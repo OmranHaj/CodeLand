@@ -1,10 +1,1180 @@
+/* ====================================================== */
+/* PAGE */
+/* ====================================================== */
+
 .page {
-  min-height: 100vh;
+  position: relative;
+
+  width: 100%;
+  height: 100dvh;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  background: #070b17;
+  padding: 22px;
+
+  overflow: hidden;
+
+  background: #050914;
+
+  color: #f8fafc;
+}
+
+/* ====================================================== */
+/* BACKGROUND */
+/* ====================================================== */
+
+.glowOne,
+.glowTwo {
+  position: absolute;
+
+  border-radius: 50%;
+
+  filter: blur(130px);
+
+  pointer-events: none;
+}
+
+.glowOne {
+  width: 420px;
+  height: 420px;
+
+  top: -170px;
+  left: -140px;
+
+  background: rgba(124, 92, 252, 0.18);
+}
+
+.glowTwo {
+  width: 420px;
+  height: 420px;
+
+  right: -130px;
+  bottom: -180px;
+
+  background: rgba(53, 194, 255, 0.1);
+}
+
+/* ====================================================== */
+/* REGISTER CARD */
+/* ====================================================== */
+
+.registerCard {
+  position: relative;
+  z-index: 2;
+
+  width: min(1180px, 100%);
+  height: min(760px, calc(100dvh - 44px));
+
+  display: grid;
+  grid-template-columns: 0.9fr 1fr;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
+
+  background: rgba(8, 13, 27, 0.94);
+
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+}
+
+/* ====================================================== */
+/* IMAGE SIDE */
+/* ====================================================== */
+
+.visualSide {
+  position: relative;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: hidden;
+
+  background: #080d1d;
+}
+
+.visualSide img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+  object-position: center;
+
+  transform: scale(1.02);
+
+  transition:
+    opacity 0.4s ease,
+    transform 0.5s ease;
+}
+
+/* Dark overlay */
+
+.imageOverlay {
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(3, 6, 18, 0.55) 0%,
+      rgba(3, 6, 18, 0.16) 50%,
+      rgba(3, 6, 18, 0.25) 100%
+    ),
+    linear-gradient(90deg, rgba(5, 9, 20, 0.25), transparent 70%);
+
+  pointer-events: none;
+}
+
+/* ====================================================== */
+/* TEXT OVER IMAGE */
+/* ====================================================== */
+
+.visualText {
+  position: absolute;
+
+  top: 38px;
+  left: 38px;
+  right: 32px;
+
+  z-index: 3;
+}
+
+/* Main image title */
+
+.visualTitle {
+  margin: 0 0 18px;
+
   color: #ffffff;
+
+  font-size: clamp(39px, 3.6vw, 58px);
+  font-weight: 800;
+
+  line-height: 1.02;
+
+  letter-spacing: -2px;
+
+  text-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.visualTitle > span {
+  background: linear-gradient(90deg, #47a3ff, #8b5cff);
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  background-clip: text;
+}
+
+/* Description */
+
+.visualDescription {
+  margin: 0;
+
+  color: rgba(230, 237, 248, 0.85);
+
+  font-size: 15px;
+
+  line-height: 1.6;
+
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+}
+
+/* ====================================================== */
+/* FORM SIDE */
+/* ====================================================== */
+
+.formSide {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 28px 42px;
+}
+
+/* ====================================================== */
+/* TOP BAR */
+/* ====================================================== */
+
+.topBar {
+  height: 44px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  color: #8290a6;
+
+  font-size: 12px;
+
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.backButton:hover {
+  color: #ffffff;
+
+  transform: translateX(-2px);
+}
+
+/* ====================================================== */
+/* LOGO */
+/* ====================================================== */
+
+.logo {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  text-decoration: none;
+}
+
+.logoIcon {
+  width: 37px;
+  height: 37px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 11px;
+
+  color: #ffffff;
+
+  background: linear-gradient(135deg, #7c5cfc, #35c2ff);
+
+  box-shadow: 0 8px 24px rgba(124, 92, 252, 0.25);
+}
+
+.logoText {
+  color: #ffffff;
+
+  font-size: 21px;
+  font-weight: 800;
+
+  letter-spacing: -0.7px;
+}
+
+.logoText span {
+  color: #8d74ff;
+}
+
+/* ====================================================== */
+/* STEP CONTENT */
+/* ====================================================== */
+
+.stepContent {
+  flex: 1;
+
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ====================================================== */
+/* HEADINGS */
+/* ====================================================== */
+
+.heading {
+  margin-bottom: 24px;
+}
+
+.badge {
+  display: inline-flex;
+
+  margin-bottom: 12px;
+
+  padding: 6px 11px;
+
+  border: 1px solid rgba(124, 92, 252, 0.3);
+  border-radius: 999px;
+
+  background: rgba(124, 92, 252, 0.08);
+
+  color: #baaaff;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.heading h1,
+.parentHeading h1 {
+  margin: 0 0 10px;
+
+  color: #ffffff;
+
+  font-size: clamp(34px, 3.3vw, 48px);
+
+  line-height: 1.04;
+
+  letter-spacing: -1.7px;
+}
+
+.heading h1 span {
+  background: linear-gradient(90deg, #8e70ff, #44c9ff);
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  background-clip: text;
+}
+
+.heading p,
+.parentHeading p {
+  max-width: 480px;
+
+  margin: 0;
+
+  color: #8c9aae;
+
+  font-size: 13px;
+
+  line-height: 1.6;
+}
+
+/* ====================================================== */
+/* ACCOUNT CARDS */
+/* ====================================================== */
+
+.accountTypes {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 14px;
+}
+
+.accountCard {
+  position: relative;
+
+  min-height: 215px;
+
+  padding: 20px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  color: #ffffff;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.accountCard:hover {
+  transform: translateY(-3px);
+
+  border-color: rgba(124, 92, 252, 0.38);
+
+  background: rgba(124, 92, 252, 0.055);
+}
+
+.accountCard.selected {
+  border-color: rgba(124, 92, 252, 0.85);
+
+  background: linear-gradient(
+    145deg,
+    rgba(124, 92, 252, 0.13),
+    rgba(53, 194, 255, 0.035)
+  );
+
+  box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.055);
+}
+
+.check {
+  position: absolute;
+
+  top: 14px;
+  right: 14px;
+
+  width: 25px;
+  height: 25px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  color: #ffffff;
+
+  background: linear-gradient(135deg, #7c5cfc, #35c2ff);
+}
+
+.accountIcon {
+  width: 47px;
+  height: 47px;
+
+  margin-bottom: 17px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  color: #ffffff;
+
+  background: linear-gradient(
+    135deg,
+    rgba(124, 92, 252, 0.95),
+    rgba(53, 194, 255, 0.82)
+  );
+}
+
+.accountCard h2 {
+  margin: 0 0 7px;
+
+  font-size: 18px;
+
+  letter-spacing: -0.4px;
+}
+
+.accountCard p {
+  margin: 0;
+
+  color: #8795aa;
+
+  font-size: 12px;
+
+  line-height: 1.55;
+}
+
+.accountLabel {
+  margin-top: auto;
+
+  padding-top: 15px;
+
+  color: #a997ff;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ====================================================== */
+/* BUTTONS */
+/* ====================================================== */
+
+.continueButton,
+.createButton {
+  width: 100%;
+  height: 50px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: linear-gradient(135deg, #704fec, #4279ec);
+
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 12px 28px rgba(104, 72, 232, 0.23);
+
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.continueButton {
+  margin-top: 18px;
+}
+
+.continueButton:hover:not(:disabled),
+.createButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+
+  box-shadow: 0 16px 34px rgba(104, 72, 232, 0.3);
+}
+
+.continueButton:disabled {
+  opacity: 0.35;
+
+  cursor: not-allowed;
+
+  box-shadow: none;
+
+  transform: none;
+}
+
+.createButton:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
+}
+
+/* ====================================================== */
+/* LOGIN */
+/* ====================================================== */
+
+.loginText {
+  margin: 15px 0 0;
+
+  text-align: center;
+
+  color: #738097;
+
+  font-size: 12px;
+}
+
+.loginText a {
+  margin-left: 5px;
+
+  color: #9181ff;
+
+  font-weight: 600;
+
+  text-decoration: none;
+
+  transition: color 0.2s ease;
+}
+
+.loginText a:hover {
+  color: #b7adff;
+}
+
+/* ====================================================== */
+/* PARENT / STUDENT FORM */
+/* ====================================================== */
+
+.changeTypeButton {
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  margin: 0 0 17px;
+
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: #8997ab;
+
+  font-size: 12px;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.changeTypeButton:hover {
+  color: #ffffff;
+
+  transform: translateX(-2px);
+}
+
+.parentHeading {
+  margin-bottom: 20px;
+}
+
+.parentHeading h1 {
+  font-size: 34px;
+}
+
+.registerForm {
+  display: flex;
+  flex-direction: column;
+
+  gap: 13px;
+}
+
+/* ====================================================== */
+/* FORM FIELD */
+/* ====================================================== */
+
+.field {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+}
+
+.field label {
+  color: #d7dfeb;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.field input {
+  width: 100%;
+  height: 46px;
+
+  padding: 0 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 11px;
+
+  outline: none;
+
+  background: rgba(255, 255, 255, 0.035);
+
+  color: #ffffff;
+
+  font: inherit;
+  font-size: 13px;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.field input::placeholder {
+  color: #59677c;
+}
+
+.field input:hover {
+  border-color: rgba(255, 255, 255, 0.13);
+}
+
+.field input:focus {
+  border-color: rgba(124, 92, 252, 0.72);
+
+  background: rgba(124, 92, 252, 0.045);
+
+  box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.08);
+}
+
+/* Autofill fix */
+
+.field input:-webkit-autofill,
+.field input:-webkit-autofill:hover,
+.field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+
+  transition: background-color 9999s ease-in-out 0s;
+
+  box-shadow: 0 0 0 1000px #0b1020 inset;
+}
+
+/* ====================================================== */
+/* PASSWORD ROW */
+/* ====================================================== */
+
+.passwordRow {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 12px;
+}
+
+.createButton {
+  margin-top: 3px;
+}
+
+/* ====================================================== */
+/* STUDENT PARENT CODE */
+/* ====================================================== */
+
+.codeHint {
+  margin: -5px 0 0;
+
+  color: #65748a;
+
+  font-size: 11px;
+
+  line-height: 1.4;
+}
+
+/* ====================================================== */
+/* ERROR MESSAGE */
+/* ====================================================== */
+
+.errorMessage {
+  padding: 10px 12px;
+
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 10px;
+
+  background: rgba(239, 68, 68, 0.07);
+
+  color: #fca5a5;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ====================================================== */
+/* VERIFIED PARENT CODE */
+/* ====================================================== */
+
+.verifiedCode {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  margin-bottom: 18px;
+
+  padding: 11px 13px;
+
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: 11px;
+
+  background: rgba(52, 211, 153, 0.06);
+
+  box-shadow: inset 0 0 25px rgba(52, 211, 153, 0.015);
+}
+
+.verifiedIcon {
+  width: 30px;
+  height: 30px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  color: #ffffff;
+
+  background: linear-gradient(135deg, #22c55e, #14b8a6);
+
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.15);
+}
+
+.verifiedInfo {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.verifiedInfo span {
+  color: #8fa09b;
+
+  font-size: 10px;
+}
+
+.verifiedInfo strong {
+  color: #9cf2cf;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  letter-spacing: 0.5px;
+}
+
+/* ====================================================== */
+/* SMALL LAPTOP HEIGHT */
+/* ====================================================== */
+
+@media (max-height: 720px) and (min-width: 1001px) {
+  .page {
+    padding: 14px;
+  }
+
+  .registerCard {
+    height: calc(100dvh - 28px);
+  }
+
+  .formSide {
+    padding: 18px 34px;
+  }
+
+  .visualText {
+    top: 25px;
+    left: 30px;
+  }
+
+  .visualTitle {
+    margin-bottom: 12px;
+
+    font-size: 38px;
+  }
+
+  .visualDescription {
+    font-size: 13px;
+  }
+
+  .heading {
+    margin-bottom: 15px;
+  }
+
+  .heading h1 {
+    font-size: 34px;
+  }
+
+  .accountCard {
+    min-height: 180px;
+
+    padding: 16px;
+  }
+
+  .accountIcon {
+    width: 42px;
+    height: 42px;
+
+    margin-bottom: 10px;
+  }
+
+  .continueButton {
+    margin-top: 12px;
+  }
+
+  .parentHeading {
+    margin-bottom: 13px;
+  }
+
+  .parentHeading h1 {
+    font-size: 30px;
+  }
+
+  .registerForm {
+    gap: 8px;
+  }
+
+  .field {
+    gap: 4px;
+  }
+
+  .field input {
+    height: 41px;
+  }
+
+  .verifiedCode {
+    margin-bottom: 10px;
+
+    padding: 8px 11px;
+  }
+
+  .createButton {
+    height: 44px;
+  }
+
+  .loginText {
+    margin-top: 9px;
+  }
+}
+
+/* ====================================================== */
+/* TABLET */
+/* ====================================================== */
+
+@media (max-width: 1000px) {
+  .page {
+    padding: 18px;
+  }
+
+  .registerCard {
+    width: min(620px, 100%);
+    height: calc(100dvh - 36px);
+
+    grid-template-columns: 1fr;
+  }
+
+  .visualSide {
+    display: none;
+  }
+
+  .formSide {
+    padding: 26px 34px;
+  }
+}
+
+/* ====================================================== */
+/* MOBILE */
+/* ====================================================== */
+
+@media (max-width: 600px) {
+  .page {
+    padding: 0;
+  }
+
+  .registerCard {
+    width: 100%;
+    height: 100dvh;
+
+    border: none;
+    border-radius: 0;
+
+    box-shadow: none;
+  }
+
+  .formSide {
+    padding: 16px 18px;
+  }
+
+  .topBar {
+    height: 40px;
+  }
+
+  .logoIcon {
+    width: 33px;
+    height: 33px;
+  }
+
+  .logoText {
+    font-size: 18px;
+  }
+
+  .heading {
+    margin-bottom: 15px;
+  }
+
+  .heading h1,
+  .parentHeading h1 {
+    font-size: 29px;
+  }
+
+  .heading p,
+  .parentHeading p {
+    font-size: 12px;
+  }
+
+  /* Account selection */
+
+  .accountTypes {
+    grid-template-columns: 1fr;
+
+    gap: 9px;
+  }
+
+  .accountCard {
+    min-height: 135px;
+
+    padding: 14px;
+  }
+
+  .accountIcon {
+    width: 39px;
+    height: 39px;
+
+    margin-bottom: 9px;
+  }
+
+  .accountCard h2 {
+    font-size: 16px;
+  }
+
+  .accountCard p {
+    font-size: 11px;
+  }
+
+  .accountLabel {
+    padding-top: 8px;
+  }
+
+  /* Forms */
+
+  .passwordRow {
+    grid-template-columns: 1fr;
+
+    gap: 8px;
+  }
+
+  .registerForm {
+    gap: 8px;
+  }
+
+  .field {
+    gap: 4px;
+  }
+
+  .field input {
+    height: 42px;
+  }
+
+  .continueButton,
+  .createButton {
+    height: 45px;
+  }
+
+  .loginText {
+    margin-top: 11px;
+  }
+
+  .changeTypeButton {
+    margin-bottom: 12px;
+  }
+
+  .parentHeading {
+    margin-bottom: 15px;
+  }
+
+  /* Parent code */
+
+  .verifiedCode {
+    margin-bottom: 12px;
+
+    padding: 9px 11px;
+  }
+
+  .verifiedIcon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .verifiedInfo span {
+    font-size: 9px;
+  }
+
+  .verifiedInfo strong {
+    font-size: 11px;
+  }
+
+  .errorMessage {
+    padding: 8px 10px;
+
+    font-size: 11px;
+  }
+
+  .codeHint {
+    font-size: 10px;
+  }
+}
+
+/* ====================================================== */
+/* VERY SMALL MOBILE HEIGHT */
+/* ====================================================== */
+
+@media (max-width: 600px) and (max-height: 720px) {
+  .formSide {
+    padding: 12px 16px;
+  }
+
+  .topBar {
+    height: 36px;
+  }
+
+  .heading {
+    margin-bottom: 10px;
+  }
+
+  .heading h1,
+  .parentHeading h1 {
+    font-size: 26px;
+  }
+
+  .badge {
+    margin-bottom: 8px;
+
+    padding: 5px 9px;
+
+    font-size: 10px;
+  }
+
+  .accountTypes {
+    gap: 7px;
+  }
+
+  .accountCard {
+    min-height: 118px;
+
+    padding: 12px;
+  }
+
+  .accountIcon {
+    width: 34px;
+    height: 34px;
+
+    margin-bottom: 7px;
+  }
+
+  .accountCard h2 {
+    margin-bottom: 4px;
+
+    font-size: 15px;
+  }
+
+  .accountCard p {
+    font-size: 10px;
+  }
+
+  .accountLabel {
+    padding-top: 5px;
+
+    font-size: 10px;
+  }
+
+  .continueButton {
+    margin-top: 9px;
+  }
+
+  .loginText {
+    margin-top: 7px;
+  }
+
+  .parentHeading {
+    margin-bottom: 10px;
+  }
+
+  .registerForm {
+    gap: 6px;
+  }
+
+  .field input {
+    height: 39px;
+
+    font-size: 12px;
+  }
+
+  .createButton {
+    height: 42px;
+  }
+
+  .verifiedCode {
+    margin-bottom: 8px;
+
+    padding: 7px 9px;
+  }
 }
