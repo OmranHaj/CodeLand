@@ -1,0 +1,752 @@
+.page {
+  position: relative;
+
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 40px;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 15% 20%,
+      rgba(124, 92, 252, 0.16),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 85% 80%,
+      rgba(53, 194, 255, 0.1),
+      transparent 30%
+    ),
+    #050914;
+
+  color: #f8fafc;
+}
+
+/* =========================
+   Background glow
+========================= */
+
+.glowOne,
+.glowTwo {
+  position: absolute;
+
+  border-radius: 50%;
+
+  filter: blur(130px);
+
+  pointer-events: none;
+}
+
+.glowOne {
+  width: 450px;
+  height: 450px;
+
+  top: -120px;
+  left: -120px;
+
+  background: rgba(124, 92, 252, 0.15);
+}
+
+.glowTwo {
+  width: 420px;
+  height: 420px;
+
+  right: -100px;
+  bottom: -100px;
+
+  background: rgba(53, 194, 255, 0.1);
+}
+
+/* =========================
+   Main card
+========================= */
+
+.loginCard {
+  position: relative;
+  z-index: 1;
+
+  width: min(100%, 1400px);
+  min-height: 820px;
+
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  overflow: hidden;
+
+  border-radius: 30px;
+
+  border: 1px solid rgba(124, 92, 252, 0.25);
+
+  background: #080d1b;
+
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.45),
+    0 0 80px rgba(124, 92, 252, 0.08);
+}
+
+/* =========================
+   Form Side
+========================= */
+
+.formSide {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  padding: 70px 85px;
+
+  background:
+    radial-gradient(circle at 0% 0%, rgba(124, 92, 252, 0.08), transparent 35%),
+    #080d1b;
+}
+
+.backButton {
+  position: absolute;
+
+  top: 32px;
+  left: 40px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  color: #7f8da3;
+
+  font-size: 13px;
+
+  text-decoration: none;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.backButton:hover {
+  color: #ffffff;
+
+  transform: translateX(-3px);
+}
+
+/* =========================
+   Logo
+========================= */
+
+.logo {
+  width: fit-content;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-bottom: 45px;
+
+  text-decoration: none;
+}
+
+.logoIcon {
+  width: 48px;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  color: #ffffff;
+
+  background: linear-gradient(135deg, #7c5cfc, #35c2ff);
+
+  box-shadow: 0 10px 30px rgba(124, 92, 252, 0.3);
+}
+
+.logoText {
+  color: #ffffff;
+
+  font-size: 32px;
+  font-weight: 800;
+
+  letter-spacing: -1px;
+}
+
+.logoText span {
+  color: #7c5cfc;
+}
+
+/* =========================
+   Heading
+========================= */
+
+.heading {
+  margin-bottom: 35px;
+}
+
+.heading h1 {
+  margin-bottom: 10px;
+
+  font-size: 42px;
+
+  letter-spacing: -1px;
+}
+
+.heading p {
+  color: #8492a7;
+
+  font-size: 16px;
+}
+
+/* =========================
+   Form
+========================= */
+
+.form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 24px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 10px;
+}
+
+.field label {
+  color: #f1f5f9;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.inputWrapper {
+  height: 58px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 0 16px;
+
+  border: 1px solid rgba(148, 163, 184, 0.2);
+
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  color: #64748b;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.inputWrapper:focus-within {
+  border-color: rgba(124, 92, 252, 0.65);
+
+  background: rgba(124, 92, 252, 0.04);
+
+  box-shadow: 0 0 0 4px rgba(124, 92, 252, 0.07);
+}
+
+.inputWrapper input {
+  width: 100%;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  color: #ffffff;
+
+  font-size: 15px;
+}
+
+.inputWrapper input::placeholder {
+  color: #58667b;
+}
+
+.eyeButton {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: #718096;
+
+  cursor: pointer;
+
+  transition: color 0.2s ease;
+}
+
+.eyeButton:hover {
+  color: #ffffff;
+}
+
+/* =========================
+   Options
+========================= */
+
+.formOptions {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+}
+
+.remember {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  color: #94a3b8;
+
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+.remember input {
+  width: 16px;
+  height: 16px;
+
+  accent-color: #7c5cfc;
+}
+
+.forgotPassword {
+  color: #758cff;
+
+  font-size: 13px;
+
+  text-decoration: none;
+
+  transition: color 0.2s ease;
+}
+
+.forgotPassword:hover {
+  color: #a99aff;
+}
+
+/* =========================
+   Login Button
+========================= */
+
+.loginButton {
+  height: 58px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: linear-gradient(135deg, #7545ff, #3189ff);
+
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 14px 35px rgba(92, 80, 255, 0.25);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.loginButton:hover {
+  transform: translateY(-2px);
+
+  box-shadow: 0 18px 40px rgba(92, 80, 255, 0.38);
+}
+
+.loginButton svg {
+  transition: transform 0.2s ease;
+}
+
+.loginButton:hover svg {
+  transform: translateX(4px);
+}
+
+/* =========================
+   Divider
+========================= */
+
+.divider {
+  display: flex;
+  align-items: center;
+
+  gap: 15px;
+
+  margin: 34px 0 25px;
+}
+
+.divider span {
+  flex: 1;
+
+  height: 1px;
+
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.divider p {
+  color: #627087;
+
+  font-size: 12px;
+
+  white-space: nowrap;
+}
+
+/* =========================
+   Social buttons
+========================= */
+
+.socialButtons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 12px;
+}
+
+.socialButton {
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  border-radius: 11px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(255, 255, 255, 0.025);
+
+  color: #dbe4f0;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.socialButton:hover {
+  transform: translateY(-2px);
+
+  background: rgba(255, 255, 255, 0.06);
+
+  border-color: rgba(124, 92, 252, 0.28);
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.googleIcon {
+  font-size: 21px;
+  font-weight: 800;
+
+  color: #ffffff;
+}
+
+.discordIcon {
+  font-size: 18px;
+  font-weight: 800;
+
+  color: #8d82ff;
+}
+
+/* =========================
+   Register
+========================= */
+
+.registerText {
+  margin-top: 38px;
+
+  text-align: center;
+
+  color: #718096;
+
+  font-size: 13px;
+}
+
+.registerText a {
+  margin-left: 5px;
+
+  color: #718cff;
+
+  font-weight: 600;
+
+  text-decoration: none;
+}
+
+.registerText a:hover {
+  color: #a99aff;
+}
+
+/* =========================
+   Visual Side
+========================= */
+
+.visualSide {
+  position: relative;
+
+  min-height: 820px;
+
+  overflow: hidden;
+
+  background: #090d20;
+}
+
+.visualSide img {
+  position: absolute;
+
+  width: 100%;
+  height: 100%;
+
+  inset: 0;
+
+  object-fit: cover;
+  object-position: center;
+}
+
+.imageOverlay {
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(90deg, rgba(5, 9, 20, 0.45), rgba(5, 9, 20, 0.02)),
+    linear-gradient(180deg, rgba(5, 9, 20, 0.05), rgba(5, 9, 20, 0.3));
+}
+
+.visualContent {
+  position: absolute;
+
+  top: 70px;
+  left: 55px;
+
+  z-index: 2;
+
+  max-width: 420px;
+}
+
+.visualBadge {
+  display: inline-flex;
+
+  margin-bottom: 20px;
+
+  color: #a69cff;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  letter-spacing: 4px;
+}
+
+.visualContent h2 {
+  margin-bottom: 15px;
+
+  font-size: clamp(42px, 4vw, 62px);
+
+  line-height: 1.05;
+
+  letter-spacing: -2px;
+}
+
+.visualContent h2 span {
+  display: block;
+
+  color: #7956ff;
+}
+
+.visualContent p {
+  color: rgba(226, 232, 240, 0.72);
+
+  font-size: 17px;
+
+  letter-spacing: 0.3px;
+}
+
+/* =========================
+   Tablet
+========================= */
+
+@media (max-width: 1100px) {
+  .page {
+    padding: 40px 20px;
+  }
+
+  .loginCard {
+    width: min(100%, 600px);
+
+    grid-template-columns: 1fr;
+
+    min-height: auto;
+  }
+
+  .visualSide {
+    display: none;
+  }
+
+  .formSide {
+    min-height: auto;
+
+    padding: 80px 60px;
+
+    justify-content: center;
+  }
+
+  .swapped .formSide,
+  .swapped .visualSide {
+    transform: none;
+  }
+
+  .swapButton {
+    display: none;
+  }
+  .swapped .formSide,
+  .swapped .visualSide {
+    transform: none;
+  }
+}
+/* =========================
+   Mobile
+========================= */
+
+@media (max-width: 600px) {
+  .page {
+    padding: 0;
+
+    align-items: stretch;
+  }
+
+  .loginCard {
+    width: 100%;
+    min-height: 100vh;
+
+    border: none;
+    border-radius: 0;
+  }
+
+  .formSide {
+    min-height: 100vh;
+
+    padding: 90px 24px 45px;
+
+    justify-content: center;
+  }
+
+  .backButton {
+    top: 28px;
+    left: 24px;
+  }
+
+  .logo {
+    margin-bottom: 32px;
+  }
+
+  .logoIcon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .logoText {
+    font-size: 27px;
+  }
+
+  .heading h1 {
+    font-size: 34px;
+  }
+
+  .heading p {
+    font-size: 14px;
+  }
+
+  .inputWrapper {
+    height: 54px;
+  }
+
+  .formOptions {
+    flex-direction: column;
+    align-items: flex-start;
+
+    gap: 12px;
+  }
+
+  .loginButton {
+    height: 54px;
+  }
+
+  .socialButtons {
+    grid-template-columns: 1fr;
+  }
+}
+.formSide,
+.visualSide {
+  transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.swapped .formSide {
+  transform: translateX(100%);
+}
+
+.swapped .visualSide {
+  transform: translateX(-100%);
+}
+.errorMessage {
+  padding: 11px 14px;
+
+  border-radius: 10px;
+
+  border: 1px solid rgba(239, 68, 68, 0.25);
+
+  background: rgba(239, 68, 68, 0.08);
+
+  color: #fca5a5;
+
+  font-size: 13px;
+}
+
+.loginButton:disabled {
+  opacity: 0.65;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
