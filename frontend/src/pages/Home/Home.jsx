@@ -71,7 +71,7 @@ function Home() {
 
           <div className={styles.robotArea}>
             <div className={styles.glow}></div>
-            <div className={styles.robotViewer}>{/* <Robot /> */}</div>
+            <div className={styles.robotViewer}> <Robot /> </div>
           </div>
         </div>
       </section>
