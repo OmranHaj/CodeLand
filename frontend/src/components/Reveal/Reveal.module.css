@@ -1,0 +1,49 @@
+.revealWrapper {
+  width: 100%;
+
+  overflow: clip;
+}
+
+.reveal {
+  width: 100%;
+
+  opacity: 0;
+
+  transition:
+    opacity 0.75s ease,
+    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+
+  will-change: opacity, transform;
+}
+
+.up {
+  transform: translateY(45px);
+}
+
+.down {
+  transform: translateY(-45px);
+}
+
+.left {
+  transform: translateX(-45px);
+}
+
+.right {
+  transform: translateX(45px);
+}
+
+.visible {
+  opacity: 1;
+
+  transform: translate3d(0, 0, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+
+    transform: none;
+
+    transition: none;
+  }
+}

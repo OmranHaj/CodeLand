@@ -631,18 +631,50 @@
 
     justify-content: center;
   }
+  .formSide,
+  .visualSide {
+    transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+  }
 
   .swapped .formSide,
   .swapped .visualSide {
     transform: none;
   }
+  .swapped .formSide {
+    transform: translateX(100%);
+  }
 
+  .swapped .visualSide {
+    transform: translateX(-100%);
+  }
   .swapButton {
     display: none;
   }
   .swapped .formSide,
   .swapped .visualSide {
     transform: none;
+  }
+}
+
+/* =========================
+   Disable swap on tablets/mobile
+========================= */
+
+@media (max-width: 1100px) {
+  .visualSide {
+    display: none;
+  }
+
+  .formSide {
+    transform: none !important;
+  }
+
+  .swapped .formSide {
+    transform: none !important;
+  }
+
+  .swapped .visualSide {
+    transform: none !important;
   }
 }
 /* =========================
@@ -749,4 +781,40 @@
   cursor: not-allowed;
 
   transform: none;
+}
+/* =========================
+   Register Success Message
+========================= */
+
+.successMessage {
+  padding: 11px 14px;
+
+  border: 1px solid rgba(34, 197, 94, 0.25);
+
+  border-radius: 10px;
+
+  background: rgba(34, 197, 94, 0.08);
+
+  color: #86efac;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+}
+
+/* =========================
+   Disabled inputs
+========================= */
+
+.inputWrapper:has(input:disabled) {
+  opacity: 0.65;
+}
+
+.inputWrapper input:disabled {
+  cursor: not-allowed;
+}
+
+.eyeButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
