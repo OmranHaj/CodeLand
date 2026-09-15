@@ -38,7 +38,7 @@ function seededRandom(seed) {
 function IslandUnderside({ radius }) {
   const rocks = useMemo(() => {
     return Array.from({
-      length: 22,
+      length: 12,
     }).map((_, index) => {
       const angle = seededRandom(index * 4.7 + 2) * Math.PI * 2;
 
@@ -69,8 +69,6 @@ function IslandUnderside({ radius }) {
       {rocks.map((rock, index) => (
         <mesh
           key={index}
-          castShadow
-          receiveShadow
           position={rock.position}
           rotation={[0, rock.rotation, Math.PI]}
           scale={rock.scale}
@@ -119,8 +117,6 @@ function Crystal({ position, scale = 1, color = CYAN }) {
           metalness={0.25}
         />
       </mesh>
-
-      <pointLight color={color} intensity={1.7} distance={3} />
     </group>
   );
 }
@@ -132,19 +128,19 @@ function Crystal({ position, scale = 1, color = CYAN }) {
 function FutureTree({ position, scale = 1 }) {
   return (
     <group position={position} scale={scale}>
-      <mesh castShadow position={[0, 0.34, 0]}>
+      <mesh position={[0, 0.34, 0]}>
         <cylinderGeometry args={[0.06, 0.11, 0.7, 7]} />
 
         <meshStandardMaterial color="#161420" roughness={0.92} />
       </mesh>
 
-      <mesh castShadow position={[0, 0.82, 0]}>
+      <mesh position={[0, 0.82, 0]}>
         <icosahedronGeometry args={[0.4, 1]} />
 
         <meshStandardMaterial color="#17382f" roughness={0.8} />
       </mesh>
 
-      <mesh castShadow position={[0.18, 0.9, 0.05]} scale={0.75}>
+      <mesh position={[0.18, 0.9, 0.05]} scale={0.75}>
         <icosahedronGeometry args={[0.34, 1]} />
 
         <meshStandardMaterial color="#205244" roughness={0.78} />
@@ -229,8 +225,6 @@ function HtmlHologram() {
           <span>/&gt;</span>
         </div>
       </Html>
-
-      <pointLight color={ORANGE} intensity={3} distance={5} />
     </group>
   );
 }
@@ -301,8 +295,6 @@ function FoundationsGate() {
 
   const innerRef = useRef(null);
 
-  const lightRef = useRef(null);
-
   useFrame(({ clock }) => {
     if (ringRef.current) {
       ringRef.current.rotation.z = Math.sin(clock.elapsedTime * 0.45) * 0.06;
@@ -310,10 +302,6 @@ function FoundationsGate() {
 
     if (innerRef.current) {
       innerRef.current.rotation.z = -clock.elapsedTime * 0.12;
-    }
-
-    if (lightRef.current) {
-      lightRef.current.intensity = 5 + Math.sin(clock.elapsedTime * 2.2) * 1.2;
     }
   });
 
@@ -360,7 +348,7 @@ function FoundationsGate() {
       {/* OUTER PORTAL */}
 
       <mesh ref={ringRef} position={[0, 2.15, 0]}>
-        <torusGeometry args={[1.45, 0.11, 14, 100]} />
+        <torusGeometry args={[1.45, 0.11, 10, 56]} />
 
         <meshStandardMaterial
           color={ORANGE}
@@ -374,7 +362,7 @@ function FoundationsGate() {
       {/* INNER RING */}
 
       <mesh ref={innerRef} position={[0, 2.15, 0.01]}>
-        <torusGeometry args={[1.12, 0.035, 12, 90]} />
+        <torusGeometry args={[1.12, 0.035, 8, 48]} />
 
         <meshBasicMaterial color={GOLD} transparent opacity={0.85} />
       </mesh>
@@ -382,7 +370,7 @@ function FoundationsGate() {
       {/* PORTAL SURFACE */}
 
       <mesh position={[0, 2.15, 0.03]}>
-        <circleGeometry args={[1.12, 64]} />
+        <circleGeometry args={[1.12, 40]} />
 
         <meshBasicMaterial
           color={ORANGE}
@@ -393,16 +381,8 @@ function FoundationsGate() {
         />
       </mesh>
 
-      <pointLight
-        ref={lightRef}
-        position={[0, 2, 1.2]}
-        color={ORANGE}
-        intensity={5}
-        distance={9}
-      />
-
       <Sparkles
-        count={25}
+        count={12}
         scale={[3, 3.8, 1.4]}
         position={[0, 2, 0]}
         size={3}
@@ -432,7 +412,7 @@ function RobotPlatform() {
   return (
     <group position={[0, 0.62, 2.05]}>
       <mesh>
-        <cylinderGeometry args={[1.05, 1.15, 0.18, 48]} />
+        <cylinderGeometry args={[1.05, 1.15, 0.18, 28]} />
 
         <meshStandardMaterial
           color="#10182b"
@@ -442,7 +422,7 @@ function RobotPlatform() {
       </mesh>
 
       <mesh ref={ringRef} position={[0, 0.1, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.68, 0.84, 48]} />
+        <ringGeometry args={[0.68, 0.84, 32]} />
 
         <meshBasicMaterial
           color={CYAN}
@@ -451,13 +431,6 @@ function RobotPlatform() {
           side={THREE.DoubleSide}
         />
       </mesh>
-
-      <pointLight
-        position={[0, 0.5, 0]}
-        color={CYAN}
-        intensity={2}
-        distance={4}
-      />
     </group>
   );
 }
@@ -509,8 +482,8 @@ function HTMLFoundationsIsland({ level, selected, onSelect, onLocked }) {
   const pathLights = useMemo(
     () =>
       Array.from({
-        length: 7,
-      }).map((_, index) => [0, 0.72, 2 - index * 0.43]),
+        length: 5,
+      }).map((_, index) => [0, 0.72, 1.9 - index * 0.55]),
     [],
   );
 
@@ -544,7 +517,7 @@ function HTMLFoundationsIsland({ level, selected, onSelect, onLocked }) {
 
       <mesh castShadow receiveShadow>
         <cylinderGeometry
-          args={[level.radius, level.radius * 0.86, 0.95, 22]}
+          args={[level.radius, level.radius * 0.86, 0.95, 18]}
         />
 
         <meshStandardMaterial
@@ -558,7 +531,7 @@ function HTMLFoundationsIsland({ level, selected, onSelect, onLocked }) {
 
       <mesh receiveShadow position={[0, 0.54, 0]}>
         <cylinderGeometry
-          args={[level.radius * 0.96, level.radius * 0.98, 0.16, 28]}
+          args={[level.radius * 0.96, level.radius * 0.98, 0.16, 20]}
         />
 
         <meshStandardMaterial
@@ -576,7 +549,7 @@ function HTMLFoundationsIsland({ level, selected, onSelect, onLocked }) {
 
       <mesh position={[0, 0.64, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry
-          args={[level.radius * 0.83, selected ? 0.07 : 0.04, 10, 90]}
+          args={[level.radius * 0.83, selected ? 0.07 : 0.04, 8, 56]}
         />
 
         <meshStandardMaterial
@@ -643,7 +616,7 @@ function HTMLFoundationsIsland({ level, selected, onSelect, onLocked }) {
       {/* ================================================= */}
 
       <Sparkles
-        count={35}
+        count={16}
         position={[0, 2.3, 0]}
         scale={[6, 4, 6]}
         size={2.5}
@@ -655,7 +628,7 @@ function HTMLFoundationsIsland({ level, selected, onSelect, onLocked }) {
       {completed && (
         <>
           <mesh position={[0, 0.7, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[level.radius * 0.9, 0.025, 8, 96]} />
+            <torusGeometry args={[level.radius * 0.9, 0.025, 8, 56]} />
 
             <meshBasicMaterial
               color={COMPLETED}
@@ -746,20 +719,6 @@ function HTMLFoundationsIsland({ level, selected, onSelect, onLocked }) {
       {/* ================================================= */}
       {/* LIGHTING */}
       {/* ================================================= */}
-
-      <pointLight
-        position={[0, 3, 0]}
-        color={ORANGE}
-        intensity={3}
-        distance={11}
-      />
-
-      <pointLight
-        position={[0, 1.3, 2.2]}
-        color={CYAN}
-        intensity={2}
-        distance={6}
-      />
     </group>
   );
 }

@@ -6,6 +6,17 @@ import { useAnimations, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 /* ====================================================== */
+/* ROBOT FRAMING */
+/* ====================================================== */
+
+const MODEL_POSITION = [0, -0.7, 0];
+const MODEL_ROTATION = [0, 0, 0];
+const MODEL_SCALE = 0.2;
+
+const CAMERA_POSITION = [0, 0.18, 2.35];
+const CAMERA_TARGET = [0, -0.18, 0];
+
+/* ====================================================== */
 /* CAMERA */
 /* ====================================================== */
 
@@ -13,12 +24,10 @@ function RobotCamera() {
   const { camera } = useThree();
 
   useEffect(() => {
-    /*
-      Explicitly frame the robot instead of relying on the
-      default camera direction. This keeps the model centered
-      in the coach card.
-    */
-    camera.lookAt(0, -0.18, 0);
+    camera.position.set(...CAMERA_POSITION);
+
+    camera.lookAt(...CAMERA_TARGET);
+
     camera.updateProjectionMatrix();
   }, [camera]);
 
@@ -31,6 +40,7 @@ function RobotCamera() {
 
 function RobotModel({ reaction = "idle", reactionKey = 0 }) {
   const { scene, animations } = useGLTF("/models/Robot.glb");
+
   const { actions, names, mixer } = useAnimations(animations, scene);
 
   /* ==================================================== */
@@ -52,6 +62,7 @@ function RobotModel({ reaction = "idle", reactionKey = 0 }) {
       Idle means Idle only.
       Never fall back to Wave / Hello / Greet.
     */
+
     const idleName =
       names.find((name) => name === "01_Idle") ||
       names.find((name) => /(^|[_ -])idle($|[_ -])/i.test(name));
@@ -93,12 +104,14 @@ function RobotModel({ reaction = "idle", reactionKey = 0 }) {
     idle.enabled = true;
     idle.paused = false;
     idle.clampWhenFinished = false;
+
     idle.setLoop(THREE.LoopRepeat, Infinity);
+
     idle.fadeIn(0.22).play();
   };
 
   /* ==================================================== */
-  /* DEFAULT STATE = IDLE ONLY */
+  /* DEFAULT STATE = IDLE */
   /* ==================================================== */
 
   useEffect(() => {
@@ -114,7 +127,7 @@ function RobotModel({ reaction = "idle", reactionKey = 0 }) {
   }, [actions, names]);
 
   /* ==================================================== */
-  /* HAPPY / SAD REACTION */
+  /* HAPPY / SAD */
   /* ==================================================== */
 
   useEffect(() => {
@@ -124,6 +137,7 @@ function RobotModel({ reaction = "idle", reactionKey = 0 }) {
 
     if (reaction === "idle") {
       playIdle();
+
       return undefined;
     }
 
@@ -152,6 +166,7 @@ function RobotModel({ reaction = "idle", reactionKey = 0 }) {
 
     if (!action) {
       playIdle();
+
       return undefined;
     }
 
@@ -159,10 +174,13 @@ function RobotModel({ reaction = "idle", reactionKey = 0 }) {
 
     action.stop();
     action.reset();
+
     action.enabled = true;
     action.paused = false;
     action.clampWhenFinished = true;
+
     action.setLoop(THREE.LoopOnce, 1);
+
     action.fadeIn(0.14).play();
 
     const handleFinished = (event) => {
@@ -171,6 +189,7 @@ function RobotModel({ reaction = "idle", reactionKey = 0 }) {
       }
 
       action.fadeOut(0.16);
+
       playIdle();
     };
 
@@ -186,13 +205,8 @@ function RobotModel({ reaction = "idle", reactionKey = 0 }) {
   /* ==================================================== */
 
   return (
-    <group position={[0, -0.7, 0]} rotation={[0, -0.06, 0]}>
-      {/*
-        Larger than the world robot on purpose.
-        This is a portrait/coach card, so the character should
-        read clearly even on a narrow sidebar.
-      */}
-      <primitive object={scene} scale={0.2} />
+    <group position={MODEL_POSITION} rotation={MODEL_ROTATION}>
+      <primitive object={scene} scale={MODEL_SCALE} />
     </group>
   );
 }
@@ -205,7 +219,7 @@ function LessonRobot({ reaction = "idle", reactionKey = 0 }) {
   return (
     <Canvas
       camera={{
-        position: [0, 0.18, 2.35],
+        position: CAMERA_POSITION,
         fov: 25,
         near: 0.1,
         far: 50,
@@ -213,8 +227,9 @@ function LessonRobot({ reaction = "idle", reactionKey = 0 }) {
       gl={{
         alpha: true,
         antialias: true,
+        powerPreference: "high-performance",
       }}
-      dpr={[1, 1.75]}
+      dpr={[1, 1.5]}
     >
       <RobotCamera />
 

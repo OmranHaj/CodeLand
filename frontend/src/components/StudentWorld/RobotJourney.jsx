@@ -1,4 +1,11 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { Sparkles, useAnimations, useGLTF } from "@react-three/drei";
 
@@ -84,8 +91,6 @@ function PortalEnergy({ position, phase, accent, secondary }) {
 
   const shockwaveRef = useRef(null);
 
-  const lightRef = useRef(null);
-
   const entryStartedRef = useRef(false);
 
   const isCharging = phase === "charging" || phase === "entering";
@@ -162,14 +167,6 @@ function PortalEnergy({ position, phase, accent, secondary }) {
           : 0;
     }
 
-    if (lightRef.current) {
-      lightRef.current.intensity = isEntering
-        ? 11 + Math.sin(time * 12) * 2
-        : isCharging
-          ? 6 + Math.sin(time * 6) * 1.2
-          : 0;
-    }
-
     if (isEntering && shockwaveRef.current && entryStartedRef.current) {
       const currentScale = shockwaveRef.current.scale.x;
 
@@ -193,7 +190,7 @@ function PortalEnergy({ position, phase, accent, secondary }) {
       {/* OUTER RING */}
 
       <mesh ref={ringOneRef}>
-        <torusGeometry args={[1.18, 0.05, 12, 96]} />
+        <torusGeometry args={[1.18, 0.05, 8, 56]} />
 
         <meshBasicMaterial
           color={accent}
@@ -207,7 +204,7 @@ function PortalEnergy({ position, phase, accent, secondary }) {
       {/* SECOND RING */}
 
       <mesh ref={ringTwoRef} rotation={[0, 0, 0.72]}>
-        <torusGeometry args={[0.96, 0.032, 10, 96]} />
+        <torusGeometry args={[0.96, 0.032, 8, 52]} />
 
         <meshBasicMaterial
           color={secondary}
@@ -221,7 +218,7 @@ function PortalEnergy({ position, phase, accent, secondary }) {
       {/* DEPTH RING */}
 
       <mesh ref={ringThreeRef} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.78, 0.025, 10, 72]} />
+        <torusGeometry args={[0.78, 0.025, 8, 40]} />
 
         <meshBasicMaterial
           color="#ffffff"
@@ -235,7 +232,7 @@ function PortalEnergy({ position, phase, accent, secondary }) {
       {/* SURFACE */}
 
       <mesh ref={surfaceRef} position={[0, 0, -0.01]}>
-        <circleGeometry args={[0.91, 64]} />
+        <circleGeometry args={[0.91, 36]} />
 
         <meshBasicMaterial
           color={accent}
@@ -250,7 +247,7 @@ function PortalEnergy({ position, phase, accent, secondary }) {
       {/* CORE */}
 
       <mesh ref={coreRef} position={[0, 0, 0.04]}>
-        <circleGeometry args={[0.14, 32]} />
+        <circleGeometry args={[0.14, 18]} />
 
         <meshBasicMaterial
           color="#ffffff"
@@ -264,7 +261,7 @@ function PortalEnergy({ position, phase, accent, secondary }) {
       {/* SHOCKWAVE */}
 
       <mesh ref={shockwaveRef} position={[0, 0, 0.07]}>
-        <ringGeometry args={[0.48, 0.57, 64]} />
+        <ringGeometry args={[0.48, 0.57, 36]} />
 
         <meshBasicMaterial
           color="#ffffff"
@@ -276,19 +273,12 @@ function PortalEnergy({ position, phase, accent, secondary }) {
       </mesh>
 
       <Sparkles
-        count={isEntering ? 100 : 60}
+        count={isEntering ? 42 : 24}
         scale={[3.2, 3.2, 1.4]}
-        size={isEntering ? 4 : 2.8}
-        speed={isEntering ? 1.5 : 0.75}
-        opacity={isEntering ? 0.95 : 0.7}
+        size={isEntering ? 3.6 : 2.6}
+        speed={isEntering ? 1.1 : 0.55}
+        opacity={isEntering ? 0.9 : 0.62}
         color={secondary}
-      />
-
-      <pointLight
-        ref={lightRef}
-        color={accent}
-        intensity={6}
-        distance={isEntering ? 15 : 10}
       />
     </group>
   );
@@ -337,55 +327,93 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
 
   const islandZ = level.position[2];
 
-  const startPosition = new THREE.Vector3(
-    islandX,
-    islandY + 1.66,
-    islandZ + 2.05,
-  );
+  const journeyPoints = useMemo(() => {
+    const startPosition = new THREE.Vector3(
+      islandX,
+      islandY + 1.66,
+      islandZ + 2.05,
+    );
 
-  const stopPosition = new THREE.Vector3(
-    islandX,
-    islandY + 1.66,
-    islandZ + 0.15,
-  );
+    const stopPosition = new THREE.Vector3(
+      islandX,
+      islandY + 1.66,
+      islandZ + 0.15,
+    );
 
-  const portalPosition = new THREE.Vector3(
-    islandX,
-    islandY + 2.85,
-    islandZ - 0.7,
-  );
+    const portalPosition = new THREE.Vector3(
+      islandX,
+      islandY + 2.85,
+      islandZ - 0.7,
+    );
 
-  /* Camera keyframes */
+    const establishCamera = new THREE.Vector3(
+      islandX + 3.2,
+      islandY + 3.9,
+      islandZ + 6,
+    );
 
-  const establishCamera = new THREE.Vector3(
-    islandX + 3.2,
-    islandY + 3.9,
-    islandZ + 6,
-  );
+    const followCamera = new THREE.Vector3(
+      islandX + 1.5,
+      islandY + 2.95,
+      islandZ + 3,
+    );
 
-  const followCamera = new THREE.Vector3(
-    islandX + 1.5,
-    islandY + 2.95,
-    islandZ + 3,
-  );
+    const chargeCamera = new THREE.Vector3(
+      islandX + 1,
+      islandY + 3.05,
+      islandZ + 2.45,
+    );
 
-  const chargeCamera = new THREE.Vector3(
-    islandX + 1,
-    islandY + 3.05,
-    islandZ + 2.45,
-  );
+    const centeredCamera = new THREE.Vector3(
+      portalPosition.x,
+      portalPosition.y,
+      portalPosition.z + 2.15,
+    );
 
-  const centeredCamera = new THREE.Vector3(
-    portalPosition.x,
-    portalPosition.y,
-    portalPosition.z + 2.15,
-  );
+    const diveCamera = new THREE.Vector3(
+      portalPosition.x,
+      portalPosition.y,
+      portalPosition.z - 4.6,
+    );
 
-  const diveCamera = new THREE.Vector3(
-    portalPosition.x,
-    portalPosition.y,
-    portalPosition.z - 4.6,
-  );
+    const chargeLookFrom = new THREE.Vector3(
+      stopPosition.x,
+      stopPosition.y + 0.72,
+      stopPosition.z - 0.35,
+    );
+
+    const targetYaw =
+      Math.atan2(
+        stopPosition.x - startPosition.x,
+        stopPosition.z - startPosition.z,
+      ) + ROBOT_FORWARD_OFFSET;
+
+    return {
+      startPosition,
+      stopPosition,
+      portalPosition,
+      establishCamera,
+      followCamera,
+      chargeCamera,
+      centeredCamera,
+      diveCamera,
+      chargeLookFrom,
+      targetYaw,
+    };
+  }, [islandX, islandY, islandZ]);
+
+  const {
+    startPosition,
+    stopPosition,
+    portalPosition,
+    establishCamera,
+    followCamera,
+    chargeCamera,
+    centeredCamera,
+    diveCamera,
+    chargeLookFrom,
+    targetYaw,
+  } = journeyPoints;
 
   /* ====================================================== */
   /* CALLBACK REFS */
@@ -411,8 +439,6 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
     setPortalPhase(nextPhase);
 
     onPhaseChangeRef.current?.(nextPhase);
-
-    console.log("[CodeLand Journey]", nextPhase);
   };
 
   /* ====================================================== */
@@ -429,6 +455,11 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
 
   const playIdle = () => {
     walkingRef.current = false;
+
+    if (robotVisualRef.current) {
+      robotVisualRef.current.position.y = 0;
+      robotVisualRef.current.rotation.z = 0;
+    }
 
     /*
       IMPORTANT:
@@ -503,13 +534,6 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
       return;
     }
 
-    console.log("[CodeLand Robot] Available animations:", names);
-
-    console.log(
-      "[CodeLand Robot] Walk clip:",
-      names.find((name) => /walk/i.test(name)) || "NOT FOUND",
-    );
-
     playIdle();
 
     return () => {
@@ -569,12 +593,6 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
     camera.updateProjectionMatrix();
 
     setPhase("approach");
-
-    console.log("[CodeLand Journey] STARTED", {
-      start: startPosition.toArray(),
-      stop: stopPosition.toArray(),
-      portal: portalPosition.toArray(),
-    });
   }, [active]);
 
   /* ====================================================== */
@@ -586,27 +604,13 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
     /* Procedural walk / idle motion */
     /* -------------------------------------------------- */
 
-    if (robotVisualRef.current) {
+    if (robotVisualRef.current && walkingRef.current) {
       const time = clock.elapsedTime;
 
-      if (walkingRef.current) {
-        robotVisualRef.current.position.y =
-          Math.abs(Math.sin(time * 10.5)) * 0.045;
+      robotVisualRef.current.position.y =
+        Math.abs(Math.sin(time * 10.5)) * 0.045;
 
-        robotVisualRef.current.rotation.z = Math.sin(time * 10.5) * 0.025;
-      } else {
-        robotVisualRef.current.position.y = THREE.MathUtils.lerp(
-          robotVisualRef.current.position.y,
-          0,
-          0.15,
-        );
-
-        robotVisualRef.current.rotation.z = THREE.MathUtils.lerp(
-          robotVisualRef.current.rotation.z,
-          0,
-          0.15,
-        );
-      }
+      robotVisualRef.current.rotation.z = Math.sin(time * 10.5) * 0.025;
     }
 
     if (!active || !robotRef.current) {
@@ -647,25 +651,15 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
         startPosition.z - progress * 0.15,
       );
     } else if (time < JOURNEY.turnEnd) {
-
-    /* -------------------------------------------------- */
-    /* 2. TURN */
-    /* -------------------------------------------------- */
+      /* -------------------------------------------------- */
+      /* 2. TURN */
+      /* -------------------------------------------------- */
       setPhase("walking");
 
       const progress = smoothStep(
         (time - JOURNEY.establishEnd) /
           (JOURNEY.turnEnd - JOURNEY.establishEnd),
       );
-
-      const direction = new THREE.Vector3(
-        stopPosition.x - startPosition.x,
-        0,
-        stopPosition.z - startPosition.z,
-      );
-
-      const targetYaw =
-        Math.atan2(direction.x, direction.z) + ROBOT_FORWARD_OFFSET;
 
       robot.position.copy(startPosition);
 
@@ -683,10 +677,9 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
         playWalk();
       }
     } else if (time < JOURNEY.walkEnd) {
-
-    /* -------------------------------------------------- */
-    /* 3. ACTUAL ROBOT WALK */
-    /* -------------------------------------------------- */
+      /* -------------------------------------------------- */
+      /* 3. ACTUAL ROBOT WALK */
+      /* -------------------------------------------------- */
       setPhase("walking");
 
       if (!walkingRef.current) {
@@ -729,10 +722,9 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
         robot.position.z - 0.18,
       );
     } else if (time < JOURNEY.chargeEnd) {
-
-    /* -------------------------------------------------- */
-    /* 4. PORTAL CHARGE */
-    /* -------------------------------------------------- */
+      /* -------------------------------------------------- */
+      /* 4. PORTAL CHARGE */
+      /* -------------------------------------------------- */
       setPhase("charging");
 
       if (walkingRef.current) {
@@ -749,19 +741,14 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
 
       lerpVector(
         cameraTargetRef.current,
-        new THREE.Vector3(
-          stopPosition.x,
-          stopPosition.y + 0.72,
-          stopPosition.z - 0.35,
-        ),
+        chargeLookFrom,
         portalPosition,
         progress,
       );
     } else if (time < JOURNEY.centerEnd) {
-
-    /* -------------------------------------------------- */
-    /* 5. CENTER PORTAL */
-    /* -------------------------------------------------- */
+      /* -------------------------------------------------- */
+      /* 5. CENTER PORTAL */
+      /* -------------------------------------------------- */
       setPhase("charging");
 
       const progress = smoothStep(
@@ -774,10 +761,9 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
 
       cameraTargetRef.current.copy(portalPosition);
     } else if (time < JOURNEY.diveEnd) {
-
-    /* -------------------------------------------------- */
-    /* 6. PORTAL DIVE */
-    /* -------------------------------------------------- */
+      /* -------------------------------------------------- */
+      /* 6. PORTAL DIVE */
+      /* -------------------------------------------------- */
       setPhase("entering");
 
       const rawProgress =
@@ -799,15 +785,12 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
 
       camera.updateProjectionMatrix();
     } else if (!completedRef.current) {
-
-    /* -------------------------------------------------- */
-    /* 7. COMPLETE */
-    /* -------------------------------------------------- */
+      /* -------------------------------------------------- */
+      /* 7. COMPLETE */
+      /* -------------------------------------------------- */
       completedRef.current = true;
 
       walkingRef.current = false;
-
-      console.log("[CodeLand Journey] COMPLETE");
 
       onCompleteRef.current?.();
     }
@@ -834,7 +817,7 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
         {/* ROBOT FLOOR RING */}
 
         <mesh position={[0, -0.93, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.5, 0.66, 40]} />
+          <ringGeometry args={[0.5, 0.66, 24]} />
 
           <meshBasicMaterial
             color="#48d9ff"
@@ -844,23 +827,16 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
             depthWrite={false}
           />
         </mesh>
-
-        {/* Soft robot light */}
-
-        <pointLight
-          position={[0, 1, 0.55]}
-          color="#47d9ff"
-          intensity={1}
-          distance={4}
-        />
       </group>
 
-      <PortalEnergy
-        position={portalPosition}
-        phase={portalPhase}
-        accent={level.accent}
-        secondary="#45dcff"
-      />
+      {(portalPhase === "charging" || portalPhase === "entering") && (
+        <PortalEnergy
+          position={portalPosition}
+          phase={portalPhase}
+          accent={level.accent}
+          secondary="#45dcff"
+        />
+      )}
     </Fragment>
   );
 }

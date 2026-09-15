@@ -37,7 +37,7 @@ function seededRandom(seed) {
 function NexusUnderside({ radius }) {
   const shards = useMemo(() => {
     return Array.from({
-      length: 24,
+      length: 12,
     }).map((_, index) => {
       const angle = seededRandom(index * 4.13 + 7) * Math.PI * 2;
 
@@ -68,8 +68,6 @@ function NexusUnderside({ radius }) {
       {shards.map((shard, index) => (
         <mesh
           key={index}
-          castShadow
-          receiveShadow
           position={shard.position}
           rotation={[0, shard.rotation, Math.PI]}
           scale={shard.scale}
@@ -125,7 +123,7 @@ function DataLink({ from, to, locked, seed = 0 }) {
   return (
     <group>
       <mesh>
-        <tubeGeometry args={[curve, 72, 0.018, 8, false]} />
+        <tubeGeometry args={[curve, 32, 0.018, 6, false]} />
 
         <meshBasicMaterial
           color={seed % 2 ? CYAN : VIOLET}
@@ -136,25 +134,26 @@ function DataLink({ from, to, locked, seed = 0 }) {
         />
       </mesh>
 
-      {Array.from({
-        length: 4,
-      }).map((_, index) => (
-        <mesh
-          key={index}
-          ref={(element) => {
-            pulseRefs.current[index] = element;
-          }}
-        >
-          <sphereGeometry args={[0.045, 10, 10]} />
+      {!locked &&
+        Array.from({
+          length: 2,
+        }).map((_, index) => (
+          <mesh
+            key={index}
+            ref={(element) => {
+              pulseRefs.current[index] = element;
+            }}
+          >
+            <sphereGeometry args={[0.045, 8, 8]} />
 
-          <meshBasicMaterial
-            color={index % 2 ? WHITE : SKY}
-            transparent
-            opacity={locked ? 0.15 : 0.95}
-            blending={THREE.AdditiveBlending}
-          />
-        </mesh>
-      ))}
+            <meshBasicMaterial
+              color={index % 2 ? WHITE : SKY}
+              transparent
+              opacity={0.95}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+        ))}
     </group>
   );
 }
@@ -269,7 +268,7 @@ function NexusTower({ position, height, accent, delay = 0, locked }) {
 
   return (
     <group position={position}>
-      <mesh castShadow position={[0, height / 2, 0]}>
+      <mesh position={[0, height / 2, 0]}>
         <cylinderGeometry args={[0.28, 0.42, height, 8]} />
 
         <meshStandardMaterial
@@ -306,7 +305,7 @@ function NexusTower({ position, height, accent, delay = 0, locked }) {
         </mesh>
 
         <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.42, 0.018, 8, 48]} />
+          <torusGeometry args={[0.42, 0.018, 8, 32]} />
 
           <meshBasicMaterial
             color={accent}
@@ -316,13 +315,6 @@ function NexusTower({ position, height, accent, delay = 0, locked }) {
           />
         </mesh>
       </group>
-
-      <pointLight
-        position={[0, height * 0.72, 0.2]}
-        color={accent}
-        intensity={locked ? 0.18 : 1.6}
-        distance={4.5}
-      />
     </group>
   );
 }
@@ -377,7 +369,7 @@ function ReactCore({ locked }) {
     <group position={[0, 3.65, 0]}>
       {/* CENTRAL SPIRE */}
 
-      <mesh castShadow position={[0, -1.45, 0]}>
+      <mesh position={[0, -1.45, 0]}>
         <cylinderGeometry args={[0.7, 1.12, 3, 12]} />
 
         <meshStandardMaterial
@@ -392,7 +384,7 @@ function ReactCore({ locked }) {
       {/* CORE */}
 
       <mesh ref={coreRef}>
-        <icosahedronGeometry args={[0.58, 2]} />
+        <icosahedronGeometry args={[0.58, 1]} />
 
         <meshStandardMaterial
           color={locked ? "#535b7f" : WHITE}
@@ -406,7 +398,7 @@ function ReactCore({ locked }) {
       {/* REACT-LIKE ORBITS */}
 
       <mesh ref={ringOneRef} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[1.65, 0.045, 10, 110]} />
+        <torusGeometry args={[1.65, 0.045, 8, 64]} />
 
         <meshBasicMaterial
           color={CYAN}
@@ -417,7 +409,7 @@ function ReactCore({ locked }) {
       </mesh>
 
       <mesh ref={ringTwoRef} rotation={[Math.PI / 2.7, 0.55, 0]}>
-        <torusGeometry args={[1.28, 0.032, 10, 100]} />
+        <torusGeometry args={[1.28, 0.032, 8, 56]} />
 
         <meshBasicMaterial
           color={VIOLET}
@@ -428,7 +420,7 @@ function ReactCore({ locked }) {
       </mesh>
 
       <mesh ref={ringThreeRef} rotation={[0.4, 0, Math.PI / 2]}>
-        <torusGeometry args={[0.96, 0.022, 10, 96]} />
+        <torusGeometry args={[0.96, 0.022, 8, 52]} />
 
         <meshBasicMaterial
           color={PURPLE}
@@ -441,7 +433,7 @@ function ReactCore({ locked }) {
       {/* OUTER HALO */}
 
       <mesh ref={haloRef} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[2.35, 0.018, 8, 120]} />
+        <torusGeometry args={[2.35, 0.018, 8, 64]} />
 
         <meshBasicMaterial
           color={CYAN}
@@ -478,15 +470,6 @@ function ReactCore({ locked }) {
           ⚛
         </div>
       </Html>
-
-      <pointLight color={VIOLET} intensity={locked ? 0.7 : 6.5} distance={13} />
-
-      <pointLight
-        position={[0, 0, 1.4]}
-        color={CYAN}
-        intensity={locked ? 0.35 : 3.2}
-        distance={9}
-      />
     </group>
   );
 }
@@ -581,7 +564,7 @@ function ReactNexusIsland({ level, selected, onSelect, onLocked }) {
 
       <mesh castShadow receiveShadow>
         <cylinderGeometry
-          args={[level.radius, level.radius * 0.86, 0.95, 24]}
+          args={[level.radius, level.radius * 0.86, 0.95, 18]}
         />
 
         <meshStandardMaterial
@@ -595,7 +578,7 @@ function ReactNexusIsland({ level, selected, onSelect, onLocked }) {
 
       <mesh receiveShadow position={[0, 0.55, 0]}>
         <cylinderGeometry
-          args={[level.radius * 0.95, level.radius * 0.98, 0.18, 28]}
+          args={[level.radius * 0.95, level.radius * 0.98, 0.18, 20]}
         />
 
         <meshStandardMaterial
@@ -612,7 +595,7 @@ function ReactNexusIsland({ level, selected, onSelect, onLocked }) {
 
       <mesh ref={rimRef} position={[0, 0.67, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry
-          args={[level.radius * 0.84, selected ? 0.08 : 0.045, 8, 120]}
+          args={[level.radius * 0.84, selected ? 0.08 : 0.045, 8, 64]}
         />
 
         <meshStandardMaterial
@@ -631,7 +614,7 @@ function ReactNexusIsland({ level, selected, onSelect, onLocked }) {
         position={[0, 0.7, 0]}
         rotation={[Math.PI / 2, 0, 0]}
       >
-        <torusGeometry args={[level.radius * 0.7, 0.018, 8, 110]} />
+        <torusGeometry args={[level.radius * 0.7, 0.018, 8, 56]} />
 
         <meshBasicMaterial
           color={CYAN}
@@ -750,7 +733,7 @@ function ReactNexusIsland({ level, selected, onSelect, onLocked }) {
       {/* NEXUS PARTICLES */}
 
       <Sparkles
-        count={92}
+        count={32}
         scale={[level.radius * 1.7, 7, level.radius * 1.7]}
         size={2.1}
         speed={locked ? 0.12 : 0.3}
@@ -759,7 +742,7 @@ function ReactNexusIsland({ level, selected, onSelect, onLocked }) {
       />
 
       <Sparkles
-        count={54}
+        count={18}
         scale={[level.radius * 1.35, 5.5, level.radius * 1.35]}
         size={1.9}
         speed={locked ? 0.08 : 0.22}
@@ -772,7 +755,7 @@ function ReactNexusIsland({ level, selected, onSelect, onLocked }) {
       {locked && (
         <>
           <mesh position={[0, 3.25, 0]}>
-            <sphereGeometry args={[level.radius * 0.92, 30, 22]} />
+            <sphereGeometry args={[level.radius * 0.92, 18, 12]} />
 
             <meshBasicMaterial
               color={VIOLET}
@@ -813,7 +796,7 @@ function ReactNexusIsland({ level, selected, onSelect, onLocked }) {
       {completed && (
         <>
           <mesh position={[0, 0.7, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[level.radius * 0.9, 0.025, 8, 96]} />
+            <torusGeometry args={[level.radius * 0.9, 0.025, 8, 56]} />
 
             <meshBasicMaterial
               color={COMPLETED}
@@ -900,20 +883,6 @@ function ReactNexusIsland({ level, selected, onSelect, onLocked }) {
           <p>{level.subtitle}</p>
         </div>
       </Html>
-
-      <pointLight
-        position={[0, 5.2, 1]}
-        color={VIOLET}
-        intensity={locked ? 0.55 : 4}
-        distance={15}
-      />
-
-      <pointLight
-        position={[0, 4.5, -1.7]}
-        color={CYAN}
-        intensity={locked ? 0.35 : 3}
-        distance={13}
-      />
     </group>
   );
 }

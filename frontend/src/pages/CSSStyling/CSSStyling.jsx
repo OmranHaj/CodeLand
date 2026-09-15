@@ -73,19 +73,24 @@ function loadLearningProgress(userId) {
 
     const parsed = JSON.parse(saved);
 
+    const xp = Number(parsed.xp);
+
     return {
       ...getDefaultProgress(),
       ...parsed,
 
       completedLessonIds: Array.isArray(parsed.completedLessonIds)
-        ? parsed.completedLessonIds
+        ? [...new Set(parsed.completedLessonIds)]
         : [],
 
       completedChallengeIds: Array.isArray(parsed.completedChallengeIds)
-        ? parsed.completedChallengeIds
+        ? [...new Set(parsed.completedChallengeIds)]
         : [],
 
-      drafts: parsed.drafts || {},
+      xp: Number.isFinite(xp) ? Math.max(0, xp) : 0,
+
+      drafts:
+        parsed.drafts && typeof parsed.drafts === "object" ? parsed.drafts : {},
 
       lastActiveUnitId:
         typeof parsed.lastActiveUnitId === "string"
@@ -106,6 +111,46 @@ function saveLearningProgress(userId, progress) {
   } catch (error) {
     console.error("[CodeLand] Unable to save CSS learning progress:", error);
   }
+}
+
+function sanitizeLearningProgress(progress, content) {
+  const lessonIds = new Set(
+    (content?.lessons || []).map((lesson) => lesson.id),
+  );
+
+  const challengeIds = new Set(
+    (content?.challenges || []).map((challenge) => challenge.id),
+  );
+
+  const validUnitIds = new Set([...lessonIds, ...challengeIds]);
+
+  const completedLessonIds = [
+    ...new Set(progress.completedLessonIds || []),
+  ].filter((id) => lessonIds.has(id));
+
+  const completedChallengeIds = [
+    ...new Set(progress.completedChallengeIds || []),
+  ].filter((id) => challengeIds.has(id));
+
+  const drafts = Object.fromEntries(
+    Object.entries(progress.drafts || {}).filter(([unitId]) =>
+      validUnitIds.has(unitId),
+    ),
+  );
+
+  const xp = Number(progress.xp);
+
+  return {
+    ...getDefaultProgress(),
+    ...progress,
+    completedLessonIds,
+    completedChallengeIds,
+    xp: Number.isFinite(xp) ? Math.max(0, xp) : 0,
+    drafts,
+    lastActiveUnitId: validUnitIds.has(progress.lastActiveUnitId)
+      ? progress.lastActiveUnitId
+      : null,
+  };
 }
 
 /* ====================================================== */
@@ -363,6 +408,14 @@ function CSSStyling() {
 
   const userId = currentUser?.id || currentUser?.email || "guest";
 
+  useEffect(() => {
+    if (!currentUser) {
+      navigate("/login", {
+        replace: true,
+      });
+    }
+  }, [currentUser, navigate]);
+
   const [content, setContent] = useState(null);
 
   const [loading, setLoading] = useState(true);
@@ -395,6 +448,34 @@ function CSSStyling() {
   const [feedbackEffect, setFeedbackEffect] = useState(null);
 
   const [xpToast, setXpToast] = useState(null);
+
+  useEffect(() => {
+    if (!feedbackEffect) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setFeedbackEffect(null);
+    }, 900);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [feedbackEffect?.key]);
+
+  useEffect(() => {
+    if (!xpToast) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setXpToast(null);
+    }, 1800);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [xpToast?.key]);
 
   /* ==================================================== */
   /* LOAD CONTENT */
@@ -484,6 +565,16 @@ function CSSStyling() {
     [units, activeUnitId],
   );
 
+  useEffect(() => {
+    if (!content) {
+      return;
+    }
+
+    setLearningProgress((current) =>
+      sanitizeLearningProgress(current, content),
+    );
+  }, [content]);
+
   /* ==================================================== */
   /* INITIAL / LAST ACTIVE UNIT */
   /* ==================================================== */
@@ -508,7 +599,11 @@ function CSSStyling() {
 
     const firstIncomplete = units.find((unit) => !isCompleted(unit));
 
-    setActiveUnitId(firstIncomplete?.id || units[0].id);
+    setActiveUnitId(
+      firstIncomplete?.id ||
+        learningProgress.lastActiveUnitId ||
+        units[units.length - 1].id,
+    );
   }, [units, activeUnitId, learningProgress]);
 
   /* ==================================================== */
@@ -610,14 +705,10 @@ function CSSStyling() {
   };
 
   const triggerFeedback = (type) => {
-    setFeedbackEffect({
+    setFeedbackEffect((current) => ({
       type,
-      key: Date.now(),
-    });
-
-    window.setTimeout(() => {
-      setFeedbackEffect(null);
-    }, 900);
+      key: (current?.key || 0) + 1,
+    }));
   };
 
   const showXpToast = (amount) => {
@@ -625,14 +716,10 @@ function CSSStyling() {
       return;
     }
 
-    setXpToast({
+    setXpToast((current) => ({
       amount,
-      key: Date.now(),
-    });
-
-    window.setTimeout(() => {
-      setXpToast(null);
-    }, 1800);
+      key: (current?.key || 0) + 1,
+    }));
   };
 
   /* ==================================================== */
@@ -714,48 +801,39 @@ function CSSStyling() {
 
     const reward = alreadyCompleted ? 0 : Number(unit.data.xp) || 0;
 
-    setLearningProgress((current) => {
-      const next = {
-        ...current,
+    const next = {
+      ...learningProgress,
+      completedLessonIds: [...learningProgress.completedLessonIds],
+      completedChallengeIds: [...learningProgress.completedChallengeIds],
+      xp: Number(learningProgress.xp) + reward,
+      lastActiveUnitId: unit.id,
+    };
 
-        completedLessonIds: [...current.completedLessonIds],
+    if (unit.kind === "lesson" && !next.completedLessonIds.includes(unit.id)) {
+      next.completedLessonIds.push(unit.id);
+    }
 
-        completedChallengeIds: [...current.completedChallengeIds],
+    if (
+      unit.kind === "challenge" &&
+      !next.completedChallengeIds.includes(unit.id)
+    ) {
+      next.completedChallengeIds.push(unit.id);
+    }
 
-        xp: Number(current.xp) + reward,
+    const nextCompletedCount =
+      next.completedLessonIds.length + next.completedChallengeIds.length;
 
-        lastActiveUnitId: unit.id,
-      };
+    const nextPercent = totalCount
+      ? Math.round((nextCompletedCount / totalCount) * 100)
+      : 0;
 
-      if (
-        unit.kind === "lesson" &&
-        !next.completedLessonIds.includes(unit.id)
-      ) {
-        next.completedLessonIds.push(unit.id);
-      }
+    setLearningProgress(next);
 
-      if (
-        unit.kind === "challenge" &&
-        !next.completedChallengeIds.includes(unit.id)
-      ) {
-        next.completedChallengeIds.push(unit.id);
-      }
-
-      const nextCompletedCount =
-        next.completedLessonIds.length + next.completedChallengeIds.length;
-
-      const nextPercent = totalCount
-        ? Math.round((nextCompletedCount / totalCount) * 100)
-        : 0;
-
+    if (nextPercent >= 100) {
+      completeWebWorldLevel(userId, LEVEL_ID);
+    } else {
       updateWebWorldLevelProgress(userId, LEVEL_ID, nextPercent);
-
-      if (nextPercent >= 100) {
-        completeWebWorldLevel(userId, LEVEL_ID);
-      }
-
-      return next;
-    });
+    }
 
     return !alreadyCompleted;
   };
@@ -866,7 +944,7 @@ function CSSStyling() {
   /* ==================================================== */
 
   const handleContinue = () => {
-    if (!activeUnit) {
+    if (!activeUnit || !isCompleted(activeUnit)) {
       return;
     }
 
@@ -927,6 +1005,14 @@ function CSSStyling() {
     setResult(null);
     setHintIndex(-1);
   };
+
+  /* ==================================================== */
+  /* AUTH */
+  /* ==================================================== */
+
+  if (!currentUser) {
+    return null;
+  }
 
   /* ==================================================== */
   /* LOADING */

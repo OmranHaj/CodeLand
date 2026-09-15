@@ -35,7 +35,7 @@ function seededRandom(seed) {
 function ShowcaseUnderside({ radius }) {
   const shards = useMemo(() => {
     return Array.from({
-      length: 17,
+      length: 10,
     }).map((_, index) => {
       const angle = seededRandom(index * 6.17 + 4) * Math.PI * 2;
 
@@ -69,7 +69,6 @@ function ShowcaseUnderside({ radius }) {
           position={shard.position}
           rotation={[0, shard.rotation, Math.PI]}
           scale={shard.scale}
-          castShadow
         >
           <coneGeometry args={[0.8, 1, 6]} />
 
@@ -204,7 +203,7 @@ function AchievementOrb({ position, color, delay = 0, locked }) {
       </mesh>
 
       <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.34, 0.015, 8, 48]} />
+        <torusGeometry args={[0.34, 0.015, 8, 32]} />
 
         <meshBasicMaterial
           color={color}
@@ -213,8 +212,6 @@ function AchievementOrb({ position, color, delay = 0, locked }) {
           blending={THREE.AdditiveBlending}
         />
       </mesh>
-
-      <pointLight color={color} intensity={locked ? 0.2 : 1.4} distance={3} />
     </group>
   );
 }
@@ -262,8 +259,8 @@ function ShowcaseCrystal({ locked }) {
     <group position={[0, 2.18, -0.1]}>
       {/* TROPHY PLATFORM */}
 
-      <mesh castShadow position={[0, -1.2, 0]}>
-        <cylinderGeometry args={[1.15, 1.5, 0.38, 32]} />
+      <mesh position={[0, -1.2, 0]}>
+        <cylinderGeometry args={[1.15, 1.5, 0.38, 20]} />
 
         <meshStandardMaterial
           color={DARK}
@@ -279,7 +276,7 @@ function ShowcaseCrystal({ locked }) {
         position={[0, -0.98, 0]}
         rotation={[Math.PI / 2, 0, 0]}
       >
-        <torusGeometry args={[1, 0.035, 8, 72]} />
+        <torusGeometry args={[1, 0.035, 8, 48]} />
 
         <meshBasicMaterial
           color={GOLD}
@@ -319,7 +316,7 @@ function ShowcaseCrystal({ locked }) {
       {/* HALOS */}
 
       <mesh ref={haloOneRef} rotation={[Math.PI / 2.5, 0.25, 0]}>
-        <torusGeometry args={[1.28, 0.035, 10, 96]} />
+        <torusGeometry args={[1.28, 0.035, 8, 56]} />
 
         <meshBasicMaterial
           color={CYAN}
@@ -330,7 +327,7 @@ function ShowcaseCrystal({ locked }) {
       </mesh>
 
       <mesh ref={haloTwoRef} rotation={[Math.PI / 2.8, -0.45, 0]}>
-        <torusGeometry args={[1, 0.025, 10, 90]} />
+        <torusGeometry args={[1, 0.025, 8, 52]} />
 
         <meshBasicMaterial
           color={GOLD}
@@ -365,15 +362,6 @@ function ShowcaseCrystal({ locked }) {
           <Trophy size={17} />
         </div>
       </Html>
-
-      <pointLight color={CYAN} intensity={locked ? 0.45 : 4} distance={9} />
-
-      <pointLight
-        color={GOLD}
-        position={[0, 0.5, 0.8]}
-        intensity={locked ? 0.3 : 2.7}
-        distance={8}
-      />
     </group>
   );
 }
@@ -457,7 +445,7 @@ function ProjectShowcaseIsland({ level, selected, onSelect, onLocked }) {
       {/* ISLAND BODY */}
 
       <mesh castShadow receiveShadow>
-        <cylinderGeometry args={[level.radius, level.radius * 0.86, 0.9, 22]} />
+        <cylinderGeometry args={[level.radius, level.radius * 0.86, 0.9, 18]} />
 
         <meshStandardMaterial
           color="#171d35"
@@ -470,7 +458,7 @@ function ProjectShowcaseIsland({ level, selected, onSelect, onLocked }) {
 
       <mesh position={[0, 0.52, 0]} receiveShadow>
         <cylinderGeometry
-          args={[level.radius * 0.95, level.radius * 0.98, 0.17, 26]}
+          args={[level.radius * 0.95, level.radius * 0.98, 0.17, 20]}
         />
 
         <meshStandardMaterial
@@ -487,7 +475,7 @@ function ProjectShowcaseIsland({ level, selected, onSelect, onLocked }) {
 
       <mesh ref={rimRef} position={[0, 0.64, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry
-          args={[level.radius * 0.82, selected ? 0.075 : 0.04, 8, 96]}
+          args={[level.radius * 0.82, selected ? 0.075 : 0.04, 8, 56]}
         />
 
         <meshStandardMaterial
@@ -504,7 +492,7 @@ function ProjectShowcaseIsland({ level, selected, onSelect, onLocked }) {
         position={[0, 0.68, 0]}
         rotation={[Math.PI / 2, 0, 0]}
       >
-        <torusGeometry args={[level.radius * 0.67, 0.02, 8, 90]} />
+        <torusGeometry args={[level.radius * 0.67, 0.02, 8, 52]} />
 
         <meshBasicMaterial
           color={GOLD}
@@ -580,7 +568,7 @@ function ProjectShowcaseIsland({ level, selected, onSelect, onLocked }) {
       {/* SHOWCASE PARTICLES */}
 
       <Sparkles
-        count={72}
+        count={28}
         scale={[level.radius * 1.7, 4.8, level.radius * 1.7]}
         size={2.2}
         speed={locked ? 0.1 : 0.28}
@@ -589,7 +577,7 @@ function ProjectShowcaseIsland({ level, selected, onSelect, onLocked }) {
       />
 
       <Sparkles
-        count={36}
+        count={14}
         scale={[level.radius * 1.35, 4, level.radius * 1.35]}
         size={1.8}
         speed={locked ? 0.07 : 0.18}
@@ -602,7 +590,7 @@ function ProjectShowcaseIsland({ level, selected, onSelect, onLocked }) {
       {locked && (
         <>
           <mesh position={[0, 2.45, 0]}>
-            <sphereGeometry args={[level.radius * 0.92, 30, 22]} />
+            <sphereGeometry args={[level.radius * 0.92, 18, 12]} />
 
             <meshBasicMaterial
               color={VIOLET}
@@ -643,7 +631,7 @@ function ProjectShowcaseIsland({ level, selected, onSelect, onLocked }) {
       {completed && (
         <>
           <mesh position={[0, 0.7, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[level.radius * 0.9, 0.025, 8, 96]} />
+            <torusGeometry args={[level.radius * 0.9, 0.025, 8, 56]} />
 
             <meshBasicMaterial
               color={COMPLETED}
@@ -730,20 +718,6 @@ function ProjectShowcaseIsland({ level, selected, onSelect, onLocked }) {
           <p>{level.subtitle}</p>
         </div>
       </Html>
-
-      <pointLight
-        position={[0, 3, 0.8]}
-        color={CYAN}
-        intensity={locked ? 0.45 : 3.4}
-        distance={11}
-      />
-
-      <pointLight
-        position={[0, 2.4, -1.4]}
-        color={GOLD}
-        intensity={locked ? 0.25 : 2}
-        distance={9}
-      />
     </group>
   );
 }

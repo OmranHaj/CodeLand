@@ -28,8 +28,8 @@ function ColorOrb({ position, color, delay = 0 }) {
 
   return (
     <group ref={ref} position={position}>
-      <mesh castShadow>
-        <icosahedronGeometry args={[0.2, 2]} />
+      <mesh>
+        <icosahedronGeometry args={[0.2, 1]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
@@ -40,7 +40,7 @@ function ColorOrb({ position, color, delay = 0 }) {
       </mesh>
 
       <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.32, 0.015, 8, 48]} />
+        <torusGeometry args={[0.32, 0.015, 8, 32]} />
         <meshBasicMaterial
           color={color}
           transparent
@@ -48,8 +48,6 @@ function ColorOrb({ position, color, delay = 0 }) {
           blending={THREE.AdditiveBlending}
         />
       </mesh>
-
-      <pointLight color={color} intensity={1.6} distance={3.5} />
     </group>
   );
 }
@@ -144,7 +142,7 @@ function StyleGate({ locked }) {
 
   return (
     <group position={[0, 0.7, -0.5]}>
-      <mesh castShadow position={[-0.82, 1.25, 0]}>
+      <mesh position={[-0.82, 1.25, 0]}>
         <boxGeometry args={[0.18, 2.5, 0.38]} />
         <meshStandardMaterial
           color={DARK}
@@ -155,7 +153,7 @@ function StyleGate({ locked }) {
         />
       </mesh>
 
-      <mesh castShadow position={[0.82, 1.25, 0]}>
+      <mesh position={[0.82, 1.25, 0]}>
         <boxGeometry args={[0.18, 2.5, 0.38]} />
         <meshStandardMaterial
           color={DARK}
@@ -167,7 +165,7 @@ function StyleGate({ locked }) {
       </mesh>
 
       <mesh ref={outerRef} position={[0, 1.45, 0.03]}>
-        <torusGeometry args={[0.78, 0.055, 10, 64]} />
+        <torusGeometry args={[0.78, 0.055, 8, 40]} />
         <meshStandardMaterial
           color={PURPLE}
           emissive={PURPLE}
@@ -178,7 +176,7 @@ function StyleGate({ locked }) {
       </mesh>
 
       <mesh ref={innerRef} position={[0, 1.45, 0.06]} scale={0.78}>
-        <torusGeometry args={[0.78, 0.028, 10, 64]} />
+        <torusGeometry args={[0.78, 0.028, 8, 40]} />
         <meshBasicMaterial
           color={CYAN}
           transparent
@@ -212,13 +210,6 @@ function StyleGate({ locked }) {
           {"{ CSS }"}
         </div>
       </Html>
-
-      <pointLight
-        position={[0, 1.5, 0.7]}
-        color={CYAN}
-        intensity={locked ? 0.7 : 4.5}
-        distance={7}
-      />
     </group>
   );
 }
@@ -282,7 +273,7 @@ function CSSStylingIsland({ level, selected, onSelect, onLocked }) {
 
       <mesh castShadow receiveShadow>
         <cylinderGeometry
-          args={[level.radius, level.radius * 0.88, 0.86, 20]}
+          args={[level.radius, level.radius * 0.88, 0.86, 18]}
         />
         <meshStandardMaterial
           color="#16233b"
@@ -293,7 +284,7 @@ function CSSStylingIsland({ level, selected, onSelect, onLocked }) {
 
       <mesh receiveShadow position={[0, 0.5, 0]}>
         <cylinderGeometry
-          args={[level.radius * 0.95, level.radius * 0.98, 0.17, 24]}
+          args={[level.radius * 0.95, level.radius * 0.98, 0.17, 20]}
         />
         <meshStandardMaterial
           color={locked ? "#111a2c" : "#183848"}
@@ -309,7 +300,7 @@ function CSSStylingIsland({ level, selected, onSelect, onLocked }) {
         rotation={[Math.PI / 2, 0, 0]}
       >
         <torusGeometry
-          args={[level.radius * 0.82, selected ? 0.07 : 0.04, 8, 96]}
+          args={[level.radius * 0.82, selected ? 0.07 : 0.04, 8, 56]}
         />
         <meshStandardMaterial
           color={completed ? COMPLETED : CYAN}
@@ -331,7 +322,7 @@ function CSSStylingIsland({ level, selected, onSelect, onLocked }) {
       <ColorOrb position={[1.35, 0.86, 1.05]} color={PINK} delay={2.1} />
 
       <Sparkles
-        count={42}
+        count={18}
         scale={[level.radius * 1.6, 3, level.radius * 1.6]}
         size={2.2}
         speed={0.22}
@@ -342,7 +333,7 @@ function CSSStylingIsland({ level, selected, onSelect, onLocked }) {
       {locked && (
         <>
           <mesh position={[0, 2.1, 0]}>
-            <sphereGeometry args={[level.radius * 0.9, 28, 20]} />
+            <sphereGeometry args={[level.radius * 0.9, 18, 12]} />
             <meshBasicMaterial
               color={PURPLE}
               wireframe
@@ -380,7 +371,7 @@ function CSSStylingIsland({ level, selected, onSelect, onLocked }) {
       {completed && (
         <>
           <mesh position={[0, 0.7, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[level.radius * 0.9, 0.025, 8, 96]} />
+            <torusGeometry args={[level.radius * 0.9, 0.025, 8, 56]} />
 
             <meshBasicMaterial
               color={COMPLETED}
@@ -459,13 +450,6 @@ function CSSStylingIsland({ level, selected, onSelect, onLocked }) {
           <p>{level.subtitle}</p>
         </div>
       </Html>
-
-      <pointLight
-        position={[0, 2.5, 0]}
-        color={CYAN}
-        intensity={locked ? 0.55 : 3}
-        distance={10}
-      />
     </group>
   );
 }

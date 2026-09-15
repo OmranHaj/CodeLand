@@ -701,6 +701,13 @@
     inset 0 0 40px color-mix(in srgb, var(--accent) 4%, transparent);
 }
 
+.cppPathCard.selected {
+  box-shadow:
+    0 42px 110px rgba(0, 0, 0, 0.34),
+    0 0 66px color-mix(in srgb, var(--accent) 18%, transparent),
+    inset 0 0 46px color-mix(in srgb, var(--secondary) 5%, transparent);
+}
+
 /* ====================================================== */
 /* POINTER GLOW */
 /* ====================================================== */
@@ -1003,6 +1010,108 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.09);
 
   transform: translateZ(30px);
+}
+
+/* ====================================================== */
+/* C++ PATH IDENTITY */
+/* ====================================================== */
+
+.cppPathCard {
+  background:
+    radial-gradient(
+      circle at 50% 20%,
+      color-mix(in srgb, var(--secondary) 7%, transparent),
+      transparent 34%
+    ),
+    linear-gradient(145deg, rgba(10, 22, 42, 0.94), rgba(5, 11, 23, 0.98));
+}
+
+.cppPathCard .cardGrid {
+  opacity: 0.1;
+
+  background-size: 34px 34px;
+}
+
+.cppPathCard .visualCore {
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle at 35% 28%,
+      color-mix(in srgb, var(--secondary) 18%, transparent),
+      transparent 32%
+    ),
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--accent) 25%, #081426),
+      color-mix(in srgb, var(--secondary) 10%, #06101f)
+    );
+
+  box-shadow:
+    0 22px 55px rgba(0, 0, 0, 0.32),
+    0 0 42px color-mix(in srgb, var(--accent) 22%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.cppPathCard .orbitRingOne {
+  border-style: dashed;
+}
+
+.cppPathCard .orbitRingTwo {
+  border-color: color-mix(in srgb, var(--secondary) 42%, transparent);
+}
+
+.cppPathCard .visualNodeOne,
+.cppPathCard .visualNodeTwo {
+  background: #c8f7ff;
+
+  box-shadow:
+    0 0 12px #c8f7ff,
+    0 0 24px var(--secondary);
+}
+
+.cppMonogram {
+  position: relative;
+
+  z-index: 2;
+
+  color: #eafcff;
+
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  font-size: 20px;
+  font-weight: 900;
+
+  letter-spacing: -1.5px;
+
+  text-shadow:
+    0 0 12px color-mix(in srgb, var(--secondary) 65%, transparent),
+    0 0 26px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.cppMonogram::after {
+  content: "";
+
+  position: absolute;
+
+  left: 50%;
+  bottom: -9px;
+
+  width: 24px;
+  height: 2px;
+
+  transform: translateX(-50%);
+
+  border-radius: 999px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--secondary),
+    transparent
+  );
+
+  box-shadow: 0 0 12px var(--secondary);
 }
 
 /* ====================================================== */

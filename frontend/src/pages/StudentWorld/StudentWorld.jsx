@@ -7,11 +7,13 @@ import { Canvas } from "@react-three/fiber";
 import {
   ArrowLeft,
   Bot,
+  CheckCircle2,
   LockKeyhole,
   Map,
   RotateCcw,
   Sparkles,
   Play,
+  Trophy,
 } from "lucide-react";
 
 import WebWorldScene from "../../components/StudentWorld/WebWorldScene";
@@ -27,6 +29,9 @@ import styles from "./StudentWorld.module.css";
 const LEVEL_ROUTES = {
   "html-foundations": "/student/level/html-foundations",
   "css-styling": "/student/level/css-styling",
+  "javascript-core": "/student/level/javascript-core",
+  "react-nexus": "/student/level/react-nexus",
+  "project-showcase": "/student/level/project-showcase",
 };
 
 function StudentWorld() {
@@ -83,7 +88,26 @@ function StudentWorld() {
   );
 
   useEffect(() => {
-    setWorldProgress(loadWebWorldProgress(userId));
+    const syncWorldProgress = () => {
+      setWorldProgress(loadWebWorldProgress(userId));
+    };
+
+    syncWorldProgress();
+
+    window.addEventListener("focus", syncWorldProgress);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        syncWorldProgress();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", syncWorldProgress);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [userId]);
 
   const worldLevels = useMemo(
@@ -91,10 +115,18 @@ function StudentWorld() {
     [worldProgress],
   );
 
+  const worldCompleted = useMemo(
+    () =>
+      worldLevels.length > 0 &&
+      worldLevels.every((level) => level.status === "completed"),
+    [worldLevels],
+  );
+
   const currentLevel = useMemo(
     () =>
       worldLevels.find((level) => level.status === "current") ||
-      worldLevels[worldLevels.length - 1],
+      worldLevels[worldLevels.length - 1] ||
+      null,
     [worldLevels],
   );
 
@@ -108,8 +140,12 @@ function StudentWorld() {
       0,
     );
 
+    if (worldCompleted) {
+      return 100;
+    }
+
     return Math.round(totalProgress / worldLevels.length);
-  }, [worldLevels]);
+  }, [worldLevels, worldCompleted]);
 
   /* ====================================================== */
   /* LOCK MESSAGE TIMER */
@@ -369,18 +405,22 @@ function StudentWorld() {
           {!selectedLevel && (
             <section className={styles.worldIntro}>
               <div className={styles.worldIntroBadge}>
-                <Map size={13} />
-                WEB CREATOR
+                {worldCompleted ? <Trophy size={13} /> : <Map size={13} />}
+                {worldCompleted ? "WORLD MASTERED" : "WEB CREATOR"}
               </div>
 
               <span className={styles.chapter}>WORLD 01</span>
 
               <h1>
-                The Web
-                <span> World.</span>
+                {worldCompleted ? "Web World" : "The Web"}
+                <span>{worldCompleted ? " Complete." : " World."}</span>
               </h1>
 
-              <p>Turn your ideas into amazing digital experiences.</p>
+              <p>
+                {worldCompleted
+                  ? "You mastered every area of the Web World. Revisit any island whenever you want."
+                  : "Turn your ideas into amazing digital experiences."}
+              </p>
 
               <div className={styles.worldProgress}>
                 <div className={styles.progressHead}>
@@ -458,14 +498,24 @@ function StudentWorld() {
                 className={styles.enterLevelButton}
                 onClick={handleBeginLevel}
               >
-                <span>Begin Level</span>
+                <span>
+                  {selectedLevel.status === "completed"
+                    ? "Revisit Level"
+                    : "Begin Level"}
+                </span>
 
-                <Play size={16} fill="currentColor" />
+                {selectedLevel.status === "completed" ? (
+                  <CheckCircle2 size={16} />
+                ) : (
+                  <Play size={16} fill="currentColor" />
+                )}
               </button>
 
               <div className={styles.panelHint}>
                 <Sparkles size={14} />
-                Your coding adventure begins here.
+                {selectedLevel.status === "completed"
+                  ? "You completed this area. Revisit it anytime."
+                  : "Your coding adventure continues here."}
               </div>
             </aside>
           )}
@@ -501,7 +551,7 @@ function StudentWorld() {
               Zoom
               <i />
               <span>CLICK</span>
-              Focus Area
+              {worldCompleted ? "Revisit Area" : "Focus Area"}
             </div>
           )}
 

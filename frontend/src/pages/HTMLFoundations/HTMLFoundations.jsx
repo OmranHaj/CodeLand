@@ -75,19 +75,24 @@ function loadLearningProgress(userId) {
 
     const parsed = JSON.parse(saved);
 
+    const xp = Number(parsed.xp);
+
     return {
       ...getDefaultProgress(),
       ...parsed,
 
       completedLessonIds: Array.isArray(parsed.completedLessonIds)
-        ? parsed.completedLessonIds
+        ? [...new Set(parsed.completedLessonIds)]
         : [],
 
       completedChallengeIds: Array.isArray(parsed.completedChallengeIds)
-        ? parsed.completedChallengeIds
+        ? [...new Set(parsed.completedChallengeIds)]
         : [],
 
-      drafts: parsed.drafts || {},
+      xp: Number.isFinite(xp) ? Math.max(0, xp) : 0,
+
+      drafts:
+        parsed.drafts && typeof parsed.drafts === "object" ? parsed.drafts : {},
     };
   } catch {
     return getDefaultProgress();
@@ -95,10 +100,54 @@ function loadLearningProgress(userId) {
 }
 
 function saveLearningProgress(userId, progress) {
-  localStorage.setItem(
-    getLearningProgressKey(userId),
-    JSON.stringify(progress),
+  try {
+    localStorage.setItem(
+      getLearningProgressKey(userId),
+      JSON.stringify(progress),
+    );
+  } catch (error) {
+    console.error("[CodeLand] Unable to save HTML learning progress:", error);
+  }
+}
+
+function sanitizeLearningProgress(progress, content) {
+  const lessonIds = new Set(
+    (content?.lessons || []).map((lesson) => lesson.id),
   );
+
+  const challengeIds = new Set(
+    (content?.challenges || []).map((challenge) => challenge.id),
+  );
+
+  const validUnitIds = new Set([...lessonIds, ...challengeIds]);
+
+  const completedLessonIds = [
+    ...new Set(progress.completedLessonIds || []),
+  ].filter((id) => lessonIds.has(id));
+
+  const completedChallengeIds = [
+    ...new Set(progress.completedChallengeIds || []),
+  ].filter((id) => challengeIds.has(id));
+
+  const drafts = Object.fromEntries(
+    Object.entries(progress.drafts || {}).filter(([unitId]) =>
+      validUnitIds.has(unitId),
+    ),
+  );
+
+  const xp = Number(progress.xp);
+
+  return {
+    ...getDefaultProgress(),
+    ...progress,
+    completedLessonIds,
+    completedChallengeIds,
+    xp: Number.isFinite(xp) ? Math.max(0, xp) : 0,
+    drafts,
+    lastActiveUnitId: validUnitIds.has(progress.lastActiveUnitId)
+      ? progress.lastActiveUnitId
+      : null,
+  };
 }
 
 /* ====================================================== */
@@ -270,6 +319,14 @@ function HTMLFoundations() {
   const currentUser = useMemo(() => getCurrentUser(), []);
 
   const userId = currentUser?.id || currentUser?.email || "guest";
+
+  useEffect(() => {
+    if (!currentUser) {
+      navigate("/login", {
+        replace: true,
+      });
+    }
+  }, [currentUser, navigate]);
 
   const [content, setContent] = useState(null);
 
@@ -448,6 +505,16 @@ function HTMLFoundations() {
     [units, activeUnitId],
   );
 
+  useEffect(() => {
+    if (!content) {
+      return;
+    }
+
+    setLearningProgress((current) =>
+      sanitizeLearningProgress(current, content),
+    );
+  }, [content]);
+
   /* ==================================================== */
   /* SELECT INITIAL UNIT */
   /* ==================================================== */
@@ -470,7 +537,11 @@ function HTMLFoundations() {
 
     const firstIncomplete = units.find((unit) => !isCompleted(unit));
 
-    setActiveUnitId(firstIncomplete?.id || units[0].id);
+    setActiveUnitId(
+      firstIncomplete?.id ||
+        learningProgress.lastActiveUnitId ||
+        units[units.length - 1].id,
+    );
   }, [units, activeUnitId, learningProgress]);
 
   useEffect(() => {
@@ -619,53 +690,45 @@ function HTMLFoundations() {
 
   const completeUnit = (unit) => {
     if (!unit) {
-      return;
+      return 0;
     }
 
     const alreadyCompleted = isCompleted(unit);
 
     const reward = alreadyCompleted ? 0 : Number(unit.data.xp) || 0;
 
-    setLearningProgress((current) => {
-      const next = {
-        ...current,
+    const next = {
+      ...learningProgress,
+      completedLessonIds: [...learningProgress.completedLessonIds],
+      completedChallengeIds: [...learningProgress.completedChallengeIds],
+      xp: Number(learningProgress.xp) + reward,
+    };
 
-        completedLessonIds: [...current.completedLessonIds],
+    if (unit.kind === "lesson" && !next.completedLessonIds.includes(unit.id)) {
+      next.completedLessonIds.push(unit.id);
+    }
 
-        completedChallengeIds: [...current.completedChallengeIds],
+    if (
+      unit.kind === "challenge" &&
+      !next.completedChallengeIds.includes(unit.id)
+    ) {
+      next.completedChallengeIds.push(unit.id);
+    }
 
-        xp: Number(current.xp) + reward,
-      };
+    const nextCompletedCount =
+      next.completedLessonIds.length + next.completedChallengeIds.length;
 
-      if (
-        unit.kind === "lesson" &&
-        !next.completedLessonIds.includes(unit.id)
-      ) {
-        next.completedLessonIds.push(unit.id);
-      }
+    const nextPercent = totalCount
+      ? Math.round((nextCompletedCount / totalCount) * 100)
+      : 0;
 
-      if (
-        unit.kind === "challenge" &&
-        !next.completedChallengeIds.includes(unit.id)
-      ) {
-        next.completedChallengeIds.push(unit.id);
-      }
+    setLearningProgress(next);
 
-      const nextCompletedCount =
-        next.completedLessonIds.length + next.completedChallengeIds.length;
-
-      const nextPercent = totalCount
-        ? Math.round((nextCompletedCount / totalCount) * 100)
-        : 0;
-
+    if (nextPercent >= 100) {
+      completeWebWorldLevel(userId, LEVEL_ID);
+    } else {
       updateWebWorldLevelProgress(userId, LEVEL_ID, nextPercent);
-
-      if (nextPercent >= 100) {
-        completeWebWorldLevel(userId, LEVEL_ID);
-      }
-
-      return next;
-    });
+    }
 
     return reward;
   };
@@ -760,7 +823,7 @@ function HTMLFoundations() {
   /* ==================================================== */
 
   const handleContinue = () => {
-    if (!activeUnit) {
+    if (!activeUnit || !isCompleted(activeUnit)) {
       return;
     }
 
@@ -818,6 +881,14 @@ function HTMLFoundations() {
     clearFeedbackFx();
     resetRobotReaction();
   };
+
+  /* ==================================================== */
+  /* AUTH */
+  /* ==================================================== */
+
+  if (!currentUser) {
+    return null;
+  }
 
   /* ==================================================== */
   /* LOADING */

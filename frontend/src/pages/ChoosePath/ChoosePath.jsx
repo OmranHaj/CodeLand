@@ -7,7 +7,7 @@ import gsap from "gsap";
 import {
   Bot,
   Code2,
-  Gamepad2,
+  Cpu,
   Terminal,
   ArrowRight,
   Check,
@@ -25,9 +25,56 @@ import styles from "./ChoosePath.module.css";
 
 const pathIcons = {
   "web-creator": Code2,
-  "game-maker": Gamepad2,
+  "cpp-developer": Cpu,
   "python-explorer": Terminal,
 };
+
+/* ====================================================== */
+/* C++ PATH */
+/* ====================================================== */
+
+const CPP_PATH = {
+  id: "cpp-developer",
+
+  eyebrow: "SYSTEMS · LOGIC · PERFORMANCE",
+
+  title: "C++ Developer",
+
+  description:
+    "Master C++ from the fundamentals to object-oriented programming, data structures, the STL, and real high-performance projects.",
+
+  skills: ["C++ Basics", "OOP", "STL"],
+
+  estimatedJourney: "8 LEVELS",
+
+  worldTitle: "C++ Core",
+
+  worldDescription:
+    "Enter a machine-powered world of logic, memory, algorithms, classes, and powerful systems built from the ground up.",
+
+  difficulty: "BEGINNER → ADVANCED",
+
+  accent: "#2f8cff",
+
+  secondaryAccent: "#7be7ff",
+};
+
+const displayPaths = learningPaths.map((path, index) =>
+  index === 1
+    ? {
+        ...path,
+        ...CPP_PATH,
+      }
+    : path,
+);
+
+function getPathRoute(pathId) {
+  if (pathId === "cpp-developer") {
+    return "/student/cpp-world";
+  }
+
+  return "/student/world";
+}
 
 /* ====================================================== */
 /* CURRENT USER */
@@ -263,7 +310,7 @@ function ChoosePath() {
     const cards = cardRefs.current.filter(Boolean);
 
     cards.forEach((card, index) => {
-      const path = learningPaths[index];
+      const path = displayPaths[index];
 
       const isSelected = path?.id === selectedPath.id;
 
@@ -454,7 +501,7 @@ function ChoosePath() {
       },
 
       onComplete: () => {
-        navigate("/student/world", {
+        navigate(getPathRoute(selectedPath.id), {
           replace: true,
 
           state: {
@@ -683,7 +730,7 @@ function ChoosePath() {
         {/* ================================================= */}
 
         <div ref={cardsWrapperRef} className={styles.pathsGrid}>
-          {learningPaths.map((path, index) => {
+          {displayPaths.map((path, index) => {
             const Icon = pathIcons[path.id] || Code2;
 
             const isSelected = selectedPath?.id === path.id;
@@ -697,7 +744,7 @@ function ChoosePath() {
                 type="button"
                 className={`${styles.pathCard} ${
                   isSelected ? styles.selected : ""
-                }`}
+                } ${path.id === "cpp-developer" ? styles.cppPathCard : ""}`}
                 style={{
                   "--accent": path.accent || "#7c5cff",
 
@@ -745,7 +792,11 @@ function ChoosePath() {
                   <div className={styles.visualNodeTwo} />
 
                   <div className={styles.visualCore}>
-                    <Icon size={34} />
+                    {path.id === "cpp-developer" ? (
+                      <span className={styles.cppMonogram}>C++</span>
+                    ) : (
+                      <Icon size={34} />
+                    )}
                   </div>
                 </div>
 
@@ -871,7 +922,11 @@ function ChoosePath() {
 
           <h2>{selectedPath?.worldTitle || "CodeLand"}</h2>
 
-          <p>INITIALIZING WORLD</p>
+          <p>
+            {selectedPath?.id === "cpp-developer"
+              ? "INITIALIZING C++ CORE"
+              : "INITIALIZING WORLD"}
+          </p>
         </div>
       </div>
     </main>
@@ -879,5 +934,3 @@ function ChoosePath() {
 }
 
 export default ChoosePath;
-
-// Download GSAP

@@ -22,7 +22,7 @@ import gsap from "gsap";
 
 import { LockKeyhole } from "lucide-react";
 
-import { WEB_WORLD_CAMERA, WEB_WORLD_LEVELS } from "../../data/webWorldLevels";
+import { WEB_WORLD_CAMERA } from "../../data/webWorldLevels";
 
 import styles from "../../pages/StudentWorld/StudentWorld.module.css";
 
@@ -118,7 +118,7 @@ function WorldSky() {
 
   return (
     <mesh scale={75}>
-      <sphereGeometry args={[1, 32, 32]} />
+      <sphereGeometry args={[1, 20, 20]} />
 
       <shaderMaterial
         vertexShader={vertexShader}
@@ -144,47 +144,40 @@ function Atmosphere() {
       <Stars
         radius={70}
         depth={45}
-        count={2400}
-        factor={3}
+        count={1100}
+        factor={3.2}
         saturation={0.15}
         fade
-        speed={0.25}
+        speed={0.18}
       />
 
       <Sparkles
-        count={150}
+        count={60}
         scale={[45, 22, 45]}
-        size={2}
-        speed={0.17}
-        opacity={0.42}
+        size={2.4}
+        speed={0.12}
+        opacity={0.46}
         color="#8c76ff"
       />
 
-      <ambientLight intensity={0.72} />
+      <ambientLight intensity={0.82} />
 
-      <hemisphereLight intensity={1.3} color="#91a9ff" groundColor="#050712" />
+      <hemisphereLight intensity={1.4} color="#91a9ff" groundColor="#050712" />
 
       <directionalLight
         castShadow
-        intensity={2.2}
+        intensity={1.8}
         position={[-10, 16, 12]}
         color="#e6ecff"
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+        shadow-mapSize-width={512}
+        shadow-mapSize-height={512}
       />
 
       <pointLight
         position={[0, 12, -8]}
         color="#755cff"
-        intensity={9}
-        distance={34}
-      />
-
-      <pointLight
-        position={[-10, 5, 5]}
-        color="#35c9ff"
-        intensity={4}
-        distance={24}
+        intensity={3.5}
+        distance={28}
       />
     </>
   );
@@ -375,6 +368,10 @@ function EnergyBridge({ from, to, active = false }) {
   }, [from, to]);
 
   useFrame(({ clock }) => {
+    if (!active) {
+      return;
+    }
+
     particleRefs.current.forEach((particle, index) => {
       if (!particle) {
         return;
@@ -389,7 +386,7 @@ function EnergyBridge({ from, to, active = false }) {
   return (
     <group>
       <mesh>
-        <tubeGeometry args={[curve, 90, 0.17, 8, false]} />
+        <tubeGeometry args={[curve, 48, 0.17, 6, false]} />
 
         <meshStandardMaterial
           color="#11192e"
@@ -399,7 +396,7 @@ function EnergyBridge({ from, to, active = false }) {
       </mesh>
 
       <mesh>
-        <tubeGeometry args={[curve, 90, 0.035, 8, false]} />
+        <tubeGeometry args={[curve, 48, 0.035, 6, false]} />
 
         <meshStandardMaterial
           color={active ? "#54dfff" : "#675bd6"}
@@ -411,7 +408,7 @@ function EnergyBridge({ from, to, active = false }) {
       </mesh>
 
       {Array.from({
-        length: 3,
+        length: active ? 2 : 0,
       }).map((_, index) => (
         <mesh
           key={index}
@@ -437,19 +434,9 @@ function EnergyBridge({ from, to, active = false }) {
 /* ====================================================== */
 
 function Waterfall({ position, width = 1.5, height = 4 }) {
-  const mistRef = useRef(null);
-
-  useFrame(({ clock }) => {
-    if (!mistRef.current) {
-      return;
-    }
-
-    mistRef.current.rotation.y = clock.elapsedTime * 0.06;
-  });
-
   return (
     <group position={position}>
-      {[0, 1, 2].map((index) => (
+      {[0, 1].map((index) => (
         <mesh
           key={index}
           position={[(index - 1) * width * 0.18, -height / 2, -index * 0.015]}
@@ -467,13 +454,13 @@ function Waterfall({ position, width = 1.5, height = 4 }) {
         </mesh>
       ))}
 
-      <group ref={mistRef} position={[0, -height, 0]}>
+      <group position={[0, -height, 0]}>
         <Sparkles
-          count={18}
+          count={8}
           scale={[width * 2, 0.7, 1.5]}
-          size={3}
-          speed={0.35}
-          opacity={0.3}
+          size={2.6}
+          speed={0.22}
+          opacity={0.28}
           color="#9eeeff"
         />
       </group>
@@ -1026,12 +1013,6 @@ function CameraDirector({ selectedLevel, disabled = false }) {
 
   const controlsRef = useRef(null);
 
-  useFrame(() => {
-    if (!disabled) {
-      controlsRef.current?.update();
-    }
-  });
-
   useEffect(() => {
     gsap.killTweensOf(camera.position);
 
@@ -1103,15 +1084,15 @@ function CameraDirector({ selectedLevel, disabled = false }) {
 
 function WorldEffects() {
   return (
-    <EffectComposer multisampling={4}>
+    <EffectComposer multisampling={0}>
       <Bloom
-        intensity={1.45}
-        luminanceThreshold={0.65}
-        luminanceSmoothing={0.22}
+        intensity={1.2}
+        luminanceThreshold={0.75}
+        luminanceSmoothing={0.3}
         mipmapBlur
       />
 
-      <Vignette eskil={false} offset={0.18} darkness={0.72} />
+      <Vignette eskil={false} offset={0.2} darkness={0.64} />
     </EffectComposer>
   );
 }
@@ -1121,7 +1102,7 @@ function WorldEffects() {
 /* ====================================================== */
 
 function WebWorldScene({
-  levels = WEB_WORLD_LEVELS,
+  levels = [],
   currentLevelId,
   journeyLevelId,
   selectedLevel,
@@ -1131,21 +1112,56 @@ function WebWorldScene({
   onJourneyPhase,
   onJourneyComplete,
 }) {
-  const [html, css, javascript, react, project] = levels;
+  /* ==================================================== */
+  /* LEVEL REFERENCES */
+  /* ==================================================== */
+
+  const html =
+    levels.find((level) => level.id === "html-foundations") || levels[0];
+
+  const css = levels.find((level) => level.id === "css-styling") || levels[1];
+
+  const javascript =
+    levels.find((level) => level.id === "javascript-core") || levels[2];
+
+  const react = levels.find((level) => level.id === "react-nexus") || levels[3];
+
+  const project =
+    levels.find((level) => level.id === "project-showcase") || levels[4];
+
+  /* ==================================================== */
+  /* CURRENT LEVEL */
+  /* ==================================================== */
 
   const currentLevel =
     levels.find((level) => level.id === currentLevelId) ||
     levels.find((level) => level.status === "current") ||
     html;
 
+  /* ==================================================== */
+  /* JOURNEY LEVEL */
+  /* ==================================================== */
+
   const journeyLevel =
-    levels.find((level) => level.id === journeyLevelId) || currentLevel;
+    levels.find((level) => level.id === journeyLevelId) || currentLevel || html;
+
+  /* ==================================================== */
+  /* SAFETY */
+  /* ==================================================== */
+
+  if (!html || !css || !javascript || !react || !project) {
+    return null;
+  }
 
   const isUnlocked = (levelId) => {
     const level = levels.find((item) => item.id === levelId);
 
     return Boolean(level && level.status !== "locked");
   };
+
+  /* ==================================================== */
+  /* RENDER */
+  /* ==================================================== */
 
   return (
     <>
@@ -1281,7 +1297,7 @@ function WebWorldScene({
       {/* =============================================== */}
 
       <RobotJourney
-        level={journeyLevel || html}
+        level={journeyLevel}
         active={journeyActive}
         onPhaseChange={onJourneyPhase}
         onComplete={onJourneyComplete}
@@ -1297,7 +1313,7 @@ function WebWorldScene({
       {/* CAMERA */}
       {/* =============================================== */}
 
-      {!journeyActive && <CameraDirector selectedLevel={selectedLevel} />}
+      <CameraDirector selectedLevel={selectedLevel} disabled={journeyActive} />
 
       {/* =============================================== */}
       {/* CINEMATIC EFFECTS */}

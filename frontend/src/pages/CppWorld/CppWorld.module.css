@@ -1,0 +1,2758 @@
+.page {
+  --bg: #02050b;
+  --panel: rgba(5, 12, 24, 0.86);
+  --panel-strong: rgba(6, 14, 28, 0.94);
+  --line: rgba(124, 202, 255, 0.12);
+  --text: #f4fbff;
+  --muted: #71839c;
+  --blue: #2f8cff;
+  --cyan: #6ee7ff;
+  --green: #63f2b1;
+  --danger: #ff5c7a;
+
+  position: relative;
+
+  width: 100%;
+  min-height: 100vh;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 50% 48%,
+      rgba(47, 140, 255, 0.08),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 50% 115%,
+      rgba(110, 231, 255, 0.07),
+      transparent 42%
+    ),
+    linear-gradient(180deg, #02050b 0%, #030814 48%, #02040a 100%);
+
+  color: var(--text);
+
+  isolation: isolate;
+}
+
+/* ====================================================== */
+/* WORLD / CANVAS */
+/* ====================================================== */
+
+.canvasShell {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 1;
+
+  transform: scale(1);
+
+  filter: brightness(1);
+
+  transition:
+    transform 1.15s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 1.15s ease;
+}
+
+.sectorEntering .canvasShell {
+  transform: scale(1.045);
+
+  filter: brightness(1.18) saturate(1.16);
+}
+
+.canvasShell canvas {
+  display: block;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  outline: none;
+}
+
+/* ====================================================== */
+/* SCREEN FX */
+/* ====================================================== */
+
+.screenGlow,
+.scanLines,
+.gridOverlay {
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+}
+
+.screenGlow {
+  z-index: 2;
+
+  background:
+    radial-gradient(
+      circle at 50% 52%,
+      rgba(45, 149, 255, 0.055),
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 18% 18%,
+      rgba(91, 116, 255, 0.04),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 82% 78%,
+      rgba(96, 227, 255, 0.035),
+      transparent 31%
+    );
+
+  mix-blend-mode: screen;
+}
+
+.scanLines {
+  z-index: 3;
+
+  opacity: 0.13;
+
+  background-image: linear-gradient(
+    rgba(255, 255, 255, 0.025) 1px,
+    transparent 1px
+  );
+
+  background-size: 100% 4px;
+
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 12%,
+    black 88%,
+    transparent 100%
+  );
+}
+
+.gridOverlay {
+  z-index: 2;
+
+  opacity: 0.1;
+
+  background-image:
+    linear-gradient(rgba(83, 166, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(83, 166, 255, 0.08) 1px, transparent 1px);
+
+  background-size: 74px 74px;
+
+  mask-image: radial-gradient(
+    circle at center,
+    transparent 0%,
+    black 58%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+}
+
+/* ====================================================== */
+/* CORNER FRAMES */
+/* ====================================================== */
+
+.cornerFrameTopLeft,
+.cornerFrameTopRight,
+.cornerFrameBottomLeft,
+.cornerFrameBottomRight {
+  position: absolute;
+
+  z-index: 15;
+
+  width: 56px;
+  height: 56px;
+
+  pointer-events: none;
+
+  opacity: 0.42;
+}
+
+.cornerFrameTopLeft {
+  top: 18px;
+  left: 18px;
+
+  border-top: 1px solid rgba(111, 207, 255, 0.36);
+  border-left: 1px solid rgba(111, 207, 255, 0.36);
+}
+
+.cornerFrameTopRight {
+  top: 18px;
+  right: 18px;
+
+  border-top: 1px solid rgba(111, 207, 255, 0.36);
+  border-right: 1px solid rgba(111, 207, 255, 0.36);
+}
+
+.cornerFrameBottomLeft {
+  bottom: 18px;
+  left: 18px;
+
+  border-bottom: 1px solid rgba(111, 207, 255, 0.24);
+  border-left: 1px solid rgba(111, 207, 255, 0.24);
+}
+
+.cornerFrameBottomRight {
+  right: 18px;
+  bottom: 18px;
+
+  border-right: 1px solid rgba(111, 207, 255, 0.24);
+  border-bottom: 1px solid rgba(111, 207, 255, 0.24);
+}
+
+/* ====================================================== */
+/* TOP HUD */
+/* ====================================================== */
+
+.topHud {
+  position: absolute;
+
+  top: 20px;
+  left: 50%;
+
+  z-index: 30;
+
+  width: min(1540px, calc(100% - 56px));
+
+  min-height: 72px;
+
+  padding: 10px 12px;
+
+  display: grid;
+
+  grid-template-columns: 1fr minmax(300px, 520px) 1fr;
+
+  align-items: center;
+
+  gap: 26px;
+
+  transform: translateX(-50%);
+
+  border: 1px solid rgba(137, 207, 255, 0.09);
+
+  border-radius: 18px;
+
+  background: linear-gradient(
+    115deg,
+    rgba(8, 18, 34, 0.9),
+    rgba(4, 10, 21, 0.76)
+  );
+
+  box-shadow:
+    0 18px 60px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+
+  backdrop-filter: blur(18px);
+
+  opacity: 0;
+  transform: translateX(-50%) translateY(-14px);
+
+  transition:
+    opacity 0.7s ease 0.18s,
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.18s;
+}
+
+.booted .topHud {
+  opacity: 1;
+
+  transform: translateX(-50%) translateY(0);
+}
+
+.topHudLeft,
+.topHudRight {
+  display: flex;
+  align-items: center;
+
+  min-width: 0;
+}
+
+.topHudLeft {
+  gap: 18px;
+}
+
+.topHudRight {
+  justify-content: flex-end;
+
+  gap: 10px;
+}
+
+.backButton,
+.overviewButton {
+  min-height: 40px;
+
+  padding: 0 13px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  color: #9fb0c6;
+
+  font: inherit;
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.9px;
+
+  cursor: pointer;
+
+  transition:
+    color 0.22s ease,
+    border-color 0.22s ease,
+    background 0.22s ease,
+    transform 0.22s ease;
+}
+
+.backButton:hover,
+.overviewButton:hover {
+  transform: translateY(-1px);
+
+  border-color: rgba(94, 206, 255, 0.22);
+
+  background: rgba(66, 157, 255, 0.06);
+
+  color: #dff8ff;
+}
+
+.worldIdentity {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+}
+
+.worldMark {
+  position: relative;
+
+  width: 44px;
+  height: 44px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(104, 215, 255, 0.2);
+
+  border-radius: 12px;
+
+  background:
+    radial-gradient(
+      circle at 30% 24%,
+      rgba(122, 236, 255, 0.28),
+      transparent 35%
+    ),
+    linear-gradient(145deg, rgba(19, 77, 140, 0.88), rgba(26, 54, 122, 0.82));
+
+  color: #c8f8ff;
+
+  box-shadow:
+    0 0 28px rgba(47, 140, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.worldMark::after {
+  content: "";
+
+  position: absolute;
+
+  inset: -70%;
+
+  background: linear-gradient(
+    120deg,
+    transparent 34%,
+    rgba(255, 255, 255, 0.26),
+    transparent 66%
+  );
+
+  transform: translateX(-100%) rotate(18deg);
+
+  animation: markScan 5.5s ease infinite;
+}
+
+@keyframes markScan {
+  0%,
+  72% {
+    transform: translateX(-120%) rotate(18deg);
+  }
+
+  100% {
+    transform: translateX(120%) rotate(18deg);
+  }
+}
+
+.worldIdentity > div:last-child {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.worldIdentity span {
+  color: #4f6683;
+
+  font-size: 6px;
+  font-weight: 900;
+
+  letter-spacing: 1.7px;
+}
+
+.worldIdentity strong {
+  overflow: hidden;
+
+  color: #eaf7ff;
+
+  font-size: 14px;
+  font-weight: 850;
+
+  letter-spacing: 0.5px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.systemReadout {
+  min-width: 0;
+}
+
+.systemReadoutTop {
+  margin-bottom: 7px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+}
+
+.systemReadoutTop span {
+  color: #596d88;
+
+  font-size: 6px;
+  font-weight: 900;
+
+  letter-spacing: 1.8px;
+}
+
+.systemReadoutTop strong {
+  color: #91eaff;
+
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  font-size: 10px;
+}
+
+.systemTrack {
+  position: relative;
+
+  height: 4px;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255, 255, 255, 0.04);
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.systemTrack > span {
+  display: block;
+
+  width: 0;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(90deg, #315fff, #3cb7ff 55%, #8af3ff);
+
+  box-shadow:
+    0 0 12px rgba(78, 193, 255, 0.52),
+    0 0 26px rgba(64, 142, 255, 0.24);
+
+  transition: width 0.55s ease;
+}
+
+.statusChip {
+  height: 38px;
+
+  padding: 0 11px;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  border: 1px solid rgba(94, 242, 177, 0.1);
+
+  border-radius: 999px;
+
+  background: rgba(99, 242, 177, 0.035);
+
+  color: #88eac0;
+
+  font-size: 6px;
+  font-weight: 900;
+
+  letter-spacing: 1.1px;
+
+  white-space: nowrap;
+}
+
+.statusChip i {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #63f2b1;
+
+  box-shadow:
+    0 0 8px #63f2b1,
+    0 0 16px rgba(99, 242, 177, 0.45);
+
+  animation: statusPulse 1.9s ease infinite;
+}
+
+@keyframes statusPulse {
+  50% {
+    opacity: 0.42;
+  }
+}
+
+/* ====================================================== */
+/* COMMAND PANEL */
+/* ====================================================== */
+
+.commandPanel {
+  position: absolute;
+
+  top: 112px;
+  left: 28px;
+  bottom: 72px;
+
+  z-index: 25;
+
+  width: 290px;
+
+  padding: 17px;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(122, 199, 255, 0.09);
+
+  border-radius: 20px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(7, 16, 30, 0.91),
+    rgba(4, 10, 20, 0.84)
+  );
+
+  box-shadow:
+    0 22px 70px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+
+  backdrop-filter: blur(19px);
+
+  opacity: 0;
+
+  transform: translateX(-18px);
+
+  transition:
+    opacity 0.7s ease 0.28s,
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.28s;
+}
+
+.booted .commandPanel {
+  opacity: 1;
+
+  transform: translateX(0);
+}
+
+.commandPanel::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0 auto 0 0;
+
+  width: 2px;
+
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(72, 189, 255, 0.4),
+    transparent
+  );
+
+  opacity: 0.6;
+}
+
+.commandHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.commandHeader span {
+  color: #53677f;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 2px;
+}
+
+.commandHeader strong {
+  color: #8edfff;
+
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  font-size: 10px;
+}
+
+.commandDivider {
+  height: 1px;
+
+  margin: 13px 0 15px;
+
+  background: linear-gradient(90deg, rgba(95, 195, 255, 0.2), transparent);
+}
+
+.commandSummary {
+  padding: 10px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  border: 1px solid rgba(90, 186, 255, 0.08);
+
+  border-radius: 13px;
+
+  background: linear-gradient(
+    120deg,
+    rgba(48, 135, 255, 0.07),
+    rgba(255, 255, 255, 0.018)
+  );
+}
+
+.summaryIcon {
+  width: 36px;
+  height: 36px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  border: 1px solid rgba(94, 211, 255, 0.12);
+
+  border-radius: 10px;
+
+  background: rgba(68, 157, 255, 0.06);
+
+  color: #75ddff;
+}
+
+.commandSummary > div:last-child {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.commandSummary span {
+  color: #4e627a;
+
+  font-size: 6px;
+  font-weight: 900;
+
+  letter-spacing: 1.3px;
+}
+
+.commandSummary strong {
+  overflow: hidden;
+
+  color: #cceaff;
+
+  font-size: 10px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sectorList {
+  min-height: 0;
+
+  margin-top: 14px;
+
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+
+  gap: 6px;
+
+  overflow-y: auto;
+
+  padding-right: 3px;
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(79, 183, 255, 0.24) transparent;
+}
+
+.sectorButton {
+  --sector-accent: #2f8cff;
+
+  position: relative;
+
+  min-height: 48px;
+
+  padding: 7px 9px;
+
+  display: grid;
+
+  grid-template-columns: 28px 1fr 7px;
+
+  align-items: center;
+
+  gap: 9px;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(255, 255, 255, 0.045);
+
+  border-radius: 11px;
+
+  background: rgba(255, 255, 255, 0.018);
+
+  color: #8394aa;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    background 0.22s ease,
+    opacity 0.22s ease;
+}
+
+.sectorButton::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--sector-accent) 10%, transparent),
+    transparent 64%
+  );
+
+  opacity: 0;
+
+  transition: opacity 0.22s ease;
+}
+
+.sectorButton:hover {
+  transform: translateX(3px);
+
+  border-color: color-mix(in srgb, var(--sector-accent) 28%, transparent);
+
+  background: rgba(255, 255, 255, 0.028);
+}
+
+.sectorButton:hover::before,
+.sectorButtonSelected::before {
+  opacity: 1;
+}
+
+.sectorButtonSelected {
+  border-color: color-mix(in srgb, var(--sector-accent) 44%, transparent);
+
+  background: color-mix(
+    in srgb,
+    var(--sector-accent) 6%,
+    rgba(255, 255, 255, 0.018)
+  );
+
+  color: #dbeeff;
+}
+
+.sectorButtonCompleted {
+  color: #9fdcbe;
+}
+
+.sectorButtonLocked {
+  opacity: 0.48;
+
+  cursor: not-allowed;
+}
+
+.sectorButtonLocked:hover {
+  transform: none;
+}
+
+.sectorButtonDenied {
+  animation: deniedShake 0.42s ease;
+}
+
+@keyframes deniedShake {
+  25% {
+    transform: translateX(-3px);
+  }
+
+  50% {
+    transform: translateX(3px);
+  }
+
+  75% {
+    transform: translateX(-2px);
+  }
+}
+
+.sectorOrder {
+  position: relative;
+
+  z-index: 2;
+
+  width: 28px;
+  height: 28px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.06);
+
+  border-radius: 8px;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  color: var(--sector-accent);
+
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.sectorButton > div {
+  position: relative;
+
+  z-index: 2;
+
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.sectorButton small {
+  color: #465a74;
+
+  font-size: 5px;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+.sectorButton strong {
+  overflow: hidden;
+
+  color: currentColor;
+
+  font-size: 9px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sectorSignal {
+  position: relative;
+
+  z-index: 2;
+
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: var(--sector-accent);
+
+  box-shadow: 0 0 9px var(--sector-accent);
+
+  opacity: 0.78;
+}
+
+.sectorButtonLocked .sectorSignal {
+  background: #263248;
+
+  box-shadow: none;
+
+  opacity: 0.5;
+}
+
+.commandFooter {
+  margin-top: 12px;
+
+  padding-top: 12px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.045);
+
+  color: #52647b;
+
+  font-size: 6px;
+  font-weight: 800;
+
+  letter-spacing: 0.7px;
+}
+
+/* ====================================================== */
+/* INTRO PANEL */
+/* ====================================================== */
+
+.introPanel {
+  position: absolute;
+
+  left: 50%;
+  bottom: 78px;
+
+  z-index: 24;
+
+  width: min(620px, calc(100% - 690px));
+
+  padding: 23px 26px;
+
+  border: 1px solid rgba(108, 208, 255, 0.11);
+
+  border-radius: 22px;
+
+  background: linear-gradient(
+    120deg,
+    rgba(7, 17, 33, 0.92),
+    rgba(5, 11, 23, 0.84)
+  );
+
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.34),
+    0 0 50px rgba(33, 132, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+
+  backdrop-filter: blur(20px);
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  transform: translateX(-50%) translateY(25px) scale(0.985);
+
+  transition:
+    opacity 0.45s ease,
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.introVisible {
+  opacity: 1;
+
+  pointer-events: auto;
+
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+.introEyebrow {
+  width: fit-content;
+
+  margin-bottom: 10px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  color: #76dfff;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 2px;
+}
+
+.introPanel h1 {
+  margin: 0;
+
+  color: #f4fbff;
+
+  font-size: clamp(34px, 4vw, 56px);
+  font-weight: 760;
+
+  line-height: 0.96;
+
+  letter-spacing: -2.9px;
+}
+
+.introPanel h1 span {
+  background: linear-gradient(90deg, #54a7ff, #70e8ff);
+
+  background-clip: text;
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.introPanel > p {
+  max-width: 560px;
+
+  margin: 15px 0 0;
+
+  color: #72859e;
+
+  font-size: 10px;
+
+  line-height: 1.7;
+}
+
+.introMetrics {
+  margin-top: 18px;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 8px;
+}
+
+.introMetrics > div {
+  min-height: 54px;
+
+  padding: 9px 10px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  border: 1px solid rgba(255, 255, 255, 0.045);
+
+  border-radius: 11px;
+
+  background: rgba(255, 255, 255, 0.018);
+
+  color: #6bdcff;
+}
+
+.introMetrics span {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.introMetrics small {
+  color: #4e6077;
+
+  font-size: 5px;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+.introMetrics strong {
+  color: #bbd8eb;
+
+  font-size: 9px;
+}
+
+.focusButton {
+  width: 100%;
+  height: 44px;
+
+  margin-top: 16px;
+
+  padding: 0 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  border: 1px solid rgba(83, 204, 255, 0.15);
+
+  border-radius: 11px;
+
+  background: linear-gradient(
+    135deg,
+    rgba(38, 115, 244, 0.88),
+    rgba(41, 176, 240, 0.84)
+  );
+
+  color: #fff;
+
+  font: inherit;
+  font-size: 9px;
+  font-weight: 850;
+
+  letter-spacing: 0.4px;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 15px 35px rgba(47, 140, 255, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.focusButton:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 20px 42px rgba(47, 140, 255, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+/* ====================================================== */
+/* LEVEL PANEL */
+/* ====================================================== */
+
+.levelPanel {
+  --panel-accent: #2f8cff;
+  --panel-secondary: #6ee7ff;
+
+  position: absolute;
+
+  top: 112px;
+  right: 28px;
+  bottom: 72px;
+
+  z-index: 25;
+
+  width: 330px;
+
+  padding: 20px;
+
+  display: flex;
+  flex-direction: column;
+
+  border: 1px solid color-mix(in srgb, var(--panel-accent) 16%, transparent);
+
+  border-radius: 20px;
+
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      color-mix(in srgb, var(--panel-accent) 11%, transparent),
+      transparent 34%
+    ),
+    linear-gradient(180deg, rgba(7, 16, 30, 0.93), rgba(4, 10, 20, 0.86));
+
+  box-shadow:
+    0 24px 75px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+
+  backdrop-filter: blur(20px);
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  transform: translateX(28px);
+
+  transition:
+    opacity 0.45s ease,
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.levelPanelVisible {
+  opacity: 1;
+
+  pointer-events: auto;
+
+  transform: translateX(0);
+}
+
+.levelPanel::before {
+  content: "";
+
+  position: absolute;
+
+  top: 16px;
+  bottom: 16px;
+  left: 0;
+
+  width: 2px;
+
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--panel-accent),
+    transparent
+  );
+
+  opacity: 0.45;
+}
+
+.levelPanelTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.levelCode {
+  width: 52px;
+  height: 52px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid color-mix(in srgb, var(--panel-accent) 36%, transparent);
+
+  border-radius: 14px;
+
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--panel-accent) 14%, rgba(8, 16, 30, 0.92)),
+    rgba(5, 11, 22, 0.9)
+  );
+
+  color: var(--panel-secondary);
+
+  box-shadow: 0 0 26px color-mix(in srgb, var(--panel-accent) 12%, transparent);
+
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.levelStatus {
+  min-height: 29px;
+
+  padding: 0 9px;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  border-radius: 999px;
+
+  font-size: 6px;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+.levelStatusCurrent {
+  border: 1px solid color-mix(in srgb, var(--panel-accent) 25%, transparent);
+
+  background: color-mix(in srgb, var(--panel-accent) 8%, transparent);
+
+  color: var(--panel-secondary);
+}
+
+.levelStatusCompleted {
+  border: 1px solid rgba(99, 242, 177, 0.18);
+
+  background: rgba(99, 242, 177, 0.055);
+
+  color: #75eab3;
+}
+
+.levelStatusLocked {
+  border: 1px solid rgba(117, 132, 153, 0.12);
+
+  background: rgba(117, 132, 153, 0.04);
+
+  color: #66788f;
+}
+
+.levelPanelCopy {
+  margin-top: 22px;
+}
+
+.levelPanelCopy > span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: var(--panel-accent);
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 1.8px;
+}
+
+.levelPanelCopy h2 {
+  margin: 0;
+
+  color: #f4fbff;
+
+  font-size: 29px;
+  font-weight: 760;
+
+  line-height: 1;
+
+  letter-spacing: -1.3px;
+}
+
+.levelPanelCopy strong {
+  display: block;
+
+  margin-top: 8px;
+
+  color: #9cc6db;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.levelPanelCopy p {
+  margin: 12px 0 0;
+
+  color: #687c96;
+
+  font-size: 9px;
+
+  line-height: 1.72;
+}
+
+.levelStats {
+  margin-top: 20px;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 6px;
+}
+
+.levelStats > div {
+  min-height: 52px;
+
+  padding: 8px;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+
+  gap: 3px;
+
+  border: 1px solid rgba(255, 255, 255, 0.045);
+
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.levelStats span {
+  color: #495c74;
+
+  font-size: 5px;
+  font-weight: 900;
+
+  letter-spacing: 0.9px;
+}
+
+.levelStats strong {
+  color: #b9d3e4;
+
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  font-size: 10px;
+}
+
+.levelProgress {
+  height: 4px;
+
+  margin-top: 11px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.levelProgress > span {
+  display: block;
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    var(--panel-accent),
+    var(--panel-secondary)
+  );
+
+  box-shadow: 0 0 12px color-mix(in srgb, var(--panel-accent) 60%, transparent);
+
+  transition: width 0.45s ease;
+}
+
+.lockedNotice {
+  margin-top: auto;
+
+  padding: 12px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  border: 1px solid rgba(255, 92, 122, 0.11);
+
+  border-radius: 11px;
+
+  background: rgba(255, 92, 122, 0.035);
+
+  color: #b46678;
+}
+
+.lockedNotice div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.lockedNotice strong {
+  color: #c27788;
+
+  font-size: 6px;
+  font-weight: 900;
+
+  letter-spacing: 1.1px;
+}
+
+.lockedNotice span {
+  color: #765c67;
+
+  font-size: 7px;
+
+  line-height: 1.45;
+}
+
+.enterSectorButton {
+  position: relative;
+
+  width: 100%;
+  height: 45px;
+
+  margin-top: auto;
+
+  padding: 0 13px;
+
+  display: grid;
+
+  grid-template-columns: auto 1fr auto;
+
+  align-items: center;
+
+  gap: 8px;
+
+  overflow: hidden;
+
+  border: 1px solid color-mix(in srgb, var(--panel-accent) 22%, transparent);
+
+  border-radius: 11px;
+
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--panel-accent) 88%, #091426),
+    color-mix(in srgb, var(--panel-secondary) 64%, #0b1730)
+  );
+
+  color: #fff;
+
+  font: inherit;
+  font-size: 9px;
+  font-weight: 850;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 16px 38px color-mix(in srgb, var(--panel-accent) 20%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.enterSectorButton::after {
+  content: "";
+
+  position: absolute;
+
+  top: -90%;
+  left: -50%;
+
+  width: 38%;
+  height: 280%;
+
+  background: rgba(255, 255, 255, 0.15);
+
+  transform: rotate(24deg);
+
+  transition: left 0.6s ease;
+}
+
+.enterSectorButton:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 20px 44px color-mix(in srgb, var(--panel-accent) 28%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.enterSectorButton:hover::after {
+  left: 120%;
+}
+
+.enterSectorButton:disabled {
+  cursor: wait;
+
+  opacity: 0.94;
+}
+
+.enterSectorButtonBusy {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--panel-secondary) 18%, transparent),
+    0 0 34px color-mix(in srgb, var(--panel-accent) 30%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+
+  animation: enterButtonCharge 0.62s ease infinite alternate;
+}
+
+@keyframes enterButtonCharge {
+  to {
+    filter: brightness(1.18);
+  }
+}
+
+.enterSectorButton svg,
+.enterSectorButton span {
+  position: relative;
+
+  z-index: 2;
+}
+
+.backToOverview {
+  width: 100%;
+  height: 34px;
+
+  margin-top: 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #61748d;
+
+  font: inherit;
+  font-size: 7px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition: color 0.2s ease;
+}
+
+.backToOverview:hover {
+  color: #9cdff5;
+}
+
+/* ====================================================== */
+/* BOTTOM HUD */
+/* ====================================================== */
+
+.bottomHud {
+  position: absolute;
+
+  right: 28px;
+  bottom: 20px;
+  left: 28px;
+
+  z-index: 28;
+
+  min-height: 38px;
+
+  padding: 0 13px;
+
+  display: grid;
+
+  grid-template-columns: 1fr auto 1fr;
+
+  align-items: center;
+
+  gap: 14px;
+
+  border: 1px solid rgba(122, 199, 255, 0.065);
+
+  border-radius: 11px;
+
+  background: rgba(5, 12, 24, 0.74);
+
+  backdrop-filter: blur(14px);
+
+  opacity: 0;
+
+  transform: translateY(12px);
+
+  transition:
+    opacity 0.65s ease 0.34s,
+    transform 0.65s ease 0.34s;
+}
+
+.booted .bottomHud {
+  opacity: 1;
+
+  transform: translateY(0);
+}
+
+.bottomHud > div:first-child,
+.bottomCoordinates {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+}
+
+.bottomCoordinates {
+  justify-content: flex-end;
+}
+
+.bottomHud span {
+  color: #425770;
+
+  font-size: 5px;
+  font-weight: 900;
+
+  letter-spacing: 1.1px;
+}
+
+.bottomHud strong {
+  overflow: hidden;
+
+  color: #718aa5;
+
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  font-size: 7px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bottomSignal {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+}
+
+.bottomSignal > span {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #53d9ff;
+
+  box-shadow: 0 0 10px #53d9ff;
+}
+
+.bottomSignal small {
+  color: #607991;
+
+  font-size: 5px;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+/* ====================================================== */
+/* DEV RESET */
+/* ====================================================== */
+
+.devResetButton {
+  position: absolute;
+
+  right: 28px;
+  bottom: 69px;
+
+  z-index: 35;
+
+  height: 31px;
+
+  padding: 0 10px;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  border: 1px solid rgba(255, 197, 87, 0.1);
+
+  border-radius: 9px;
+
+  background: rgba(255, 197, 87, 0.035);
+
+  color: #9c8452;
+
+  font: inherit;
+  font-size: 6px;
+  font-weight: 900;
+
+  letter-spacing: 0.8px;
+
+  cursor: pointer;
+
+  opacity: 0.72;
+
+  transition:
+    opacity 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.devResetButton:hover {
+  opacity: 1;
+
+  border-color: rgba(255, 197, 87, 0.22);
+
+  color: #d4b56a;
+}
+
+/* ====================================================== */
+/* SECTOR ENTRY TRANSITION */
+/* ====================================================== */
+
+.sectorLaunchOverlay {
+  --launch-accent: #2f8cff;
+  --launch-secondary: #6ee7ff;
+
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 95;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      color-mix(in srgb, var(--launch-accent) 20%, transparent),
+      transparent 22%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      color-mix(in srgb, var(--launch-secondary) 8%, transparent),
+      transparent 44%
+    ),
+    rgba(1, 4, 10, 0.78);
+
+  backdrop-filter: blur(5px);
+
+  animation: sectorLaunchIn 0.28s ease both;
+}
+
+.sectorLaunchOverlay::before {
+  content: "";
+
+  position: absolute;
+
+  inset: -40%;
+
+  background: repeating-conic-gradient(
+    from 0deg,
+    color-mix(in srgb, var(--launch-accent) 8%, transparent) 0deg 1deg,
+    transparent 1deg 12deg
+  );
+
+  opacity: 0.2;
+
+  animation: sectorFieldSpin 14s linear infinite;
+}
+
+.sectorLaunchOverlay::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 255, 255, 0.025) 50%,
+    transparent 100%
+  );
+
+  background-size: 100% 6px;
+
+  opacity: 0.18;
+
+  pointer-events: none;
+}
+
+.launchGrid {
+  position: absolute;
+
+  inset: 0;
+
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--launch-secondary) 9%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--launch-secondary) 9%, transparent) 1px,
+      transparent 1px
+    );
+
+  background-size: 54px 54px;
+
+  mask-image: radial-gradient(
+    circle at center,
+    black 0%,
+    rgba(0, 0, 0, 0.8) 24%,
+    transparent 72%
+  );
+
+  opacity: 0.23;
+
+  animation: launchGridZoom 1.15s ease forwards;
+}
+
+.launchBeam {
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  width: 3px;
+  height: 110vh;
+
+  transform: translate(-50%, -50%) scaleY(0);
+
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--launch-secondary),
+    #ffffff,
+    var(--launch-accent),
+    transparent
+  );
+
+  box-shadow:
+    0 0 18px var(--launch-secondary),
+    0 0 55px var(--launch-accent),
+    0 0 120px color-mix(in srgb, var(--launch-accent) 70%, transparent);
+
+  animation:
+    launchBeamOpen 0.55s ease 0.2s forwards,
+    launchBeamExpand 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.72s forwards;
+}
+
+.launchCore {
+  position: relative;
+
+  z-index: 2;
+
+  width: 190px;
+  height: 190px;
+
+  display: grid;
+  place-items: center;
+
+  animation: launchCoreRise 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.launchRingOuter,
+.launchRingMiddle,
+.launchRingInner {
+  position: absolute;
+
+  border-radius: 50%;
+}
+
+.launchRingOuter {
+  inset: 0;
+
+  border: 1px solid color-mix(in srgb, var(--launch-secondary) 55%, transparent);
+
+  box-shadow:
+    0 0 40px color-mix(in srgb, var(--launch-accent) 22%, transparent),
+    inset 0 0 34px color-mix(in srgb, var(--launch-accent) 12%, transparent);
+
+  animation: launchSpin 1.35s linear infinite;
+}
+
+.launchRingOuter::before,
+.launchRingOuter::after {
+  content: "";
+
+  position: absolute;
+
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+
+  background: var(--launch-secondary);
+
+  box-shadow: 0 0 15px var(--launch-secondary);
+}
+
+.launchRingOuter::before {
+  top: -5px;
+  left: calc(50% - 4px);
+}
+
+.launchRingOuter::after {
+  right: -5px;
+  top: calc(50% - 4px);
+}
+
+.launchRingMiddle {
+  inset: 24px;
+
+  border: 1px dashed color-mix(in srgb, var(--launch-accent) 68%, transparent);
+
+  animation: launchSpin 1.05s linear infinite reverse;
+}
+
+.launchRingInner {
+  inset: 50px;
+
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--launch-secondary) 28%, transparent),
+    color-mix(in srgb, var(--launch-accent) 11%, transparent) 52%,
+    transparent 72%
+  );
+
+  box-shadow: 0 0 30px
+    color-mix(in srgb, var(--launch-secondary) 26%, transparent);
+}
+
+.launchSymbol {
+  position: relative;
+
+  z-index: 3;
+
+  min-width: 66px;
+  min-height: 66px;
+
+  padding: 0 12px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  border-radius: 18px;
+
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--launch-secondary) 35%, #081425),
+    color-mix(in srgb, var(--launch-accent) 55%, #06101f)
+  );
+
+  color: #fff;
+
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  font-size: 19px;
+  font-weight: 900;
+
+  box-shadow:
+    0 0 24px color-mix(in srgb, var(--launch-secondary) 45%, transparent),
+    0 0 68px color-mix(in srgb, var(--launch-accent) 32%, transparent);
+
+  animation: launchSymbolPulse 0.52s ease infinite alternate;
+}
+
+.launchCopy {
+  position: relative;
+
+  z-index: 2;
+
+  margin-top: 24px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 5px;
+
+  text-align: center;
+
+  animation: launchCopyIn 0.65s ease 0.28s both;
+}
+
+.launchCopy span {
+  color: var(--launch-secondary);
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 2.3px;
+}
+
+.launchCopy strong {
+  color: #f4fbff;
+
+  font-size: clamp(18px, 2.2vw, 28px);
+  font-weight: 850;
+
+  letter-spacing: -0.7px;
+}
+
+.launchCopy small {
+  color: #55718d;
+
+  font-size: 6px;
+  font-weight: 900;
+
+  letter-spacing: 1.9px;
+}
+
+.launchProgress {
+  position: relative;
+
+  z-index: 2;
+
+  width: min(300px, 62vw);
+  height: 3px;
+
+  margin-top: 18px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.launchProgress span {
+  display: block;
+
+  width: 0;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    var(--launch-accent),
+    var(--launch-secondary),
+    #ffffff
+  );
+
+  box-shadow: 0 0 16px var(--launch-secondary);
+
+  animation: launchProgressFill 1.45s cubic-bezier(0.22, 1, 0.36, 1) 0.18s
+    forwards;
+}
+
+@keyframes sectorLaunchIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sectorFieldSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes launchGridZoom {
+  from {
+    transform: scale(1.16);
+
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+
+    opacity: 0.23;
+  }
+}
+
+@keyframes launchBeamOpen {
+  to {
+    transform: translate(-50%, -50%) scaleY(1);
+  }
+}
+
+@keyframes launchBeamExpand {
+  from {
+    width: 3px;
+  }
+
+  to {
+    width: 100vw;
+
+    opacity: 0.08;
+  }
+}
+
+@keyframes launchCoreRise {
+  from {
+    opacity: 0;
+
+    transform: scale(0.74) translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes launchSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes launchSymbolPulse {
+  to {
+    transform: scale(1.06);
+
+    filter: brightness(1.18);
+  }
+}
+
+@keyframes launchCopyIn {
+  from {
+    opacity: 0;
+
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+}
+
+@keyframes launchProgressFill {
+  to {
+    width: 100%;
+  }
+}
+
+/* ====================================================== */
+/* BOOT OVERLAY */
+/* ====================================================== */
+
+.bootOverlay {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 100;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 28px;
+
+  background:
+    radial-gradient(circle at center, rgba(21, 78, 146, 0.16), transparent 35%),
+    #02050b;
+
+  pointer-events: auto;
+
+  opacity: 1;
+
+  visibility: visible;
+
+  transition:
+    opacity 0.75s ease,
+    visibility 0.75s ease;
+}
+
+.booted .bootOverlay {
+  opacity: 0;
+
+  visibility: hidden;
+
+  pointer-events: none;
+}
+
+.bootCore {
+  position: relative;
+
+  width: 150px;
+  height: 150px;
+
+  display: grid;
+  place-items: center;
+}
+
+.bootRingOne,
+.bootRingTwo {
+  position: absolute;
+
+  border-radius: 50%;
+}
+
+.bootRingOne {
+  inset: 0;
+
+  border: 1px solid rgba(91, 195, 255, 0.45);
+
+  box-shadow:
+    0 0 35px rgba(47, 140, 255, 0.17),
+    inset 0 0 35px rgba(47, 140, 255, 0.08);
+
+  animation: bootSpin 3s linear infinite;
+}
+
+.bootRingTwo {
+  inset: 21px;
+
+  border: 1px dashed rgba(110, 231, 255, 0.55);
+
+  animation: bootSpin 2.2s linear infinite reverse;
+}
+
+.bootSymbol {
+  width: 72px;
+  height: 72px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: radial-gradient(
+    circle at 35% 28%,
+    #c9f9ff,
+    #5dc8ff 28%,
+    #2f67ff 72%,
+    #0d1c3d
+  );
+
+  color: #fff;
+
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  font-size: 18px;
+  font-weight: 900;
+
+  letter-spacing: -1px;
+
+  box-shadow:
+    0 0 30px rgba(98, 218, 255, 0.45),
+    0 0 70px rgba(47, 140, 255, 0.28);
+
+  animation: bootPulse 1.6s ease infinite;
+}
+
+.bootOverlay > span {
+  color: #5f8aa9;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 3px;
+
+  animation: bootText 1.7s ease infinite;
+}
+
+@keyframes bootSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bootPulse {
+  50% {
+    transform: scale(1.07);
+
+    box-shadow:
+      0 0 40px rgba(98, 218, 255, 0.58),
+      0 0 95px rgba(47, 140, 255, 0.38);
+  }
+}
+
+@keyframes bootText {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ====================================================== */
+/* LARGE SCREENS */
+/* ====================================================== */
+
+@media (min-width: 1700px) {
+  .commandPanel {
+    left: 42px;
+
+    width: 310px;
+  }
+
+  .levelPanel {
+    right: 42px;
+
+    width: 350px;
+  }
+
+  .bottomHud {
+    right: 42px;
+    left: 42px;
+  }
+}
+
+/* ====================================================== */
+/* TABLET / SMALL LAPTOP */
+/* ====================================================== */
+
+@media (max-width: 1180px) {
+  .topHud {
+    width: calc(100% - 36px);
+
+    grid-template-columns: 1fr auto;
+  }
+
+  .systemReadout {
+    display: none;
+  }
+
+  .commandPanel {
+    left: 18px;
+
+    width: 255px;
+  }
+
+  .levelPanel {
+    right: 18px;
+
+    width: 295px;
+  }
+
+  .introPanel {
+    width: min(520px, calc(100% - 590px));
+  }
+
+  .bottomHud {
+    right: 18px;
+    left: 18px;
+  }
+}
+
+/* ====================================================== */
+/* COMPACT TABLET */
+/* ====================================================== */
+
+@media (max-width: 920px) {
+  .page {
+    min-height: 100svh;
+
+    overflow-y: auto;
+  }
+
+  .canvasShell {
+    position: fixed;
+
+    min-height: 100svh;
+  }
+
+  .topHud {
+    position: fixed;
+
+    top: 12px;
+
+    width: calc(100% - 24px);
+
+    min-height: 62px;
+
+    grid-template-columns: 1fr auto;
+
+    gap: 10px;
+  }
+
+  .worldIdentity span {
+    display: none;
+  }
+
+  .statusChip {
+    display: none;
+  }
+
+  .commandPanel {
+    position: absolute;
+
+    top: 88px;
+    left: 12px;
+    bottom: auto;
+
+    width: 245px;
+    max-height: 62vh;
+  }
+
+  .levelPanel {
+    position: absolute;
+
+    top: 88px;
+    right: 12px;
+    bottom: auto;
+
+    width: 280px;
+    max-height: calc(100vh - 170px);
+
+    overflow-y: auto;
+  }
+
+  .introPanel {
+    position: absolute;
+
+    right: 12px;
+    bottom: 68px;
+    left: auto;
+
+    width: min(480px, calc(100% - 300px));
+
+    transform: translateY(22px);
+  }
+
+  .introVisible {
+    transform: translateY(0);
+  }
+
+  .bottomHud {
+    position: fixed;
+
+    right: 12px;
+    bottom: 12px;
+    left: 12px;
+  }
+
+  .devResetButton {
+    right: 12px;
+    bottom: 58px;
+  }
+}
+
+/* ====================================================== */
+/* MOBILE */
+/* ====================================================== */
+
+@media (max-width: 680px) {
+  .page {
+    min-height: 100svh;
+
+    overflow-y: auto;
+  }
+
+  .cornerFrameTopLeft,
+  .cornerFrameTopRight,
+  .cornerFrameBottomLeft,
+  .cornerFrameBottomRight {
+    display: none;
+  }
+
+  .scanLines {
+    opacity: 0.08;
+  }
+
+  .topHud {
+    padding: 8px 9px;
+
+    border-radius: 15px;
+  }
+
+  .topHudLeft {
+    gap: 9px;
+  }
+
+  .backButton {
+    width: 36px;
+
+    padding: 0;
+  }
+
+  .backButton span {
+    display: none;
+  }
+
+  .worldMark {
+    width: 38px;
+    height: 38px;
+
+    border-radius: 10px;
+  }
+
+  .worldIdentity strong {
+    font-size: 11px;
+  }
+
+  .topHudRight {
+    gap: 5px;
+  }
+
+  .overviewButton {
+    width: 38px;
+
+    padding: 0;
+  }
+
+  .overviewButton span {
+    display: none;
+  }
+
+  .commandPanel {
+    top: 84px;
+    right: 12px;
+    left: 12px;
+
+    width: auto;
+    max-height: none;
+
+    padding: 12px;
+
+    border-radius: 15px;
+  }
+
+  .commandSummary,
+  .commandFooter {
+    display: none;
+  }
+
+  .commandDivider {
+    margin: 8px 0 9px;
+  }
+
+  .sectorList {
+    display: grid;
+
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 5px;
+
+    overflow: visible;
+  }
+
+  .sectorButton {
+    min-height: 48px;
+
+    padding: 6px;
+
+    grid-template-columns: 24px 1fr;
+
+    gap: 5px;
+  }
+
+  .sectorOrder {
+    width: 24px;
+    height: 24px;
+  }
+
+  .sectorButton small {
+    display: none;
+  }
+
+  .sectorButton strong {
+    font-size: 7px;
+  }
+
+  .sectorSignal {
+    display: none;
+  }
+
+  .introPanel,
+  .levelPanel {
+    position: absolute;
+
+    top: 265px;
+    right: 12px;
+    bottom: auto;
+    left: 12px;
+
+    width: auto;
+    max-height: none;
+
+    padding: 18px;
+
+    border-radius: 17px;
+  }
+
+  .introPanel {
+    transform: translateY(18px);
+  }
+
+  .introVisible {
+    transform: translateY(0);
+  }
+
+  .levelPanel {
+    overflow: visible;
+
+    transform: translateY(18px);
+  }
+
+  .levelPanelVisible {
+    transform: translateY(0);
+  }
+
+  .introPanel h1 {
+    font-size: 37px;
+
+    letter-spacing: -2.1px;
+  }
+
+  .introPanel > p,
+  .levelPanelCopy p {
+    font-size: 9px;
+  }
+
+  .introMetrics {
+    grid-template-columns: 1fr;
+  }
+
+  .introMetrics > div {
+    min-height: 45px;
+  }
+
+  .levelStats {
+    gap: 5px;
+  }
+
+  .levelPanelCopy h2 {
+    font-size: 26px;
+  }
+
+  .bottomHud {
+    display: none;
+  }
+
+  .devResetButton {
+    position: fixed;
+
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .canvasShell {
+    opacity: 0.72;
+  }
+}
+
+/* ====================================================== */
+/* VERY SMALL */
+/* ====================================================== */
+
+@media (max-width: 430px) {
+  .sectorList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .introPanel,
+  .levelPanel {
+    top: 335px;
+  }
+
+  .introPanel h1 {
+    font-size: 33px;
+  }
+}
+
+/* ====================================================== */
+/* REDUCED MOTION */
+/* ====================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .worldMark::after,
+  .statusChip i,
+  .bootRingOne,
+  .bootRingTwo,
+  .bootSymbol,
+  .bootOverlay > span {
+    animation: none;
+  }
+
+  .topHud,
+  .commandPanel,
+  .introPanel,
+  .levelPanel,
+  .bottomHud,
+  .sectorButton,
+  .focusButton,
+  .enterSectorButton,
+  .backButton,
+  .overviewButton {
+    transition-duration: 0.01ms;
+  }
+}
