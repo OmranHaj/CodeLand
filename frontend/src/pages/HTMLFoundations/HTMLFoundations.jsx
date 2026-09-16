@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-
+import LessonAnimation from "../../components/Learning/animations/LessonAnimation";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -492,12 +492,8 @@ function HTMLFoundations() {
     return learningProgress.completedChallengeIds.includes(unit.id);
   };
 
-  const isUnlocked = (unitIndex) => {
-    if (unitIndex === 0) {
-      return true;
-    }
-
-    return units.slice(0, unitIndex).every((unit) => isCompleted(unit));
+  const isUnlocked = () => {
+    return true;
   };
 
   const activeUnit = useMemo(
@@ -1192,6 +1188,9 @@ function HTMLFoundations() {
               activeUnit.data.blocks
                 ?.filter((block) => block.type !== "interactive")
                 .map((block) => {
+                  if (block.type === "animation") {
+                    return <LessonAnimation key={block.id} animation={block} />;
+                  }
                   if (block.type === "text") {
                     return (
                       <article key={block.id} className={styles.textBlock}>

@@ -14,7 +14,7 @@ export const HTML_FOUNDATIONS_CONTENT = {
   description:
     "Learn how real web pages are structured using semantic HTML, elements, links, images, forms, and more.",
 
-  version: 1,
+  version: 2,
 
   status: "published",
 
@@ -59,6 +59,19 @@ export const HTML_FOUNDATIONS_CONTENT = {
 
           content:
             "HTML gives a website its structure. Think of it like the skeleton of a building: it tells the browser what each part of the page is.",
+        },
+
+        {
+          id: "intro-animation",
+
+          type: "animation",
+
+          template: "html-browser-render",
+
+          props: {
+            heading: "Hello CodeLand!",
+            paragraph: "This is my first web page.",
+          },
         },
 
         {
@@ -145,6 +158,19 @@ export const HTML_FOUNDATIONS_CONTENT = {
         },
 
         {
+          id: "elements-animation",
+
+          type: "animation",
+
+          template: "html-element",
+
+          props: {
+            tag: "h1",
+            text: "My Website",
+          },
+        },
+
+        {
           id: "elements-example",
 
           type: "code",
@@ -214,6 +240,19 @@ export const HTML_FOUNDATIONS_CONTENT = {
 
           content:
             "A complete HTML document has a predictable structure. The head stores page information while the body contains what visitors see.",
+        },
+
+        {
+          id: "structure-animation",
+
+          type: "animation",
+
+          template: "html-document-structure",
+
+          props: {
+            title: "My Website",
+            heading: "Welcome!",
+          },
         },
 
         {
@@ -304,6 +343,20 @@ export const HTML_FOUNDATIONS_CONTENT = {
         },
 
         {
+          id: "links-animation",
+
+          type: "animation",
+
+          template: "html-links-images",
+
+          props: {
+            linkText: "Visit Website",
+            href: "example.com",
+            imageAlt: "A random example",
+          },
+        },
+
+        {
           id: "links-code",
 
           type: "code",
@@ -380,6 +433,18 @@ export const HTML_FOUNDATIONS_CONTENT = {
         },
 
         {
+          id: "lists-animation",
+
+          type: "animation",
+
+          template: "html-list-builder",
+
+          props: {
+            items: ["HTML", "CSS", "JavaScript"],
+          },
+        },
+
+        {
           id: "lists-code",
 
           type: "code",
@@ -452,6 +517,21 @@ export const HTML_FOUNDATIONS_CONTENT = {
 
           content:
             "Forms allow visitors to enter information. Inputs collect data and buttons let users submit or trigger actions.",
+        },
+
+        {
+          id: "forms-animation",
+
+          type: "animation",
+
+          template: "html-form-flow",
+
+          props: {
+            label: "Your name",
+            placeholder: "Enter your name",
+            sampleValue: "Alex",
+            buttonText: "Join",
+          },
         },
 
         {
@@ -745,6 +825,105 @@ export const HTML_FOUNDATIONS_CONTENT = {
       hints: [
         "Build one part at a time.",
         "Use everything you learned in the previous lessons.",
+      ],
+    },
+    {
+      id: "html-headings-paragraphs",
+
+      slug: "html-headings-paragraphs",
+
+      order: 7,
+
+      title: "Headings & Paragraphs",
+
+      subtitle: "Give your page a clear voice",
+
+      description:
+        "Learn how headings introduce important ideas and paragraphs organize normal text on a webpage.",
+
+      difficulty: "beginner",
+
+      xp: 90,
+
+      estimatedMinutes: 12,
+
+      status: "published",
+
+      blocks: [
+        {
+          id: "headings-paragraphs-text",
+
+          type: "text",
+
+          title: "Pages need titles and readable text",
+
+          content:
+            "HTML headings help visitors understand what a section is about. Paragraph elements are used for normal blocks of readable text.",
+        },
+
+        {
+          id: "headings-paragraphs-animation",
+
+          type: "animation",
+
+          template: "html-element",
+
+          props: {
+            tag: "p",
+            text: "I am learning HTML!",
+          },
+        },
+
+        {
+          id: "headings-paragraphs-tip",
+
+          type: "tip",
+
+          content:
+            "HTML provides headings from h1 to h6. The h1 usually represents the main heading of the page.",
+        },
+
+        {
+          id: "headings-paragraphs-code",
+
+          type: "code",
+
+          language: "html",
+
+          code: `<h1>Welcome to CodeLand</h1>
+
+<h2>My Coding Journey</h2>
+
+<p>I am learning HTML!</p>`,
+        },
+
+        {
+          id: "headings-paragraphs-interactive",
+
+          type: "interactive",
+
+          title: "Create your introduction",
+
+          instructions:
+            "Add an h2 element containing the text My First Section.",
+
+          starterCode: `<h1>My Website</h1>
+
+<p>I am learning HTML!</p>`,
+
+          validation: {
+            type: "htmlContainsText",
+
+            selector: "h2",
+
+            expectedText: "My First Section",
+          },
+
+          hints: [
+            "Use an opening <h2> tag and a closing </h2> tag.",
+            "Try: <h2>My First Section</h2>",
+          ],
+        },
       ],
     },
   ],
