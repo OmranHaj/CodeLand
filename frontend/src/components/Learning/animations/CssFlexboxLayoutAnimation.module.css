@@ -1,0 +1,1295 @@
+.animation {
+  --bg: #050816;
+  --panel: rgba(8, 15, 31, 0.96);
+  --panel-soft: rgba(11, 21, 41, 0.88);
+
+  --text: #eef8ff;
+  --muted: #70809d;
+
+  --cyan: #46dfff;
+  --blue: #5177ff;
+  --violet: #8067ff;
+  --green: #6df2b3;
+  --gold: #ffd36a;
+
+  width: 100%;
+  margin-top: 28px;
+
+  position: relative;
+  overflow: hidden;
+
+  border: 1px solid rgba(70, 223, 255, 0.14);
+  border-radius: 24px;
+
+  color: var(--text);
+
+  background:
+    radial-gradient(
+      circle at 50% 14%,
+      rgba(70, 223, 255, 0.1),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 90% 84%,
+      rgba(128, 103, 255, 0.08),
+      transparent 30%
+    ),
+    linear-gradient(145deg, #050914, #071120 52%, #050816);
+
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+/* ====================================================== */
+/* TOP BAR */
+/* ====================================================== */
+
+.topBar {
+  min-height: 62px;
+
+  padding: 14px 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  position: relative;
+  z-index: 10;
+
+  border-bottom: 1px solid rgba(70, 223, 255, 0.07);
+
+  background: linear-gradient(
+    180deg,
+    rgba(12, 20, 39, 0.95),
+    rgba(6, 11, 25, 0.92)
+  );
+
+  backdrop-filter: blur(18px);
+}
+
+.topBarIdentity {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.eyebrow {
+  color: var(--cyan);
+
+  font-size: 8px;
+  font-weight: 950;
+
+  letter-spacing: 1.6px;
+}
+
+.topBarIdentity strong {
+  color: #edf8ff;
+
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.replayButton {
+  height: 34px;
+
+  padding: 0 12px;
+
+  flex: 0 0 auto;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  border: 1px solid rgba(70, 223, 255, 0.18);
+  border-radius: 10px;
+
+  color: #a7f0ff;
+
+  background: linear-gradient(
+    145deg,
+    rgba(70, 223, 255, 0.08),
+    rgba(128, 103, 255, 0.04)
+  );
+
+  cursor: pointer;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.replayButton:hover {
+  transform: translateY(-1px);
+
+  border-color: rgba(70, 223, 255, 0.34);
+
+  background: linear-gradient(
+    145deg,
+    rgba(70, 223, 255, 0.13),
+    rgba(128, 103, 255, 0.07)
+  );
+
+  box-shadow: 0 8px 24px rgba(70, 223, 255, 0.08);
+}
+
+/* ====================================================== */
+/* STAGE */
+/* ====================================================== */
+
+.stage {
+  min-height: 560px;
+
+  padding: 38px 22px 30px;
+
+  position: relative;
+  overflow: hidden;
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  opacity: 0.38;
+
+  background-image:
+    linear-gradient(rgba(70, 223, 255, 0.023) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(70, 223, 255, 0.023) 1px, transparent 1px);
+
+  background-size: 28px 28px;
+
+  mask-image: linear-gradient(to bottom, black 0%, black 72%, transparent 100%);
+}
+
+.stage::before {
+  content: "";
+
+  width: 390px;
+  height: 390px;
+
+  position: absolute;
+
+  top: 46%;
+  left: 52%;
+
+  transform: translate(-50%, -50%);
+
+  border-radius: 50%;
+
+  background: rgba(70, 223, 255, 0.065);
+
+  filter: blur(125px);
+
+  pointer-events: none;
+}
+
+/* ====================================================== */
+/* STATUS */
+/* ====================================================== */
+
+.status {
+  width: max-content;
+  max-width: 100%;
+
+  margin: 0 auto 30px;
+
+  padding: 7px 12px;
+
+  position: relative;
+  z-index: 5;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(70, 223, 255, 0.2);
+  border-radius: 999px;
+
+  color: #a8f2ff;
+
+  background: linear-gradient(
+    90deg,
+    rgba(70, 223, 255, 0.07),
+    rgba(128, 103, 255, 0.05)
+  );
+
+  box-shadow: 0 0 28px rgba(70, 223, 255, 0.055);
+
+  font-size: 8px;
+  font-weight: 950;
+
+  letter-spacing: 1.2px;
+
+  text-align: center;
+}
+
+.status::after {
+  content: "";
+
+  width: 45px;
+  height: 100%;
+
+  position: absolute;
+
+  top: 0;
+  left: -60px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.14),
+    transparent
+  );
+
+  transform: skewX(-18deg);
+
+  animation: statusScan 2.6s linear infinite;
+}
+
+/* ====================================================== */
+/* WORKSPACE */
+/* ====================================================== */
+
+.workspace {
+  position: relative;
+  z-index: 3;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(150px, 0.85fr)
+    minmax(260px, 1.4fr)
+    minmax(150px, 0.85fr);
+
+  align-items: stretch;
+
+  gap: 18px;
+}
+
+/* ====================================================== */
+/* CONTROLS PANEL */
+/* ====================================================== */
+
+.controlsPanel {
+  min-width: 0;
+
+  overflow: hidden;
+
+  border: 1px solid rgba(70, 223, 255, 0.1);
+  border-radius: 16px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(9, 18, 35, 0.97),
+    rgba(6, 13, 28, 0.94)
+  );
+
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.21),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.panelHeader {
+  min-height: 58px;
+
+  padding: 11px 12px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  border-bottom: 1px solid rgba(70, 223, 255, 0.07);
+
+  background: rgba(70, 223, 255, 0.025);
+}
+
+.panelHeader > svg {
+  color: var(--cyan);
+}
+
+.panelHeader > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.panelHeader span {
+  color: #566885;
+
+  font-size: 6px;
+  font-weight: 950;
+
+  letter-spacing: 1px;
+}
+
+.panelHeader strong {
+  color: #c7d8e8;
+
+  font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+
+  font-size: 10px;
+}
+
+/* ====================================================== */
+/* CONTROL LIST */
+/* ====================================================== */
+
+.controlList {
+  padding: 10px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.controlRow {
+  min-height: 54px;
+
+  padding: 8px 9px;
+
+  display: grid;
+
+  grid-template-columns:
+    31px
+    minmax(0, 1fr)
+    6px;
+
+  align-items: center;
+
+  gap: 8px;
+
+  border: 1px solid rgba(70, 223, 255, 0.07);
+  border-radius: 10px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.024),
+    rgba(255, 255, 255, 0.008)
+  );
+}
+
+.controlIcon {
+  width: 30px;
+  height: 30px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(70, 223, 255, 0.12);
+  border-radius: 8px;
+
+  color: #74def1;
+
+  background: rgba(70, 223, 255, 0.045);
+}
+
+.controlRow > div:nth-child(2) {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.controlRow span {
+  overflow: hidden;
+
+  color: #6e819f;
+
+  font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+
+  font-size: 6px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.controlRow strong {
+  color: #d6ecf8;
+
+  font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+
+  font-size: 8px;
+}
+
+.controlRow > i {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: var(--cyan);
+
+  box-shadow: 0 0 9px rgba(70, 223, 255, 0.6);
+}
+
+/* ====================================================== */
+/* CODE BLOCK */
+/* ====================================================== */
+
+.codeBlock {
+  margin: 2px 10px 10px;
+
+  padding: 11px 10px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  overflow-x: auto;
+
+  border: 1px solid rgba(128, 103, 255, 0.1);
+  border-radius: 10px;
+
+  color: #9cb0cc;
+
+  background: rgba(5, 10, 23, 0.72);
+
+  font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+
+  font-size: 6.5px;
+
+  line-height: 1.55;
+}
+
+.codeBlock span {
+  white-space: pre;
+}
+
+.codeBlock b {
+  color: #a88dff;
+}
+
+.codeBlock em {
+  color: #6edfff;
+
+  font-style: normal;
+}
+
+/* ====================================================== */
+/* FLEX PANEL */
+/* ====================================================== */
+
+.flexPanel {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 9px;
+}
+
+.flexHeader {
+  min-height: 32px;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.flexHeader > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.flexHeader span {
+  color: #566985;
+
+  font-size: 6px;
+  font-weight: 950;
+
+  letter-spacing: 1px;
+}
+
+.flexHeader strong {
+  color: #b7c7db;
+
+  font-size: 9px;
+}
+
+.activeBadge {
+  padding: 4px 7px;
+
+  border: 1px solid rgba(109, 242, 179, 0.14);
+  border-radius: 999px;
+
+  color: #8bf5bf !important;
+
+  background: rgba(109, 242, 179, 0.045);
+}
+
+/* ====================================================== */
+/* FLEX STAGE */
+/* ====================================================== */
+
+.flexStage {
+  min-height: 420px;
+
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(70, 223, 255, 0.14);
+  border-radius: 16px;
+
+  background:
+    radial-gradient(
+      circle at 50% 46%,
+      rgba(70, 223, 255, 0.07),
+      transparent 40%
+    ),
+    linear-gradient(145deg, #08111f, #080e1b);
+
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.26),
+    0 0 40px rgba(70, 223, 255, 0.035);
+}
+
+.flexStage::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background-image:
+    linear-gradient(rgba(70, 223, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(70, 223, 255, 0.022) 1px, transparent 1px);
+
+  background-size: 22px 22px;
+}
+
+/* ====================================================== */
+/* CONTAINER */
+/* ====================================================== */
+
+.containerOutline {
+  width: 86%;
+  height: 190px;
+
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  border: 1px dashed rgba(70, 223, 255, 0.35);
+  border-radius: 18px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(70, 223, 255, 0.035),
+    rgba(81, 119, 255, 0.025)
+  );
+
+  box-shadow:
+    inset 0 0 28px rgba(70, 223, 255, 0.025),
+    0 0 28px rgba(70, 223, 255, 0.025);
+}
+
+/* ====================================================== */
+/* ITEMS */
+/* ====================================================== */
+
+.items {
+  width: 78%;
+
+  position: relative;
+  z-index: 4;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 16px;
+}
+
+.flexItem {
+  min-width: 72px;
+  min-height: 78px;
+
+  padding: 10px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  border: 1px solid rgba(70, 223, 255, 0.18);
+  border-radius: 12px;
+
+  color: #eafaff;
+
+  background:
+    radial-gradient(
+      circle at 50% 15%,
+      rgba(70, 223, 255, 0.09),
+      transparent 50%
+    ),
+    linear-gradient(145deg, rgba(11, 26, 45, 0.98), rgba(8, 16, 30, 0.98));
+
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.22),
+    0 0 18px rgba(70, 223, 255, 0.04);
+}
+
+.flexItem span {
+  color: #66809c;
+
+  font-size: 5.5px;
+  font-weight: 950;
+
+  letter-spacing: 0.8px;
+}
+
+.flexItem strong {
+  font-size: 8px;
+  font-weight: 850;
+
+  text-align: center;
+}
+
+/* ====================================================== */
+/* MAIN AXIS */
+/* ====================================================== */
+
+.mainAxis {
+  width: 76%;
+
+  position: absolute;
+
+  top: 50%;
+  left: 12%;
+
+  z-index: 2;
+
+  display: grid;
+
+  grid-template-columns:
+    auto
+    1fr
+    auto;
+
+  align-items: center;
+
+  gap: 5px;
+}
+
+.mainAxis div {
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    rgba(70, 223, 255, 0.1),
+    rgba(70, 223, 255, 0.75),
+    rgba(70, 223, 255, 0.1)
+  );
+
+  box-shadow: 0 0 9px rgba(70, 223, 255, 0.22);
+}
+
+.axisArrowLeft,
+.axisArrowRight {
+  color: #5de6ff;
+
+  font-size: 8px;
+
+  filter: drop-shadow(0 0 5px rgba(70, 223, 255, 0.55));
+}
+
+.mainAxisLabel {
+  padding: 4px 6px;
+
+  position: absolute;
+
+  left: 50%;
+  bottom: 70px;
+
+  z-index: 5;
+
+  transform: translateX(-50%);
+
+  border: 1px solid rgba(70, 223, 255, 0.13);
+  border-radius: 6px;
+
+  color: #83e8f9;
+
+  background: #091426;
+
+  font-size: 5.5px;
+  font-weight: 950;
+
+  letter-spacing: 0.7px;
+}
+
+/* ====================================================== */
+/* CROSS AXIS */
+/* ====================================================== */
+
+.crossAxis {
+  height: 72%;
+
+  position: absolute;
+
+  top: 14%;
+  left: 50%;
+
+  z-index: 2;
+
+  display: grid;
+
+  grid-template-rows:
+    auto
+    1fr
+    auto;
+
+  justify-items: center;
+
+  gap: 5px;
+}
+
+.crossAxis div {
+  width: 1px;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(128, 103, 255, 0.1),
+    rgba(128, 103, 255, 0.72),
+    rgba(128, 103, 255, 0.1)
+  );
+
+  box-shadow: 0 0 9px rgba(128, 103, 255, 0.2);
+}
+
+.crossAxis span {
+  color: #a592ff;
+
+  font-size: 8px;
+}
+
+.crossAxisLabel {
+  padding: 4px 6px;
+
+  position: absolute;
+
+  top: 50%;
+  right: 17px;
+
+  z-index: 5;
+
+  transform: translateY(-50%) rotate(90deg);
+
+  border: 1px solid rgba(128, 103, 255, 0.14);
+  border-radius: 6px;
+
+  color: #b2a4ff;
+
+  background: #0c1125;
+
+  font-size: 5.5px;
+  font-weight: 950;
+
+  letter-spacing: 0.7px;
+}
+
+/* ====================================================== */
+/* GAP MARKERS */
+/* ====================================================== */
+
+.gapMarker {
+  width: 16px;
+
+  position: relative;
+  z-index: 6;
+
+  display: none;
+}
+
+.gapMarker span {
+  padding: 3px 4px;
+
+  position: absolute;
+
+  top: 52px;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  border: 1px solid rgba(255, 211, 106, 0.14);
+  border-radius: 5px;
+
+  color: #ffe088;
+
+  background: rgba(255, 211, 106, 0.07);
+
+  font-size: 5px;
+  font-weight: 900;
+}
+
+/*
+  The visual gap itself is already created by flex gap.
+  Markers are decorative teaching labels.
+*/
+.items .gapMarker {
+  display: block;
+}
+
+/* ====================================================== */
+/* COMPLETE */
+/* ====================================================== */
+
+.completeBadge {
+  width: max-content;
+
+  padding: 5px 8px;
+
+  position: absolute;
+
+  left: 50%;
+  bottom: 24px;
+
+  z-index: 6;
+
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  border: 1px solid rgba(109, 242, 179, 0.17);
+  border-radius: 8px;
+
+  color: #9bf6c7;
+
+  background: rgba(109, 242, 179, 0.055);
+
+  font-size: 7px;
+  font-weight: 900;
+}
+
+/* ====================================================== */
+/* SUMMARY PANEL */
+/* ====================================================== */
+
+.summaryPanel {
+  min-width: 0;
+
+  padding: 11px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+
+  border: 1px solid rgba(128, 103, 255, 0.1);
+  border-radius: 16px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(11, 18, 38, 0.92),
+    rgba(7, 13, 27, 0.94)
+  );
+}
+
+.summaryHeader {
+  min-height: 35px;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 8px;
+}
+
+.summaryHeader span {
+  color: #5c6982;
+
+  font-size: 6px;
+  font-weight: 950;
+
+  letter-spacing: 1px;
+}
+
+.summaryHeader strong {
+  color: #b7c4d8;
+
+  font-size: 8px;
+}
+
+/* ====================================================== */
+/* PROPERTY CARDS */
+/* ====================================================== */
+
+.propertyCard {
+  min-height: 76px;
+
+  padding: 10px;
+
+  display: grid;
+
+  grid-template-columns:
+    auto
+    minmax(0, 1fr);
+
+  align-items: start;
+
+  gap: 9px;
+
+  border: 1px solid rgba(70, 223, 255, 0.07);
+  border-radius: 11px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.025),
+    rgba(255, 255, 255, 0.008)
+  );
+}
+
+.propertyCard > span {
+  color: var(--cyan);
+
+  font-size: 6px;
+  font-weight: 950;
+}
+
+.propertyCard strong {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #d9e7f6;
+
+  font-size: 8px;
+}
+
+.propertyCard p {
+  margin: 0;
+
+  color: #71819e;
+
+  font-size: 7px;
+
+  line-height: 1.45;
+}
+
+/* ====================================================== */
+/* SUMMARY SIGNAL */
+/* ====================================================== */
+
+.summarySignal {
+  min-height: 34px;
+
+  padding: 0 7px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  border-top: 1px solid rgba(70, 223, 255, 0.05);
+
+  color: #647c94;
+
+  font-size: 5.7px;
+  font-weight: 950;
+
+  letter-spacing: 0.6px;
+
+  text-align: center;
+}
+
+.summarySignal svg {
+  color: var(--cyan);
+}
+
+/* ====================================================== */
+/* EXPLANATION */
+/* ====================================================== */
+
+.explanation {
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  border-top: 1px solid rgba(70, 223, 255, 0.06);
+
+  background: rgba(4, 8, 20, 0.82);
+}
+
+.explanation > div {
+  min-width: 0;
+
+  padding: 16px;
+
+  display: grid;
+
+  grid-template-columns:
+    auto
+    minmax(0, 1fr);
+
+  gap: 10px;
+}
+
+.explanation > div + div {
+  border-left: 1px solid rgba(70, 223, 255, 0.055);
+}
+
+.explanation > div > span {
+  color: var(--cyan);
+
+  font-size: 7px;
+  font-weight: 950;
+
+  letter-spacing: 0.45px;
+}
+
+.explanation strong {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #d9e7f6;
+
+  font-size: 9px;
+}
+
+.explanation p {
+  margin: 0;
+
+  color: #7585a3;
+
+  font-size: 9px;
+
+  line-height: 1.55;
+}
+
+/* ====================================================== */
+/* FOOTER */
+/* ====================================================== */
+
+.footerSignal {
+  min-height: 34px;
+
+  padding: 0 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  border-top: 1px solid rgba(70, 223, 255, 0.05);
+
+  color: #607d90;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(70, 223, 255, 0.024),
+    transparent
+  );
+
+  font-size: 7px;
+  font-weight: 950;
+
+  letter-spacing: 1px;
+
+  text-align: center;
+}
+
+.footerSignal svg {
+  color: var(--cyan);
+}
+
+/* ====================================================== */
+/* KEYFRAMES */
+/* ====================================================== */
+
+@keyframes statusScan {
+  0% {
+    left: -60px;
+  }
+
+  100% {
+    left: calc(100% + 60px);
+  }
+}
+
+/* ====================================================== */
+/* RESPONSIVE */
+/* ====================================================== */
+
+@media (max-width: 1100px) {
+  .workspace {
+    grid-template-columns:
+      minmax(135px, 0.8fr)
+      minmax(220px, 1.3fr)
+      minmax(135px, 0.8fr);
+
+    gap: 13px;
+  }
+
+  .stage {
+    padding-inline: 16px;
+  }
+
+  .flexItem {
+    min-width: 60px;
+    min-height: 70px;
+
+    padding: 8px;
+  }
+
+  .items {
+    width: 82%;
+
+    gap: 12px;
+  }
+}
+
+@media (max-width: 860px) {
+  .workspace {
+    grid-template-columns: 1fr;
+
+    align-items: stretch;
+  }
+
+  .flexPanel {
+    order: -1;
+  }
+
+  .flexStage {
+    min-height: 390px;
+  }
+
+  .stage {
+    min-height: unset;
+  }
+
+  .explanation {
+    grid-template-columns: 1fr;
+  }
+
+  .explanation > div + div {
+    border-left: 0;
+
+    border-top: 1px solid rgba(70, 223, 255, 0.055);
+  }
+}
+
+@media (max-width: 560px) {
+  .animation {
+    border-radius: 18px;
+  }
+
+  .topBar {
+    align-items: flex-start;
+  }
+
+  .topBarIdentity strong {
+    font-size: 11px;
+  }
+
+  .replayButton {
+    height: 31px;
+
+    padding-inline: 9px;
+  }
+
+  .stage {
+    padding: 28px 12px 24px;
+  }
+
+  .status {
+    font-size: 6.4px;
+
+    letter-spacing: 0.78px;
+  }
+
+  .flexStage {
+    min-height: 350px;
+  }
+
+  .containerOutline {
+    width: 92%;
+    height: 180px;
+  }
+
+  .items {
+    width: 88%;
+
+    gap: 7px;
+  }
+
+  .flexItem {
+    min-width: 0;
+    width: 100%;
+
+    min-height: 64px;
+
+    padding: 7px 5px;
+  }
+
+  .flexItem strong {
+    font-size: 6.5px;
+  }
+
+  .gapMarker span {
+    display: none;
+  }
+
+  .mainAxis {
+    width: 82%;
+    left: 9%;
+  }
+
+  .crossAxisLabel {
+    right: 3px;
+  }
+
+  .footerSignal {
+    font-size: 6.1px;
+  }
+}
+
+/* ====================================================== */
+/* REDUCED MOTION */
+/* ====================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .status::after {
+    animation: none;
+  }
+}

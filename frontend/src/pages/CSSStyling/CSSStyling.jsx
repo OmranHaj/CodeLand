@@ -26,6 +26,7 @@ import {
 
 import { getLevelContent } from "../../services/learningContentService";
 import LessonRobot from "../../components/Learning/LessonRobot";
+import LessonAnimation from "../../components/Learning/animations/LessonAnimation";
 
 import styles from "./CSSStyling.module.css";
 
@@ -553,10 +554,19 @@ function CSSStyling() {
   };
 
   const isUnlocked = (unitIndex) => {
-    if (unitIndex === 0) {
+    const lessonCount = content?.lessons?.length || 0;
+
+    /*
+    All CSS lessons are available from the beginning.
+  */
+    if (unitIndex < lessonCount) {
       return true;
     }
 
+    /*
+    Challenges still follow normal progression:
+    all previous lessons/challenges must be completed.
+  */
     return units.slice(0, unitIndex).every((unit) => isCompleted(unit));
   };
 
@@ -1337,11 +1347,14 @@ function CSSStyling() {
               activeUnit.data.blocks
                 ?.filter((block) => block.type !== "interactive")
                 .map((block) => {
+                  if (block.type === "animation") {
+                    return <LessonAnimation key={block.id} animation={block} />;
+                  }
+
                   if (block.type === "text") {
                     return (
                       <article key={block.id} className={styles.textBlock}>
                         <h2>{block.title}</h2>
-
                         <p>{block.content}</p>
                       </article>
                     );
@@ -1354,7 +1367,6 @@ function CSSStyling() {
 
                         <div>
                           <strong>Quick tip</strong>
-
                           <p>{block.content}</p>
                         </div>
                       </div>
@@ -1366,7 +1378,6 @@ function CSSStyling() {
                       <div key={block.id} className={styles.exampleCode}>
                         <div className={styles.codeHeader}>
                           <Code2 size={14} />
-
                           <span>{block.language}</span>
                         </div>
 

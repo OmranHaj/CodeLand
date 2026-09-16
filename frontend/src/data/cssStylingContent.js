@@ -68,6 +68,21 @@ export const CSS_STYLING_CONTENT = {
         },
 
         {
+          id: "css-intro-animation",
+
+          type: "animation",
+
+          template: "css-intro-transformation",
+
+          props: {
+            heading: "Hello CodeLand!",
+            paragraph: "CSS makes websites beautiful.",
+            accent: "#46dfff",
+            background: "#10172a",
+          },
+        },
+
+        {
           id: "css-intro-tip",
 
           type: "tip",
@@ -161,6 +176,21 @@ export const CSS_STYLING_CONTENT = {
 
           content:
             "CSS gives you many ways to work with color. You can use color names, HEX values, RGB values, and more.",
+        },
+
+        {
+          id: "colors-animation",
+
+          type: "animation",
+
+          template: "css-color-reactor",
+
+          props: {
+            colorName: "cyan",
+            hex: "#46dfff",
+            rgb: "rgb(70, 223, 255)",
+            background: "#10172a",
+          },
         },
 
         {
@@ -270,6 +300,19 @@ p {
 
           content:
             "Typography helps users understand what is most important. Large bold headings attract attention while smaller text supports the main message.",
+        },
+
+        {
+          id: "typography-animation",
+
+          type: "animation",
+
+          template: "css-typography-lab",
+
+          props: {
+            heading: "Future Coder",
+            paragraph: "Building amazing things with code.",
+          },
         },
 
         {
@@ -387,6 +430,21 @@ p {
         },
 
         {
+          id: "spacing-animation",
+
+          type: "animation",
+
+          template: "css-box-model",
+
+          props: {
+            content: "My Project",
+            padding: 24,
+            margin: 20,
+            border: 2,
+          },
+        },
+
+        {
           id: "spacing-example",
 
           type: "code",
@@ -486,6 +544,18 @@ p {
 
           content:
             "Flexbox makes it easy to arrange elements in rows or columns and control how they align.",
+        },
+
+        {
+          id: "flexbox-animation",
+
+          type: "animation",
+
+          template: "css-flexbox-layout",
+
+          props: {
+            items: ["Explore", "Build", "Create"],
+          },
         },
 
         {
@@ -601,6 +671,27 @@ p {
         },
 
         {
+          id: "grid-animation",
+
+          type: "animation",
+
+          template: "css-grid-builder",
+
+          props: {
+            columns: 3,
+
+            items: [
+              "Project 1",
+              "Project 2",
+              "Project 3",
+              "Project 4",
+              "Project 5",
+              "Project 6",
+            ],
+          },
+        },
+
+        {
           id: "grid-example",
 
           type: "code",
@@ -698,6 +789,18 @@ p {
 
           content:
             "Responsive design allows a website to adapt when the available screen size changes. Media queries are one of the tools used to create responsive experiences.",
+        },
+
+        {
+          id: "responsive-animation",
+
+          type: "animation",
+
+          template: "css-responsive-viewport",
+
+          props: {
+            breakpoint: 700,
+          },
         },
 
         {
@@ -804,6 +907,20 @@ p {
 
           content:
             "Transitions allow CSS properties to change smoothly instead of instantly. They can make buttons and cards feel more polished.",
+        },
+
+        {
+          id: "motion-animation",
+
+          type: "animation",
+
+          template: "css-motion-timeline",
+
+          props: {
+            label: "Launch Project",
+            distance: 18,
+            duration: 0.35,
+          },
         },
 
         {

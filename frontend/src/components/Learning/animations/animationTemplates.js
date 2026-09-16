@@ -1,4 +1,8 @@
 export const ANIMATION_TEMPLATES = [
+  /* ====================================================== */
+  /* HTML */
+  /* ====================================================== */
+
   {
     id: "html-browser-render",
 
@@ -208,7 +212,6 @@ export const ANIMATION_TEMPLATES = [
         minimum: 1,
         maximum: 6,
         required: true,
-
         placeholder: "Add list item",
       },
     ],
@@ -261,6 +264,331 @@ export const ANIMATION_TEMPLATES = [
         label: "Button Text",
         type: "text",
         placeholder: "Join",
+        required: true,
+      },
+    ],
+  },
+
+  /* ====================================================== */
+  /* CSS */
+  /* ====================================================== */
+
+  {
+    id: "css-intro-transformation",
+
+    label: "CSS Transformation",
+
+    category: "css",
+
+    description:
+      "Shows how CSS transforms plain HTML into a styled visual interface.",
+
+    defaultProps: {
+      heading: "Hello CodeLand!",
+      paragraph: "CSS makes websites beautiful.",
+      accent: "#46dfff",
+      background: "#10172a",
+    },
+
+    fields: [
+      {
+        name: "heading",
+        label: "Heading",
+        type: "text",
+        placeholder: "Hello CodeLand!",
+        required: true,
+      },
+
+      {
+        name: "paragraph",
+        label: "Paragraph",
+        type: "text",
+        placeholder: "CSS makes websites beautiful.",
+        required: true,
+      },
+
+      {
+        name: "accent",
+        label: "Accent Color",
+        type: "text",
+        placeholder: "#46dfff",
+        required: true,
+      },
+
+      {
+        name: "background",
+        label: "Background Color",
+        type: "text",
+        placeholder: "#10172a",
+        required: true,
+      },
+    ],
+  },
+
+  {
+    id: "css-color-reactor",
+
+    label: "Color Reactor",
+
+    category: "css",
+
+    description:
+      "Visualizes CSS color names, HEX values, RGB values, and how colors are applied to an interface.",
+
+    defaultProps: {
+      colorName: "cyan",
+      hex: "#46dfff",
+      rgb: "rgb(70, 223, 255)",
+      background: "#10172a",
+    },
+
+    fields: [
+      {
+        name: "colorName",
+        label: "Color Name",
+        type: "text",
+        placeholder: "cyan",
+        required: true,
+      },
+
+      {
+        name: "hex",
+        label: "HEX Color",
+        type: "text",
+        placeholder: "#46dfff",
+        required: true,
+      },
+
+      {
+        name: "rgb",
+        label: "RGB Color",
+        type: "text",
+        placeholder: "rgb(70, 223, 255)",
+        required: true,
+      },
+
+      {
+        name: "background",
+        label: "Background",
+        type: "text",
+        placeholder: "#10172a",
+        required: true,
+      },
+    ],
+  },
+
+  {
+    id: "css-typography-lab",
+
+    label: "Typography Lab",
+
+    category: "css",
+
+    description:
+      "Shows how font size, font weight, alignment, and line height create visual hierarchy.",
+
+    defaultProps: {
+      heading: "Future Coder",
+      paragraph: "Building amazing things with code.",
+    },
+
+    fields: [
+      {
+        name: "heading",
+        label: "Heading",
+        type: "text",
+        placeholder: "Future Coder",
+        required: true,
+      },
+
+      {
+        name: "paragraph",
+        label: "Paragraph",
+        type: "text",
+        placeholder: "Building amazing things with code.",
+        required: true,
+      },
+    ],
+  },
+
+  {
+    id: "css-box-model",
+
+    label: "Box Model Scanner",
+
+    category: "css",
+
+    description:
+      "Explains content, padding, border, and margin by visually expanding each box-model layer.",
+
+    defaultProps: {
+      content: "My Project",
+      padding: 24,
+      margin: 20,
+      border: 2,
+    },
+
+    fields: [
+      {
+        name: "content",
+        label: "Content",
+        type: "text",
+        placeholder: "My Project",
+        required: true,
+      },
+
+      {
+        name: "padding",
+        label: "Padding",
+        type: "number",
+        required: true,
+      },
+
+      {
+        name: "margin",
+        label: "Margin",
+        type: "number",
+        required: true,
+      },
+
+      {
+        name: "border",
+        label: "Border",
+        type: "number",
+        required: true,
+      },
+    ],
+  },
+
+  {
+    id: "css-flexbox-layout",
+
+    label: "Flexbox Layout Engine",
+
+    category: "css",
+
+    description:
+      "Shows elements becoming a flex container and demonstrates alignment, centering, and gap.",
+
+    defaultProps: {
+      items: ["Explore", "Build", "Create"],
+    },
+
+    fields: [
+      {
+        name: "items",
+        label: "Flex Items",
+        type: "string-list",
+        minimum: 2,
+        maximum: 6,
+        required: true,
+        placeholder: "Add flex item",
+      },
+    ],
+  },
+
+  {
+    id: "css-grid-builder",
+
+    label: "Grid Builder",
+
+    category: "css",
+
+    description:
+      "Constructs CSS Grid tracks and shows cards snapping into rows and columns.",
+
+    defaultProps: {
+      columns: 3,
+      items: [
+        "Project 1",
+        "Project 2",
+        "Project 3",
+        "Project 4",
+        "Project 5",
+        "Project 6",
+      ],
+    },
+
+    fields: [
+      {
+        name: "columns",
+        label: "Columns",
+        type: "number",
+        required: true,
+      },
+
+      {
+        name: "items",
+        label: "Grid Items",
+        type: "string-list",
+        minimum: 1,
+        maximum: 9,
+        required: true,
+        placeholder: "Add grid item",
+      },
+    ],
+  },
+
+  {
+    id: "css-responsive-viewport",
+
+    label: "Responsive Viewport",
+
+    category: "css",
+
+    description:
+      "Shrinks a simulated browser viewport and shows a media query reflowing the layout.",
+
+    defaultProps: {
+      breakpoint: 700,
+    },
+
+    fields: [
+      {
+        name: "breakpoint",
+        label: "Breakpoint",
+        type: "number",
+        required: true,
+      },
+    ],
+  },
+
+  {
+    id: "css-motion-timeline",
+
+    label: "Motion Timeline",
+
+    category: "css",
+
+    description:
+      "Compares instant state changes with smooth CSS transitions and visualizes duration and easing.",
+
+    defaultProps: {
+      label: "Launch Project",
+      distance: 18,
+      duration: 0.35,
+    },
+
+    fields: [
+      {
+        name: "label",
+        label: "Button Label",
+        type: "text",
+        placeholder: "Launch Project",
+        required: true,
+      },
+
+      {
+        name: "distance",
+        label: "Movement Distance",
+        type: "number",
+        required: true,
+      },
+
+      {
+        name: "duration",
+        label: "Transition Duration",
+        type: "number",
         required: true,
       },
     ],

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import LessonAnimation from "../../components/Learning/animations/LessonAnimation";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -10,9 +9,9 @@ import {
   ChevronRight,
   Code2,
   Eye,
+  FileCode2,
   Lightbulb,
   LockKeyhole,
-  Play,
   RotateCcw,
   Sparkles,
   Target,
@@ -26,12 +25,12 @@ import {
 } from "../../data/webWorldLevels";
 
 import { getLevelContent } from "../../services/learningContentService";
-
 import LessonRobot from "../../components/Learning/LessonRobot";
+import LessonAnimation from "../../components/Learning/animations/LessonAnimation";
 
 import styles from "./HTMLFoundations.module.css";
 
-const LEVEL_ID = "html-foundations";
+const LEVEL_ID = "css-styling";
 
 /* ====================================================== */
 /* USER */
@@ -93,6 +92,11 @@ function loadLearningProgress(userId) {
 
       drafts:
         parsed.drafts && typeof parsed.drafts === "object" ? parsed.drafts : {},
+
+      lastActiveUnitId:
+        typeof parsed.lastActiveUnitId === "string"
+          ? parsed.lastActiveUnitId
+          : null,
     };
   } catch {
     return getDefaultProgress();
@@ -106,7 +110,7 @@ function saveLearningProgress(userId, progress) {
       JSON.stringify(progress),
     );
   } catch (error) {
-    console.error("[CodeLand] Unable to save HTML learning progress:", error);
+    console.error("[CodeLand] Unable to save CSS learning progress:", error);
   }
 }
 
@@ -151,20 +155,139 @@ function sanitizeLearningProgress(progress, content) {
 }
 
 /* ====================================================== */
-/* HTML VALIDATION */
+/* CSS VALIDATION */
 /* ====================================================== */
 
-function createDocument(code) {
-  const parser = new DOMParser();
-
-  return parser.parseFromString(String(code || ""), "text/html");
+function normalizeCssValue(value = "") {
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/\s*,\s*/g, ",")
+    .replace(/\(\s+/g, "(")
+    .replace(/\s+\)/g, ")");
 }
 
-function normalizeText(value = "") {
-  return String(value).replace(/\s+/g, " ").trim().toLowerCase();
+function normalizeSelector(selector = "") {
+  return String(selector).trim().replace(/\s+/g, " ");
 }
 
-function runValidation(code, validation) {
+function getStyleRules(css = "") {
+  try {
+    const documentShell = document.implementation.createHTMLDocument("");
+    const styleElement = documentShell.createElement("style");
+
+    styleElement.textContent = String(css || "");
+    documentShell.head.appendChild(styleElement);
+
+    const collectedRules = [];
+
+    const collect = (ruleList) => {
+      Array.from(ruleList || []).forEach((rule) => {
+        if (rule.type === CSSRule.STYLE_RULE) {
+          collectedRules.push(rule);
+          return;
+        }
+
+        if (rule.cssRules) {
+          collect(rule.cssRules);
+        }
+      });
+    };
+
+    collect(styleElement.sheet?.cssRules);
+
+    return collectedRules;
+  } catch (error) {
+    console.warn("[CodeLand] Unable to parse CSS:", error);
+    return [];
+  }
+}
+
+function findStyleRule(css, selector) {
+  const expectedSelector = normalizeSelector(selector);
+
+  return getStyleRules(css).find((rule) => {
+    const selectors = String(rule.selectorText || "")
+      .split(",")
+      .map(normalizeSelector);
+
+    return selectors.includes(expectedSelector);
+  });
+}
+
+function getRulePropertyValue(rule, property) {
+  if (!rule?.style) {
+    return "";
+  }
+
+  let value = rule.style.getPropertyValue(property).trim();
+
+  /*
+    Let students use background-color when a challenge asks
+    for a styled background, and vice versa.
+  */
+
+  if (!value && property === "background") {
+    value =
+      rule.style.getPropertyValue("background-color").trim() ||
+      rule.style.getPropertyValue("background-image").trim();
+  }
+
+  if (!value && property === "background-color") {
+    value =
+      rule.style.getPropertyValue("background-color").trim() ||
+      rule.style.getPropertyValue("background").trim();
+  }
+
+  return value;
+}
+
+function canonicalColor(value) {
+  if (!value || typeof window === "undefined") {
+    return null;
+  }
+
+  const testElement = document.createElement("span");
+
+  testElement.style.position = "fixed";
+  testElement.style.pointerEvents = "none";
+  testElement.style.opacity = "0";
+  testElement.style.color = "";
+
+  testElement.style.color = value;
+
+  if (!testElement.style.color) {
+    return null;
+  }
+
+  document.body.appendChild(testElement);
+
+  const computedColor = window.getComputedStyle(testElement).color;
+
+  testElement.remove();
+
+  return computedColor;
+}
+
+function valuesMatch(property, actualValue, expectedValue) {
+  if (
+    property === "color" ||
+    property === "background-color" ||
+    property === "border-color"
+  ) {
+    const actualColor = canonicalColor(actualValue);
+    const expectedColor = canonicalColor(expectedValue);
+
+    if (actualColor && expectedColor) {
+      return actualColor === expectedColor;
+    }
+  }
+
+  return normalizeCssValue(actualValue) === normalizeCssValue(expectedValue);
+}
+
+function runCssValidation(css, validation) {
   if (!validation) {
     return {
       passed: true,
@@ -172,123 +295,91 @@ function runValidation(code, validation) {
     };
   }
 
-  const document = createDocument(code);
+  const rule = findStyleRule(css, validation.selector);
 
-  switch (validation.type) {
-    case "htmlContainsText": {
-      const elements = Array.from(
-        document.querySelectorAll(validation.selector),
-      );
+  if (!rule) {
+    return {
+      passed: false,
+      message: `Add a CSS rule for ${validation.selector}.`,
+    };
+  }
 
-      if (!elements.length) {
-        return {
-          passed: false,
-          message: `Add a ${validation.selector} element first.`,
-        };
-      }
+  if (validation.type === "cssPropertyExists") {
+    const value = getRulePropertyValue(rule, validation.property);
 
-      const expectedText = normalizeText(validation.expectedText);
+    return {
+      passed: Boolean(value),
+      message: value
+        ? `${validation.property} is in place.`
+        : `Add ${validation.property} to ${validation.selector}.`,
+    };
+  }
 
-      const matchingElement = elements.find((element) =>
-        normalizeText(element.textContent).includes(expectedText),
-      );
+  if (validation.type === "cssProperty") {
+    const value = getRulePropertyValue(rule, validation.property);
 
-      return {
-        passed: Boolean(matchingElement),
-
-        message: matchingElement
-          ? "Perfect! You got it."
-          : `Make sure your ${validation.selector} contains "${validation.expectedText}".`,
-      };
-    }
-
-    case "htmlElementExists": {
-      const element = document.querySelector(validation.selector);
-
-      return {
-        passed: Boolean(element),
-
-        message: element
-          ? "Nice work!"
-          : `Your page still needs a ${validation.selector} element.`,
-      };
-    }
-
-    case "htmlMinimumElements": {
-      const elements = document.querySelectorAll(validation.selector);
-
-      const passed = elements.length >= validation.minimum;
-
-      return {
-        passed,
-
-        message: passed
-          ? "Great job!"
-          : `Add at least ${validation.minimum} ${validation.selector} elements.`,
-      };
-    }
-
-    case "htmlMultipleElementsExist": {
-      const missing = validation.selectors.filter(
-        (selector) => !document.querySelector(selector),
-      );
-
-      return {
-        passed: missing.length === 0,
-
-        message:
-          missing.length === 0
-            ? "Everything is in place!"
-            : `Still missing: ${missing.join(", ")}`,
-      };
-    }
-
-    default:
-      console.warn("[CodeLand] Unknown validation type:", validation.type);
-
+    if (!value) {
       return {
         passed: false,
-        message: "This mission has an unsupported validation rule.",
+        message: `Add ${validation.property} to ${validation.selector}.`,
       };
+    }
+
+    const passed = valuesMatch(
+      validation.property,
+      value,
+      validation.expectedValue,
+    );
+
+    return {
+      passed,
+      message: passed
+        ? `${validation.property} looks great.`
+        : `Set ${validation.property} to ${validation.expectedValue}.`,
+    };
   }
+
+  return {
+    passed: false,
+    message: "This CSS mission uses an unsupported validation rule.",
+  };
 }
 
 /* ====================================================== */
-/* PREVIEW DOCUMENT */
+/* LIVE PREVIEW */
 /* ====================================================== */
 
-function createPreviewDocument(code) {
-  const normalized = code.trim().toLowerCase();
-
-  if (normalized.includes("<!doctype") || normalized.includes("<html")) {
-    return code;
-  }
-
+function createPreviewDocument(html, css) {
   return `
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
 
     <style>
       * {
         box-sizing: border-box;
       }
 
+      html,
+      body {
+        min-height: 100%;
+      }
+
       body {
         margin: 0;
-        padding: 28px;
-        font-family:
-          Inter,
-          system-ui,
-          sans-serif;
-        background: #ffffff;
+        padding: 30px;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f6f8ff;
         color: #151827;
       }
 
       img {
         max-width: 100%;
-        border-radius: 12px;
       }
 
       button,
@@ -296,14 +387,12 @@ function createPreviewDocument(code) {
         font: inherit;
       }
 
-      a {
-        color: #6558ff;
-      }
+      ${css}
     </style>
   </head>
 
   <body>
-    ${code}
+    ${html}
   </body>
 </html>
 `;
@@ -313,7 +402,7 @@ function createPreviewDocument(code) {
 /* MAIN PAGE */
 /* ====================================================== */
 
-function HTMLFoundations() {
+function CSSStyling() {
   const navigate = useNavigate();
 
   const currentUser = useMemo(() => getCurrentUser(), []);
@@ -340,13 +429,15 @@ function HTMLFoundations() {
 
   const [activeUnitId, setActiveUnitId] = useState(null);
 
-  const [editorCode, setEditorCode] = useState("");
+  const [htmlCode, setHtmlCode] = useState("");
+
+  const [cssCode, setCssCode] = useState("");
 
   const [result, setResult] = useState(null);
 
   const [hintIndex, setHintIndex] = useState(-1);
 
-  const [labTab, setLabTab] = useState("code");
+  const [labTab, setLabTab] = useState("css");
 
   const [levelComplete, setLevelComplete] = useState(false);
 
@@ -355,53 +446,23 @@ function HTMLFoundations() {
     key: 0,
   });
 
-  const [feedbackFx, setFeedbackFx] = useState({
-    type: "idle",
-    key: 0,
-  });
+  const [feedbackEffect, setFeedbackEffect] = useState(null);
 
   const [xpToast, setXpToast] = useState(null);
 
-  const [showHintPrompt, setShowHintPrompt] = useState(false);
-
-  const triggerRobotReaction = (type) => {
-    setRobotReaction((current) => ({
-      type,
-      key: current.key + 1,
-    }));
-  };
-
-  const resetRobotReaction = () => {
-    setRobotReaction((current) => ({
-      type: "idle",
-      key: current.key,
-    }));
-  };
-
-  const triggerFeedbackFx = (type) => {
-    setFeedbackFx((current) => ({
-      type,
-      key: current.key + 1,
-    }));
-  };
-
-  const clearFeedbackFx = () => {
-    setFeedbackFx((current) => ({
-      type: "idle",
-      key: current.key,
-    }));
-  };
-
-  const showXpReward = (amount) => {
-    if (!amount) {
-      return;
+  useEffect(() => {
+    if (!feedbackEffect) {
+      return undefined;
     }
 
-    setXpToast((current) => ({
-      amount,
-      key: (current?.key || 0) + 1,
-    }));
-  };
+    const timeoutId = window.setTimeout(() => {
+      setFeedbackEffect(null);
+    }, 900);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [feedbackEffect?.key]);
 
   useEffect(() => {
     if (!xpToast) {
@@ -410,7 +471,7 @@ function HTMLFoundations() {
 
     const timeoutId = window.setTimeout(() => {
       setXpToast(null);
-    }, 1900);
+    }, 1800);
 
     return () => {
       window.clearTimeout(timeoutId);
@@ -441,7 +502,7 @@ function HTMLFoundations() {
           return;
         }
 
-        setLoadError(error?.message || "Unable to load this level.");
+        setLoadError(error?.message || "Unable to load CSS Styling.");
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -492,8 +553,12 @@ function HTMLFoundations() {
     return learningProgress.completedChallengeIds.includes(unit.id);
   };
 
-  const isUnlocked = () => {
-    return true;
+  const isUnlocked = (unitIndex) => {
+    if (unitIndex === 0) {
+      return true;
+    }
+
+    return units.slice(0, unitIndex).every((unit) => isCompleted(unit));
   };
 
   const activeUnit = useMemo(
@@ -512,7 +577,7 @@ function HTMLFoundations() {
   }, [content]);
 
   /* ==================================================== */
-  /* SELECT INITIAL UNIT */
+  /* INITIAL / LAST ACTIVE UNIT */
   /* ==================================================== */
 
   useEffect(() => {
@@ -524,10 +589,12 @@ function HTMLFoundations() {
       (unit) => unit.id === learningProgress.lastActiveUnitId,
     );
 
-    const savedUnit = savedUnitIndex >= 0 ? units[savedUnitIndex] : null;
+    if (
+      savedUnitIndex >= 0 &&
+      (isUnlocked(savedUnitIndex) || isCompleted(units[savedUnitIndex]))
+    ) {
+      setActiveUnitId(units[savedUnitIndex].id);
 
-    if (savedUnit && (isUnlocked(savedUnitIndex) || isCompleted(savedUnit))) {
-      setActiveUnitId(savedUnit.id);
       return;
     }
 
@@ -540,25 +607,8 @@ function HTMLFoundations() {
     );
   }, [units, activeUnitId, learningProgress]);
 
-  useEffect(() => {
-    if (!activeUnitId) {
-      return;
-    }
-
-    setLearningProgress((current) => {
-      if (current.lastActiveUnitId === activeUnitId) {
-        return current;
-      }
-
-      return {
-        ...current,
-        lastActiveUnitId: activeUnitId,
-      };
-    });
-  }, [activeUnitId]);
-
   /* ==================================================== */
-  /* ACTIVE CODE */
+  /* ACTIVE INTERACTIVE CONTENT */
   /* ==================================================== */
 
   const interactiveBlock = useMemo(() => {
@@ -572,17 +622,33 @@ function HTMLFoundations() {
     );
   }, [activeUnit]);
 
-  const starterCode = useMemo(() => {
+  const starterHtml = useMemo(() => {
     if (!activeUnit) {
       return "";
     }
 
     if (activeUnit.kind === "challenge") {
-      return activeUnit.data.starterCode || "";
+      return activeUnit.data.starterHtml || "";
     }
 
-    return interactiveBlock?.starterCode || "";
+    return interactiveBlock?.starterHtml || "";
   }, [activeUnit, interactiveBlock]);
+
+  const starterCss = useMemo(() => {
+    if (!activeUnit) {
+      return "";
+    }
+
+    if (activeUnit.kind === "challenge") {
+      return activeUnit.data.starterCss || "";
+    }
+
+    return interactiveBlock?.starterCss || "";
+  }, [activeUnit, interactiveBlock]);
+
+  /* ==================================================== */
+  /* LOAD UNIT DRAFT */
+  /* ==================================================== */
 
   useEffect(() => {
     if (!activeUnit) {
@@ -591,17 +657,23 @@ function HTMLFoundations() {
 
     const savedDraft = learningProgress.drafts[activeUnit.id];
 
-    setEditorCode(savedDraft ?? starterCode);
+    setHtmlCode(savedDraft?.html ?? starterHtml);
+
+    setCssCode(savedDraft?.css ?? starterCss);
 
     setResult(null);
     setHintIndex(-1);
-    setShowHintPrompt(false);
-    clearFeedbackFx();
-    resetRobotReaction();
-  }, [activeUnit?.id, starterCode]);
+    setLabTab("css");
+    setFeedbackEffect(null);
+
+    setRobotReaction((current) => ({
+      type: "idle",
+      key: current.key + 1,
+    }));
+  }, [activeUnit?.id, starterHtml, starterCss]);
 
   /* ==================================================== */
-  /* SAVE LOCAL LEARNING STATE */
+  /* SAVE PROGRESS */
   /* ==================================================== */
 
   useEffect(() => {
@@ -623,17 +695,43 @@ function HTMLFoundations() {
     : 0;
 
   /* ==================================================== */
-  /* CODE CHANGE */
+  /* REACTION / FEEDBACK */
   /* ==================================================== */
 
-  const handleCodeChange = (event) => {
+  const triggerRobotReaction = (type) => {
+    setRobotReaction((current) => ({
+      type,
+      key: current.key + 1,
+    }));
+  };
+
+  const triggerFeedback = (type) => {
+    setFeedbackEffect((current) => ({
+      type,
+      key: (current?.key || 0) + 1,
+    }));
+  };
+
+  const showXpToast = (amount) => {
+    if (!amount) {
+      return;
+    }
+
+    setXpToast((current) => ({
+      amount,
+      key: (current?.key || 0) + 1,
+    }));
+  };
+
+  /* ==================================================== */
+  /* CSS CHANGE */
+  /* ==================================================== */
+
+  const handleCssChange = (event) => {
     const value = event.target.value;
 
-    setEditorCode(value);
+    setCssCode(value);
     setResult(null);
-    setShowHintPrompt(false);
-    clearFeedbackFx();
-    resetRobotReaction();
 
     if (!activeUnit) {
       return;
@@ -645,8 +743,13 @@ function HTMLFoundations() {
       drafts: {
         ...current.drafts,
 
-        [activeUnit.id]: value,
+        [activeUnit.id]: {
+          html: htmlCode,
+          css: value,
+        },
       },
+
+      lastActiveUnitId: activeUnit.id,
     }));
   };
 
@@ -659,12 +762,12 @@ function HTMLFoundations() {
       return;
     }
 
-    setEditorCode(starterCode);
+    setHtmlCode(starterHtml);
+    setCssCode(starterCss);
 
     setResult(null);
-    setShowHintPrompt(false);
-    clearFeedbackFx();
-    resetRobotReaction();
+    setHintIndex(-1);
+    setLabTab("css");
 
     setLearningProgress((current) => {
       const drafts = {
@@ -676,8 +779,14 @@ function HTMLFoundations() {
       return {
         ...current,
         drafts,
+        lastActiveUnitId: activeUnit.id,
       };
     });
+
+    setRobotReaction((current) => ({
+      type: "idle",
+      key: current.key + 1,
+    }));
   };
 
   /* ==================================================== */
@@ -686,7 +795,7 @@ function HTMLFoundations() {
 
   const completeUnit = (unit) => {
     if (!unit) {
-      return 0;
+      return false;
     }
 
     const alreadyCompleted = isCompleted(unit);
@@ -698,6 +807,7 @@ function HTMLFoundations() {
       completedLessonIds: [...learningProgress.completedLessonIds],
       completedChallengeIds: [...learningProgress.completedChallengeIds],
       xp: Number(learningProgress.xp) + reward,
+      lastActiveUnitId: unit.id,
     };
 
     if (unit.kind === "lesson" && !next.completedLessonIds.includes(unit.id)) {
@@ -726,7 +836,7 @@ function HTMLFoundations() {
       updateWebWorldLevelProgress(userId, LEVEL_ID, nextPercent);
     }
 
-    return reward;
+    return !alreadyCompleted;
   };
 
   /* ==================================================== */
@@ -740,39 +850,56 @@ function HTMLFoundations() {
 
     if (activeUnit.kind === "lesson") {
       if (!interactiveBlock) {
-        const reward = completeUnit(activeUnit);
+        const newlyCompleted = completeUnit(activeUnit);
 
         setResult({
           passed: true,
           message: "Lesson complete!",
         });
 
-        setShowHintPrompt(false);
-        triggerFeedbackFx("success");
         triggerRobotReaction("happy");
-        showXpReward(reward);
+
+        triggerFeedback("success");
+
+        if (newlyCompleted) {
+          showXpToast(activeUnit.data.xp);
+        }
 
         return;
       }
 
-      const validationResult = runValidation(
-        editorCode,
-        interactiveBlock.validation,
+      const validations = Array.isArray(interactiveBlock.validation)
+        ? interactiveBlock.validation
+        : [interactiveBlock.validation].filter(Boolean);
+
+      const validationResults = validations.map((validation) =>
+        runCssValidation(cssCode, validation),
       );
 
-      setResult(validationResult);
+      const passed = validationResults.every((item) => item.passed);
 
-      if (validationResult.passed) {
-        const reward = completeUnit(activeUnit);
+      const failedResult = validationResults.find((item) => !item.passed);
 
-        setShowHintPrompt(false);
-        triggerFeedbackFx("success");
-        triggerRobotReaction("happy");
-        showXpReward(reward);
-      } else {
-        setShowHintPrompt(hints.length > 0);
-        triggerFeedbackFx("error");
-        triggerRobotReaction("sad");
+      setResult({
+        passed,
+
+        message: passed
+          ? "Your CSS matches the mission!"
+          : failedResult?.message || "A few CSS rules still need attention.",
+
+        checks: validationResults,
+      });
+
+      triggerRobotReaction(passed ? "happy" : "sad");
+
+      triggerFeedback(passed ? "success" : "error");
+
+      if (passed) {
+        const newlyCompleted = completeUnit(activeUnit);
+
+        if (newlyCompleted) {
+          showXpToast(activeUnit.data.xp);
+        }
       }
 
       return;
@@ -783,7 +910,7 @@ function HTMLFoundations() {
     const requirementResults = requirements.map((requirement) => ({
       ...requirement,
 
-      result: runValidation(editorCode, requirement.validation),
+      result: runCssValidation(cssCode, requirement.validation),
     }));
 
     const passed = requirementResults.every(
@@ -800,17 +927,16 @@ function HTMLFoundations() {
       requirements: requirementResults,
     });
 
-    if (passed) {
-      const reward = completeUnit(activeUnit);
+    triggerRobotReaction(passed ? "happy" : "sad");
 
-      setShowHintPrompt(false);
-      triggerFeedbackFx("success");
-      triggerRobotReaction("happy");
-      showXpReward(reward);
-    } else {
-      setShowHintPrompt(hints.length > 0);
-      triggerFeedbackFx("error");
-      triggerRobotReaction("sad");
+    triggerFeedback(passed ? "success" : "error");
+
+    if (passed) {
+      const newlyCompleted = completeUnit(activeUnit);
+
+      if (newlyCompleted) {
+        showXpToast(activeUnit.data.xp);
+      }
     }
   };
 
@@ -834,12 +960,14 @@ function HTMLFoundations() {
 
     setActiveUnitId(nextUnit.id);
 
+    setLearningProgress((current) => ({
+      ...current,
+      lastActiveUnitId: nextUnit.id,
+    }));
+
     setResult(null);
     setHintIndex(-1);
-    setShowHintPrompt(false);
-    clearFeedbackFx();
-    setLabTab("code");
-    resetRobotReaction();
+    setLabTab("css");
   };
 
   /* ==================================================== */
@@ -856,12 +984,11 @@ function HTMLFoundations() {
       return;
     }
 
-    setShowHintPrompt(false);
     setHintIndex((current) => Math.min(current + 1, hints.length - 1));
   };
 
   /* ==================================================== */
-  /* SELECT SIDEBAR UNIT */
+  /* SELECT UNIT */
   /* ==================================================== */
 
   const handleSelectUnit = (unit, index) => {
@@ -871,11 +998,13 @@ function HTMLFoundations() {
 
     setActiveUnitId(unit.id);
 
+    setLearningProgress((current) => ({
+      ...current,
+      lastActiveUnitId: unit.id,
+    }));
+
     setResult(null);
     setHintIndex(-1);
-    setShowHintPrompt(false);
-    clearFeedbackFx();
-    resetRobotReaction();
   };
 
   /* ==================================================== */
@@ -895,7 +1024,7 @@ function HTMLFoundations() {
       <main className={styles.loadingPage}>
         <div className={styles.loaderOrb} />
 
-        <span>INITIALIZING HTML FOUNDATIONS</span>
+        <span>INITIALIZING CSS STYLING</span>
       </main>
     );
   }
@@ -909,7 +1038,7 @@ function HTMLFoundations() {
       <main className={styles.errorPage}>
         <XCircle size={34} />
 
-        <h1>Unable to load the level</h1>
+        <h1>Unable to load CSS Styling</h1>
 
         <p>{loadError}</p>
 
@@ -924,12 +1053,41 @@ function HTMLFoundations() {
     return null;
   }
 
+  const robotMessage =
+    robotReaction.type === "happy"
+      ? "That looks awesome!"
+      : robotReaction.type === "sad"
+        ? "Try one more change."
+        : "Let's style it.";
+
   /* ==================================================== */
   /* RENDER */
   /* ==================================================== */
 
   return (
     <main className={styles.page}>
+      {/* =============================================== */}
+      {/* XP TOAST */}
+      {/* =============================================== */}
+
+      {xpToast && (
+        <div
+          key={xpToast.key}
+          className={styles.xpToast}
+          role="status"
+          aria-live="polite"
+        >
+          <span className={styles.xpToastIcon}>
+            <Sparkles size={16} />
+          </span>
+
+          <div>
+            <strong>+{xpToast.amount} XP</strong>
+            <small>MISSION REWARD</small>
+          </div>
+        </div>
+      )}
+
       {/* =============================================== */}
       {/* TOP BAR */}
       {/* =============================================== */}
@@ -947,12 +1105,12 @@ function HTMLFoundations() {
           </button>
 
           <div className={styles.levelIdentity}>
-            <div className={styles.htmlMark}>&lt;/&gt;</div>
+            <div className={styles.cssMark}>CSS</div>
 
             <div>
-              <span>WORLD 01</span>
+              <span>WORLD 02</span>
 
-              <strong>HTML Foundations</strong>
+              <strong>CSS Styling</strong>
             </div>
           </div>
         </div>
@@ -982,31 +1140,13 @@ function HTMLFoundations() {
         </div>
       </header>
 
-      {xpToast && (
-        <div
-          key={xpToast.key}
-          className={styles.xpToast}
-          role="status"
-          aria-live="polite"
-        >
-          <span className={styles.xpToastIcon}>
-            <Sparkles size={16} />
-          </span>
-
-          <div>
-            <strong>+{xpToast.amount} XP</strong>
-            <small>MISSION REWARD</small>
-          </div>
-        </div>
-      )}
-
       {/* =============================================== */}
       {/* WORKSPACE */}
       {/* =============================================== */}
 
       <div className={styles.workspace}>
         {/* ============================================= */}
-        {/* NAVIGATION */}
+        {/* SIDEBAR */}
         {/* ============================================= */}
 
         <aside className={styles.sidebar}>
@@ -1017,6 +1157,10 @@ function HTMLFoundations() {
               {completedCount}/{totalCount}
             </strong>
           </div>
+
+          {/* =========================================== */}
+          {/* ROBOT */}
+          {/* =========================================== */}
 
           <div
             className={`${styles.robotCoach} ${
@@ -1039,15 +1183,13 @@ function HTMLFoundations() {
             <div className={styles.robotCoachText}>
               <span>CODE BUDDY</span>
 
-              <strong>
-                {robotReaction.type === "happy"
-                  ? "Great job!"
-                  : robotReaction.type === "sad"
-                    ? "Try again — you've got this."
-                    : "I'm with you."}
-              </strong>
+              <strong>{robotMessage}</strong>
             </div>
           </div>
+
+          {/* =========================================== */}
+          {/* LESSONS */}
+          {/* =========================================== */}
 
           <div className={styles.sectionLabel}>
             <BookOpen size={14} />
@@ -1095,6 +1237,10 @@ function HTMLFoundations() {
               );
             })}
           </div>
+
+          {/* =========================================== */}
+          {/* CHALLENGES */}
+          {/* =========================================== */}
 
           <div className={styles.sectionLabel}>
             <Target size={14} />
@@ -1184,6 +1330,10 @@ function HTMLFoundations() {
               <span>{activeUnit.data.difficulty}</span>
             </div>
 
+            {/* ========================================= */}
+            {/* LESSON BLOCKS */}
+            {/* ========================================= */}
+
             {activeUnit.kind === "lesson" &&
               activeUnit.data.blocks
                 ?.filter((block) => block.type !== "interactive")
@@ -1191,6 +1341,7 @@ function HTMLFoundations() {
                   if (block.type === "animation") {
                     return <LessonAnimation key={block.id} animation={block} />;
                   }
+
                   if (block.type === "text") {
                     return (
                       <article key={block.id} className={styles.textBlock}>
@@ -1234,14 +1385,18 @@ function HTMLFoundations() {
                   return null;
                 })}
 
+            {/* ========================================= */}
+            {/* MISSION */}
+            {/* ========================================= */}
+
             {activeUnit.kind === "lesson" && interactiveBlock && (
               <div className={styles.missionCard}>
                 <div className={styles.missionIcon}>
-                  <Play size={18} fill="currentColor" />
+                  <Code2 size={18} />
                 </div>
 
                 <div>
-                  <span>YOUR MISSION</span>
+                  <span>CSS MISSION</span>
 
                   <h2>{interactiveBlock.title}</h2>
 
@@ -1250,13 +1405,17 @@ function HTMLFoundations() {
               </div>
             )}
 
+            {/* ========================================= */}
+            {/* CHALLENGE */}
+            {/* ========================================= */}
+
             {activeUnit.kind === "challenge" && (
               <>
                 <div className={styles.challengeIntro}>
                   <Trophy size={24} />
 
                   <div>
-                    <span>BUILD CHALLENGE</span>
+                    <span>DESIGN CHALLENGE</span>
 
                     <p>{activeUnit.data.description}</p>
                   </div>
@@ -1276,15 +1435,22 @@ function HTMLFoundations() {
               </>
             )}
 
+            {/* ========================================= */}
+            {/* HINT */}
+            {/* ========================================= */}
+
             {hints.length > 0 && (
               <div className={styles.hintArea}>
                 <button
                   type="button"
-                  className={showHintPrompt ? styles.hintPromptActive : ""}
+                  className={
+                    result && !result.passed ? styles.hintPromptActive : ""
+                  }
                   onClick={handleHint}
                 >
                   <Lightbulb size={15} />
-                  {showHintPrompt ? "Try a hint" : "Need a hint?"}
+
+                  {result && !result.passed ? "Try a hint" : "Need a hint?"}
                 </button>
 
                 {hintIndex >= 0 && (
@@ -1300,18 +1466,18 @@ function HTMLFoundations() {
         {/* ============================================= */}
 
         <section
-          key={`lab-${activeUnit.id}-${feedbackFx.key}`}
+          key={feedbackEffect?.key || "lab"}
           className={`${styles.lab} ${
-            feedbackFx.type === "success"
+            feedbackEffect?.type === "success"
               ? styles.labSuccess
-              : feedbackFx.type === "error"
+              : feedbackEffect?.type === "error"
                 ? styles.labError
                 : ""
           }`}
         >
-          {feedbackFx.type === "success" && (
+          {feedbackEffect?.type === "success" && (
             <div
-              key={`success-${feedbackFx.key}`}
+              key={`success-${feedbackEffect.key}`}
               className={styles.successBurst}
               aria-hidden="true"
             >
@@ -1326,9 +1492,9 @@ function HTMLFoundations() {
             </div>
           )}
 
-          {feedbackFx.type === "error" && (
+          {feedbackEffect?.type === "error" && (
             <div
-              key={`error-${feedbackFx.key}`}
+              key={`error-${feedbackEffect.key}`}
               className={styles.errorFlash}
               aria-hidden="true"
             />
@@ -1336,9 +1502,9 @@ function HTMLFoundations() {
 
           <div className={styles.labHeader}>
             <div>
-              <span>LIVE LAB</span>
+              <span>STYLE LAB</span>
 
-              <strong>HTML Playground</strong>
+              <strong>CSS Playground</strong>
             </div>
 
             <button
@@ -1351,14 +1517,27 @@ function HTMLFoundations() {
             </button>
           </div>
 
+          {/* =========================================== */}
+          {/* TABS */}
+          {/* =========================================== */}
+
           <div className={styles.labTabs}>
             <button
               type="button"
-              className={labTab === "code" ? styles.labTabActive : ""}
-              onClick={() => setLabTab("code")}
+              className={labTab === "html" ? styles.labTabActive : ""}
+              onClick={() => setLabTab("html")}
+            >
+              <FileCode2 size={14} />
+              HTML
+            </button>
+
+            <button
+              type="button"
+              className={labTab === "css" ? styles.labTabActive : ""}
+              onClick={() => setLabTab("css")}
             >
               <Code2 size={14} />
-              Code
+              CSS
             </button>
 
             <button
@@ -1371,23 +1550,50 @@ function HTMLFoundations() {
             </button>
           </div>
 
+          {/* =========================================== */}
+          {/* LAB BODY */}
+          {/* =========================================== */}
+
           <div className={styles.labBody}>
-            {labTab === "code" ? (
+            {labTab === "html" && (
               <div className={styles.editor}>
                 <div className={styles.lineRail}>
-                  {editorCode.split("\n").map((_, index) => (
+                  {htmlCode.split("\n").map((_, index) => (
+                    <span key={index}>{index + 1}</span>
+                  ))}
+                </div>
+
+                <div className={styles.readOnlyEditor}>
+                  <div className={styles.readOnlyBadge}>HTML STRUCTURE</div>
+
+                  <textarea
+                    value={htmlCode}
+                    readOnly
+                    spellCheck={false}
+                    aria-label="HTML structure"
+                  />
+                </div>
+              </div>
+            )}
+
+            {labTab === "css" && (
+              <div className={styles.editor}>
+                <div className={styles.lineRail}>
+                  {cssCode.split("\n").map((_, index) => (
                     <span key={index}>{index + 1}</span>
                   ))}
                 </div>
 
                 <textarea
-                  value={editorCode}
-                  onChange={handleCodeChange}
+                  value={cssCode}
+                  onChange={handleCssChange}
                   spellCheck={false}
-                  aria-label="HTML code editor"
+                  aria-label="CSS code editor"
                 />
               </div>
-            ) : (
+            )}
+
+            {labTab === "preview" && (
               <div className={styles.preview}>
                 <div className={styles.browserBar}>
                   <i />
@@ -1398,8 +1604,8 @@ function HTMLFoundations() {
                 </div>
 
                 <iframe
-                  title="HTML live preview"
-                  srcDoc={createPreviewDocument(editorCode)}
+                  title="CSS live preview"
+                  srcDoc={createPreviewDocument(htmlCode, cssCode)}
                   sandbox=""
                 />
               </div>
@@ -1424,13 +1630,37 @@ function HTMLFoundations() {
 
               <div>
                 <strong>
-                  {result.passed ? "Mission complete!" : "Almost there"}
+                  {result.passed ? "Style mission complete!" : "Almost there"}
                 </strong>
 
                 <span>{result.message}</span>
               </div>
             </div>
           )}
+
+          {/* =========================================== */}
+          {/* LESSON CHECK RESULTS */}
+          {/* =========================================== */}
+
+          {result?.checks && result.checks.length > 1 && (
+            <div className={styles.requirementResults}>
+              {result.checks.map((check, index) => (
+                <div key={index}>
+                  {check.passed ? (
+                    <CheckCircle2 size={14} />
+                  ) : (
+                    <XCircle size={14} />
+                  )}
+
+                  <span>{check.message}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* =========================================== */}
+          {/* CHALLENGE RESULTS */}
+          {/* =========================================== */}
 
           {result?.requirements && (
             <div className={styles.requirementResults}>
@@ -1449,7 +1679,7 @@ function HTMLFoundations() {
           )}
 
           {/* =========================================== */}
-          {/* ACTIONS */}
+          {/* FOOTER */}
           {/* =========================================== */}
 
           <footer className={styles.labFooter}>
@@ -1477,7 +1707,7 @@ function HTMLFoundations() {
                 onClick={handleCheckAnswer}
               >
                 <Check size={17} />
-                Check Answer
+                Check CSS
               </button>
             )}
           </footer>
@@ -1497,13 +1727,13 @@ function HTMLFoundations() {
               <Trophy size={38} />
             </div>
 
-            <span>HTML FOUNDATIONS</span>
+            <span>CSS STYLING</span>
 
-            <h2>World upgrade complete.</h2>
+            <h2>Your designs are alive.</h2>
 
             <p>
-              You mastered the foundations of HTML. Your next destination is now
-              unlocked.
+              You mastered colors, typography, spacing, layouts, responsive
+              design and motion. JavaScript Core is now unlocked.
             </p>
 
             <div className={styles.completeStats}>
@@ -1520,7 +1750,7 @@ function HTMLFoundations() {
               </div>
 
               <div>
-                <strong>CSS</strong>
+                <strong>JS</strong>
 
                 <span>UNLOCKED</span>
               </div>
@@ -1537,4 +1767,4 @@ function HTMLFoundations() {
   );
 }
 
-export default HTMLFoundations;
+export default CSSStyling;

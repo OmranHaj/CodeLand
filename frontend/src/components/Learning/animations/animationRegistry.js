@@ -5,6 +5,15 @@ import HtmlLinksImagesAnimation from "./HtmlLinksImagesAnimation";
 import HtmlListBuilderAnimation from "./HtmlListBuilderAnimation";
 import HtmlFormFlowAnimation from "./HtmlFormFlowAnimation";
 
+import CssIntroTransformationAnimation from "./CssIntroTransformationAnimation";
+import CssColorReactorAnimation from "./CssColorReactorAnimation";
+import CssTypographyLabAnimation from "./CssTypographyLabAnimation";
+import CssBoxModelAnimation from "./CssBoxModelAnimation";
+import CssFlexboxLayoutAnimation from "./CssFlexboxLayoutAnimation";
+import CssGridBuilderAnimation from "./CssGridBuilderAnimation";
+import CssResponsiveViewportAnimation from "./CssResponsiveViewportAnimation";
+import CssMotionTimelineAnimation from "./CssMotionTimelineAnimation";
+
 import { ANIMATION_TEMPLATES_BY_ID } from "./animationTemplates";
 
 /* ====================================================== */
@@ -12,6 +21,10 @@ import { ANIMATION_TEMPLATES_BY_ID } from "./animationTemplates";
 /* ====================================================== */
 
 export const ANIMATION_COMPONENTS = {
+  /* ==================================================== */
+  /* HTML */
+  /* ==================================================== */
+
   "html-browser-render": HtmlBrowserRenderAnimation,
 
   "html-element": HtmlElementAnimation,
@@ -23,6 +36,26 @@ export const ANIMATION_COMPONENTS = {
   "html-list-builder": HtmlListBuilderAnimation,
 
   "html-form-flow": HtmlFormFlowAnimation,
+
+  /* ==================================================== */
+  /* CSS */
+  /* ==================================================== */
+
+  "css-intro-transformation": CssIntroTransformationAnimation,
+
+  "css-color-reactor": CssColorReactorAnimation,
+
+  "css-typography-lab": CssTypographyLabAnimation,
+
+  "css-box-model": CssBoxModelAnimation,
+
+  "css-flexbox-layout": CssFlexboxLayoutAnimation,
+
+  "css-grid-builder": CssGridBuilderAnimation,
+
+  "css-responsive-viewport": CssResponsiveViewportAnimation,
+
+  "css-motion-timeline": CssMotionTimelineAnimation,
 };
 
 /* ====================================================== */
@@ -39,6 +72,10 @@ export function getAnimationDefinition(templateId) {
   const component = ANIMATION_COMPONENTS[templateId];
 
   if (!metadata || !component) {
+    console.warn(
+      `[CodeLand] Animation template is not fully registered: ${templateId}`,
+    );
+
     return null;
   }
 
