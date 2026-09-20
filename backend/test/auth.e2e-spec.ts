@@ -87,6 +87,38 @@ describe('AuthController (e2e)', () => {
     });
   });
 
+  describe('Parent Code Verification', () => {
+    it('should reject invalid parent code with 400', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/verify-parent-code')
+        .send({ code: 'INVALID8' })
+        .expect(400);
+
+      expect(response.body.message).toContain('Invalid parent code');
+    });
+
+    it('should successfully verify valid parent code', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/verify-parent-code')
+        .send({ code: parentCode })
+        .expect(200);
+
+      expect(response.body.valid).toBe(true);
+      expect(response.body.code).toBe(parentCode);
+      expect(response.body.parent).toHaveProperty('email', testParentEmail);
+    });
+
+    it('should successfully verify valid parent code with CL- prefix', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/verify-parent-code')
+        .send({ code: `CL-${parentCode}` })
+        .expect(200);
+
+      expect(response.body.valid).toBe(true);
+      expect(response.body.code).toBe(parentCode);
+    });
+  });
+
   describe('Child Registration', () => {
     it('should fail if parentCode does not exist', async () => {
       const response = await request(app.getHttpServer())

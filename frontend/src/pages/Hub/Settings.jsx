@@ -1,16 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Check, Copy, Settings as SettingsIcon, UserRound, Users } from "lucide-react";
 import HubLayout from "../../components/Hub/HubLayout";
 import { getParentInviteCode, getProfile, getUser, userKey, writeStored } from "../../services/learningHub";
+import { apiRequest } from "../../services/api";
 
 export default function Settings() {
-  const user = getUser();
+  const [user, setUser] = useState(getUser);
   const [form, setForm] = useState(() => getProfile(user));
   const [message, setMessage] = useState("");
   const [failed, setFailed] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
 
-  const inviteCode = user?.role === "parent" ? getParentInviteCode(user) : null;
+  useEffect(() => {
+    async function syncUser() {
+      const token = localStorage.getItem("codeland_token");
+      if (token) {
+        try {
+          const profile = await apiRequest("/auth/me");
+          if (profile) {
+            const rawRole = (profile.role || "").toLowerCase();
+            const updated = {
+              ...getUser(),
+              ...profile,
+              role: rawRole === "child" ? "student" : rawRole,
+              parentCode: profile.parentCode,
+              inviteCode: profile.parentCode || profile.inviteCode,
+              fullName: profile.name || profile.fullName,
+            };
+            writeStored("codeland_current_user", updated);
+            setUser(updated);
+          }
+        } catch {
+          // ignore error
+        }
+      }
+    }
+    syncUser();
+
+    const handleUpdate = () => setUser(getUser());
+    window.addEventListener("codeland:update", handleUpdate);
+    return () => window.removeEventListener("codeland:update", handleUpdate);
+  }, []);
+
+  const inviteCode = (user?.role === "parent" || user?.role === "PARENT")
+    ? (user?.parentCode || user?.inviteCode || getParentInviteCode(user) || null)
+    : null;
 
   const handleCopyInviteCode = async () => {
     if (!inviteCode) return;

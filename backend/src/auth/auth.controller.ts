@@ -11,6 +11,7 @@ import {
 import { AuthService } from './auth.service.js';
 import { RegisterParentDto } from './dto/register-parent.dto.js';
 import { RegisterChildDto } from './dto/register-child.dto.js';
+import { VerifyParentCodeDto } from './dto/verify-parent-code.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 
@@ -29,12 +30,32 @@ export class AuthController {
   }
 
   /**
+   * Endpoint: POST /auth/verify-parent-code
+   * Verifies that a parent code exists and is valid.
+   */
+  @Post('verify-parent-code')
+  @HttpCode(HttpStatus.OK)
+  async verifyParentCode(@Body() dto: VerifyParentCodeDto) {
+    return this.authService.verifyParentCode(dto.code);
+  }
+
+  /**
    * Endpoint: POST /auth/register/child
    * Registers a new Child linked via parentCode and returns user info with JWT.
    */
   @Post('register/child')
   @HttpCode(HttpStatus.CREATED)
   async registerChild(@Body() dto: RegisterChildDto) {
+    return this.authService.registerChild(dto);
+  }
+
+  /**
+   * Endpoint: POST /auth/register/student
+   * Alias for registerChild to support frontend student terminology.
+   */
+  @Post('register/student')
+  @HttpCode(HttpStatus.CREATED)
+  async registerStudent(@Body() dto: RegisterChildDto) {
     return this.authService.registerChild(dto);
   }
 

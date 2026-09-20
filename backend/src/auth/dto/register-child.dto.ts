@@ -13,8 +13,12 @@ export class RegisterChildDto {
   @IsOptional()
   name?: string;
 
+  @IsString({ message: 'Full name must be a string' })
+  @IsOptional()
+  fullName?: string;
+
   @IsString({ message: 'Parent code must be a string' })
   @IsNotEmpty({ message: 'Parent code is required' })
-  @Length(6, 8, { message: 'Parent code must be between 6 and 8 characters' })
+  @Length(6, 12, { message: 'Parent code must be between 6 and 12 characters' })
   parentCode: string;
 }

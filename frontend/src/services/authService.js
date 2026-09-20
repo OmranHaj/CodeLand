@@ -13,10 +13,27 @@ export async function loginUser(credentials) {
     return mockLogin(credentials);
   }
 
-  return apiRequest("/auth/login", {
+  const data = await apiRequest("/auth/login", {
     method: "POST",
     body: JSON.stringify(credentials),
   });
+
+  if (data?.accessToken) {
+    localStorage.setItem("codeland_token", data.accessToken);
+  }
+
+  if (data?.user) {
+    const rawRole = (data.user.role || "").toLowerCase();
+    const normalizedUser = {
+      ...data.user,
+      role: rawRole === "child" ? "student" : rawRole,
+      inviteCode: data.user.parentCode || data.user.inviteCode,
+      fullName: data.user.name || data.user.fullName,
+    };
+    return { ...data, user: normalizedUser };
+  }
+
+  return data;
 }
 
 /* ====================================================== */
@@ -28,10 +45,34 @@ export async function registerParent(parentData) {
     return mockRegisterParent(parentData);
   }
 
-  return apiRequest("/auth/register/parent", {
+  const payload = {
+    email: parentData.email,
+    password: parentData.password,
+    name: parentData.fullName || parentData.name,
+    ...(parentData.fullName ? { fullName: parentData.fullName } : {}),
+  };
+
+  const data = await apiRequest("/auth/register/parent", {
     method: "POST",
-    body: JSON.stringify(parentData),
+    body: JSON.stringify(payload),
   });
+
+  if (data?.accessToken) {
+    localStorage.setItem("codeland_token", data.accessToken);
+  }
+
+  if (data?.user) {
+    const rawRole = (data.user.role || "").toLowerCase();
+    const normalizedUser = {
+      ...data.user,
+      role: rawRole === "child" ? "student" : rawRole,
+      inviteCode: data.user.parentCode || data.user.inviteCode,
+      fullName: data.user.name || data.user.fullName,
+    };
+    return { ...data, user: normalizedUser };
+  }
+
+  return data;
 }
 
 /* ====================================================== */
@@ -45,7 +86,6 @@ export async function verifyParentCode(code) {
 
   return apiRequest("/auth/verify-parent-code", {
     method: "POST",
-
     body: JSON.stringify({
       code,
     }),
@@ -61,10 +101,34 @@ export async function registerStudent(studentData) {
     return mockRegisterStudent(studentData);
   }
 
-  return apiRequest("/auth/register/student", {
+  const payload = {
+    parentCode: studentData.parentCode,
+    email: studentData.email,
+    password: studentData.password,
+    name: studentData.name || studentData.fullName,
+    ...(studentData.fullName ? { fullName: studentData.fullName } : {}),
+  };
+
+  const data = await apiRequest("/auth/register/child", {
     method: "POST",
-    body: JSON.stringify(studentData),
+    body: JSON.stringify(payload),
   });
+
+  if (data?.accessToken) {
+    localStorage.setItem("codeland_token", data.accessToken);
+  }
+
+  if (data?.user) {
+    const rawRole = (data.user.role || "").toLowerCase();
+    const normalizedUser = {
+      ...data.user,
+      role: rawRole === "child" ? "student" : rawRole,
+      fullName: data.user.name || data.user.fullName,
+    };
+    return { ...data, user: normalizedUser };
+  }
+
+  return data;
 }
 
 /* ====================================================== */

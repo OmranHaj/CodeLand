@@ -12,4 +12,8 @@ export class RegisterParentDto {
   @IsString({ message: 'Name must be a string' })
   @IsOptional()
   name?: string;
+
+  @IsString({ message: 'Full name must be a string' })
+  @IsOptional()
+  fullName?: string;
 }

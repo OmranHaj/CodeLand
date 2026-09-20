@@ -49,7 +49,7 @@ export class AuthService {
       data: {
         email: dto.email.toLowerCase(),
         password: hashedPassword,
-        name: dto.name,
+        name: dto.name || dto.fullName,
         role: Role.PARENT,
         parentCode,
       },
@@ -73,7 +73,45 @@ export class AuthService {
     };
   }
 
+  /**
+   * Verifies if a parentCode belongs to a valid registered parent.
+   */
+  async verifyParentCode(code: string) {
+    const rawCode = code.trim().toUpperCase();
+    const cleanCode = rawCode.replace(/^CL-/, '');
 
+    const parent = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { parentCode: rawCode },
+          { parentCode: cleanCode },
+        ],
+        role: Role.PARENT,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        parentCode: true,
+      },
+    });
+
+    if (!parent) {
+      throw new BadRequestException(
+        'Invalid parent code. Please check the code and try again.',
+      );
+    }
+
+    return {
+      valid: true,
+      code: parent.parentCode,
+      parent: {
+        id: parent.id,
+        fullName: parent.name,
+        email: parent.email,
+      },
+    };
+  }
 
   /**
    * Register a new Child account.
@@ -91,11 +129,20 @@ export class AuthService {
     }
 
     // Validate parent code
-    const parent = await this.prisma.user.findUnique({
-      where: { parentCode: dto.parentCode.trim().toUpperCase() },
+    const rawCode = dto.parentCode.trim().toUpperCase();
+    const cleanCode = rawCode.replace(/^CL-/, '');
+
+    const parent = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { parentCode: rawCode },
+          { parentCode: cleanCode },
+        ],
+        role: Role.PARENT,
+      },
     });
 
-    if (!parent || parent.role !== Role.PARENT) {
+    if (!parent) {
       throw new BadRequestException(
         'Invalid parent code. A valid parent code from an active parent account is required.',
       );
@@ -109,7 +156,7 @@ export class AuthService {
       data: {
         email: dto.email.toLowerCase(),
         password: hashedPassword,
-        name: dto.name,
+        name: dto.name || dto.fullName,
         role: Role.CHILD,
         parentId: parent.id,
       },

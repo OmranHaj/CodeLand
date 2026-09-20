@@ -42,51 +42,36 @@ export function getSummary(user = getUser()) {
 export const pathRoute = id => id === "cpp-developer" ? "/student/cpp-world" : id === "python-explorer" ? "/student/python-world" : "/student/world";
 
 export function getParentInviteCode(user = getUser()) {
-  if (!user || user.role !== "parent") return null;
+  if (!user) return null;
+  const role = (user.role || "").toLowerCase();
+  if (role !== "parent") return null;
 
-  let code = user.inviteCode;
-  const mockUsers = readStored("codeland_mock_users", []);
-  const parentInStore = Array.isArray(mockUsers)
-    ? mockUsers.find(u => u.id === user.id || (u.email && u.email.toLowerCase() === user.email?.toLowerCase()))
-    : null;
-
-  if (parentInStore?.inviteCode) {
-    code = parentInStore.inviteCode;
+  // Real parent code from backend takes absolute priority
+  if (user.parentCode && user.parentCode !== "DEMO-ONLY") {
+    return user.parentCode;
+  }
+  if (user.inviteCode && user.inviteCode !== "DEMO-ONLY" && user.inviteCode !== "CL-2026") {
+    return user.inviteCode;
   }
 
-  if (!code || code === "DEMO-ONLY") {
-    code = "CL-2026";
-  }
+  // Only check mock users if in mock mode
+  const isMockMode = import.meta.env.VITE_USE_MOCK_API === "true";
+  if (isMockMode) {
+    const mockUsers = readStored("codeland_mock_users", []);
+    const parentInStore = Array.isArray(mockUsers)
+      ? mockUsers.find(u => u.id === user.id || (u.email && u.email.toLowerCase() === user.email?.toLowerCase()))
+      : null;
 
-  // Ensure current user is synced with the code
-  if (user.inviteCode !== code) {
-    writeStored("codeland_current_user", { ...user, inviteCode: code });
-  }
-
-  // Ensure mock users contains this parent with the code
-  if (Array.isArray(mockUsers)) {
-    let updated = false;
-    const nextMockUsers = mockUsers.map(u => {
-      if (u.id === user.id || (u.email && u.email.toLowerCase() === user.email?.toLowerCase())) {
-        updated = true;
-        return { ...u, inviteCode: code };
-      }
-      return u;
-    });
-
-    if (!updated && user.id) {
-      nextMockUsers.push({
-        id: user.id,
-        fullName: user.fullName || "Parent",
-        email: user.email || "parent@codeland.com",
-        role: "parent",
-        inviteCode: code,
-        createdAt: new Date().toISOString()
-      });
+    if (parentInStore?.inviteCode) {
+      return parentInStore.inviteCode;
     }
-    writeStored("codeland_mock_users", nextMockUsers);
   }
 
-  return code;
+  // If demo mode
+  if (user.isDemo) {
+    return "CL-2026";
+  }
+
+  return user.parentCode || user.inviteCode || null;
 }
 

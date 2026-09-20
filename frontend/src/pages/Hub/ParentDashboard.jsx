@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Users,
@@ -24,6 +24,7 @@ import {
 import HubLayout from "../../components/Hub/HubLayout";
 import ParentMasteryOrb from "../../components/Parent/ParentMasteryOrb";
 import { getParentInviteCode, getUser, readStored, writeStored, startPreview } from "../../services/learningHub";
+import { apiRequest } from "../../services/api";
 import {
   buildParentChildrenList,
   generate30DayActivity
@@ -39,7 +40,38 @@ export default function ParentDashboard() {
   const [linkInputCode, setLinkInputCode] = useState("");
   const [linkSuccessMessage, setLinkSuccessMessage] = useState("");
 
-  const inviteCode = getParentInviteCode(user) || user?.inviteCode || "CL-2026";
+  useEffect(() => {
+    async function syncUser() {
+      const token = localStorage.getItem("codeland_token");
+      if (token) {
+        try {
+          const profile = await apiRequest("/auth/me");
+          if (profile) {
+            const rawRole = (profile.role || "").toLowerCase();
+            const updated = {
+              ...getUser(),
+              ...profile,
+              role: rawRole === "child" ? "student" : rawRole,
+              parentCode: profile.parentCode,
+              inviteCode: profile.parentCode || profile.inviteCode,
+              fullName: profile.name || profile.fullName,
+            };
+            writeStored("codeland_current_user", updated);
+            setUser(updated);
+          }
+        } catch {
+          // ignore error
+        }
+      }
+    }
+    syncUser();
+
+    const handleUpdate = () => setUser(getUser());
+    window.addEventListener("codeland:update", handleUpdate);
+    return () => window.removeEventListener("codeland:update", handleUpdate);
+  }, []);
+
+  const inviteCode = user?.parentCode || user?.inviteCode || getParentInviteCode(user) || "";
 
   const mockMode = import.meta.env.VITE_USE_MOCK_API === "true";
   const storedUsers = mockMode ? readStored("codeland_mock_users", []) : [];
