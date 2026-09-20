@@ -640,3 +640,12 @@
     transition: none;
   }
 }
+
+/* Give the hero a consistent reading width and clear the fixed navigation. */
+.hero { padding-top: 122px; padding-bottom: 55px; }
+.container { width: min(1180px, calc(100% - 48px)); gap: 65px; }
+.title { font-size: clamp(46px, 5.3vw, 76px); }
+.description { font-size: 16px; }
+.robotMover { pointer-events: none; }
+@media(max-width:900px) { .hero { padding-top: 90px; } .container { padding-block: 35px; gap: 40px; } }
+@media(max-width:600px) { .container { width: calc(100% - 36px); } .title { font-size: 45px; letter-spacing: -1.8px; } .stats { gap: 0; } .stats div { padding-inline: 18px; } .robotArea { height: 330px; min-height: 330px; } }

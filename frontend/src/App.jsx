@@ -1,33 +1,77 @@
-import { Routes, Route } from "react-router-dom";
+import { lazy, Suspense, useSyncExternalStore } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { RouteEffects, RouteErrorBoundary } from "./components/Hub/RouteSupport";
 
-import Home from "./pages/Home/Home";
-import Login from "./pages/Login/Login";
-import Register from "./pages/Register/Register";
+const Home = lazy(() => import("./pages/Home/Home"));
+const Login = lazy(() => import("./pages/Login/Login"));
+const Register = lazy(() => import("./pages/Register/Register"));
 
-import ChoosePath from "./pages/ChoosePath/ChoosePath";
+const ChoosePath = lazy(() => import("./pages/ChoosePath/ChoosePath"));
 
-import StudentWorld from "./pages/StudentWorld/StudentWorld";
+const StudentWorld = lazy(() => import("./pages/StudentWorld/StudentWorld"));
 
-import CppWorld from "./pages/CppWorld/CppWorld";
-import CppSyntaxCore from "./pages/CppSyntaxCore/CppSyntaxCore";
-import CppDataCircuits from "./pages/CppDataCircuits/CppDataCircuits";
-import CppLogicGates from "./pages/CppLogicGates/CppLogicGates";
-import CppFunctionEngine from "./pages/CppFunctionEngine/CppFunctionEngine";
-import CppArrayMatrix from "./pages/CppArrayMatrix/CppArrayMatrix";
-import CppMemoryVault from "./pages/CppMemoryVault/CppMemoryVault";
-import CppObjectForge from "./pages/CppObjectForge/CppObjectForge";
-import CppStlCommand from "./pages/CppStlCommand/CppStlCommand";
-import CppFinalSystem from "./pages/CppFinalSystem/CppFinalSystem";
+const CppWorld = lazy(() => import("./pages/CppWorld/CppWorld"));
+const CppSyntaxCore = lazy(() => import("./pages/CppSyntaxCore/CppSyntaxCore"));
+const CppDataCircuits = lazy(() => import("./pages/CppDataCircuits/CppDataCircuits"));
+const CppLogicGates = lazy(() => import("./pages/CppLogicGates/CppLogicGates"));
+const CppFunctionEngine = lazy(() => import("./pages/CppFunctionEngine/CppFunctionEngine"));
+const CppArrayMatrix = lazy(() => import("./pages/CppArrayMatrix/CppArrayMatrix"));
+const CppMemoryVault = lazy(() => import("./pages/CppMemoryVault/CppMemoryVault"));
+const CppObjectForge = lazy(() => import("./pages/CppObjectForge/CppObjectForge"));
+const CppStlCommand = lazy(() => import("./pages/CppStlCommand/CppStlCommand"));
+const CppFinalSystem = lazy(() => import("./pages/CppFinalSystem/CppFinalSystem"));
 
-import HTMLFoundations from "./pages/HTMLFoundations/HTMLFoundations";
-import CSSStyling from "./pages/CSSStyling/CSSStyling";
-import JavaScriptCore from "./pages/JavaScriptCore/JavaScriptCore";
-import ReactNexus from "./pages/ReactNexus/ReactNexus";
-import ProjectShowcase from "./pages/ProjectShowcase/ProjectShowcase";
+const HTMLFoundations = lazy(() => import("./pages/HTMLFoundations/HTMLFoundations"));
+const CSSStyling = lazy(() => import("./pages/CSSStyling/CSSStyling"));
+const JavaScriptCore = lazy(() => import("./pages/JavaScriptCore/JavaScriptCore"));
+const ReactNexus = lazy(() => import("./pages/ReactNexus/ReactNexus"));
+const ProjectShowcase = lazy(() => import("./pages/ProjectShowcase/ProjectShowcase"));
+
+const Dashboard = lazy(() => import("./pages/Hub/Dashboard"));
+const Courses = lazy(() => import("./pages/Hub/Courses"));
+const Challenges = lazy(() => import("./pages/Hub/Challenges"));
+const Achievements = lazy(() => import("./pages/Hub/Achievements"));
+const Settings = lazy(() => import("./pages/Hub/Settings"));
+const PythonWorld = lazy(() => import("./pages/Hub/PythonWorld"));
+const AlgorithmLab = lazy(() => import("./pages/Hub/AlgorithmLab"));
+const ParentDashboard = lazy(() => import("./pages/Hub/ParentDashboard"));
+const ParentCurriculum = lazy(() => import("./pages/Hub/ParentCurriculum"));
+const ParentReports = lazy(() => import("./pages/Hub/ParentReports"));
+const ParentGuide = lazy(() => import("./pages/Hub/ParentGuide"));
+const Help = lazy(() => import("./pages/Hub/Help"));
+const NotFound = lazy(() => import("./pages/Hub/NotFound"));
+
+function subscribeSession(callback) {
+  window.addEventListener("codeland:update", callback);
+  window.addEventListener("storage", callback);
+  return () => { window.removeEventListener("codeland:update", callback); window.removeEventListener("storage", callback); };
+}
+function getSessionSnapshot() {
+  try { return localStorage.getItem("codeland_current_user") || "guest"; } catch { return "guest"; }
+}
 
 function App() {
+  const location = useLocation();
+  const session = useSyncExternalStore(subscribeSession, getSessionSnapshot);
   return (
-    <Routes>
+    <><RouteEffects /><RouteErrorBoundary key={`${location.pathname}:${session}`}><Suspense fallback={<div className="route-status" role="status"><span className="route-spinner" /><p>Opening your next adventure…</p></div>}><Routes>
+      <Route path="/student/dashboard" element={<Dashboard />} />
+      <Route path="/courses" element={<Courses />} />
+      <Route path="/challenges" element={<Challenges key="arena" />} />
+      <Route path="/challenges/:challengeId" element={<Challenges key={location.pathname} />} />
+      <Route path="/student/achievements" element={<Achievements />} />
+      <Route path="/student/settings" element={<Settings />} />
+      <Route path="/student/profile" element={<Settings />} />
+      <Route path="/student/python-world" element={<PythonWorld key={location.search} />} />
+      <Route path="/student/algorithm-lab/:sectorId" element={<AlgorithmLab />} />
+      <Route path="/student/algorithm-lab" element={<AlgorithmLab />} />
+      <Route path="/parent/dashboard" element={<ParentDashboard />} />
+      <Route path="/parent/curriculum" element={<ParentCurriculum />} />
+      <Route path="/parent/reports" element={<ParentReports />} />
+      <Route path="/parent/guide" element={<ParentGuide />} />
+      <Route path="/help" element={<Help />} />
+      <Route path="/forgot-password" element={<Help />} />
+      <Route path="*" element={<NotFound />} />
       {/* PUBLIC */}
       <Route path="/" element={<Home />} />
 
@@ -104,7 +148,7 @@ function App() {
         path="/student/level/cpp-final-system"
         element={<CppFinalSystem />}
       />
-    </Routes>
+    </Routes></Suspense></RouteErrorBoundary></>
   );
 }
 

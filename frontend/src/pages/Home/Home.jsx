@@ -7,6 +7,7 @@ import LearningPaths from "../../components/LearningPaths/LearningPaths";
 import HowItWorks from "../../components/HowItWorks/HowItWorks";
 import Footer from "../../components/Footer/Footer";
 import Reveal from "../../components/Reveal/Reveal";
+import HomeExtras from "../../components/HomeExtras/HomeExtras";
 
 import { Link } from "react-router-dom";
 
@@ -312,6 +313,7 @@ function Home() {
       {/* FOOTER */}
       {/* ================================= */}
 
+      <HomeExtras />
       <Footer />
     </main>
   );

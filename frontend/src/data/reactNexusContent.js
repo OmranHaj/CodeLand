@@ -76,6 +76,17 @@ export const REACT_NEXUS_CONTENT = {
         },
 
         {
+          id: "react-intro-animation",
+          type: "animation",
+          template: "react-intro-nexus",
+          props: {
+            appName: "CodeLand App",
+            components: ["Header", "ProfileCard", "ActionButton"],
+            reusableComponent: "ActionButton",
+          },
+        },
+
+        {
           id: "react-intro-tip",
 
           type: "tip",
@@ -168,6 +179,17 @@ export const REACT_NEXUS_CONTENT = {
         },
 
         {
+          id: "jsx-animation",
+          type: "animation",
+          template: "react-jsx-transform",
+          props: {
+            variableName: "name",
+            variableValue: "Maya",
+            element: "h2",
+          },
+        },
+
+        {
           id: "jsx-example",
 
           type: "code",
@@ -250,6 +272,17 @@ function Greeting() {
 
           content:
             "Components help keep your interface organized. One component can be reused many times throughout an application.",
+        },
+
+        {
+          id: "components-animation",
+          type: "animation",
+          template: "react-component-tree",
+          props: {
+            rootComponent: "Profile",
+            childComponents: ["Avatar", "PlayerInfo", "Badge"],
+            repeatedComponent: "Badge",
+          },
         },
 
         {
@@ -352,6 +385,18 @@ function Profile() {
         },
 
         {
+          id: "props-animation",
+          type: "animation",
+          template: "react-props-flow",
+          props: {
+            parentName: "App",
+            childName: "PlayerCard",
+            propName: "name",
+            propValue: "Lina",
+          },
+        },
+
+        {
           id: "props-example",
 
           type: "code",
@@ -445,6 +490,18 @@ function App() {
         },
 
         {
+          id: "state-animation",
+          type: "animation",
+          template: "react-state-core",
+          props: {
+            stateName: "score",
+            setterName: "setScore",
+            initialValue: 0,
+            updatedValue: 1,
+          },
+        },
+
+        {
           id: "state-example",
 
           type: "code",
@@ -533,6 +590,18 @@ function ScoreBoard() {
 
           content:
             "React uses event props such as onClick to run functions when users interact with the interface.",
+        },
+
+        {
+          id: "react-events-animation",
+          type: "animation",
+          template: "react-event-pulse",
+          props: {
+            eventName: "onClick",
+            handlerName: "handleClick",
+            buttonLabel: "Activate",
+            resultMessage: "Activated!",
+          },
         },
 
         {
@@ -630,6 +699,18 @@ function ScoreBoard() {
         },
 
         {
+          id: "conditional-animation",
+          type: "animation",
+          template: "react-conditional-branch",
+          props: {
+            conditionName: "online",
+            conditionValue: true,
+            trueText: "Online",
+            falseText: "Offline",
+          },
+        },
+
+        {
           id: "conditional-example",
 
           type: "code",
@@ -717,6 +798,17 @@ function ScoreBoard() {
 
           content:
             "React commonly uses the map method to transform arrays into lists of JSX elements.",
+        },
+
+        {
+          id: "lists-animation",
+          type: "animation",
+          template: "react-list-map",
+          props: {
+            arrayName: "skills",
+            items: ["HTML", "CSS", "JavaScript", "React"],
+            element: "li",
+          },
         },
 
         {
@@ -818,6 +910,19 @@ function Projects() {
 
           content:
             "React forms often store input values in state. The value prop controls the input, while onChange updates the state.",
+        },
+
+        {
+          id: "forms-animation",
+          type: "animation",
+          template: "react-form-control",
+          props: {
+            stateName: "username",
+            setterName: "setUsername",
+            initialValue: "",
+            typedValue: "Alex",
+            placeholder: "Explorer name",
+          },
         },
 
         {
@@ -924,6 +1029,17 @@ function UsernameForm() {
         },
 
         {
+          id: "effects-animation",
+          type: "animation",
+          template: "react-effect-sync",
+          props: {
+            componentName: "Nexus",
+            effectMessage: "Nexus ready",
+            dependencyLabel: "[]",
+          },
+        },
+
+        {
           id: "effects-example",
 
           type: "code",
@@ -1020,6 +1136,16 @@ function Nexus() {
 
           content:
             "Good React interfaces are built by combining small focused components instead of placing everything inside one giant component.",
+        },
+
+        {
+          id: "composition-animation",
+          type: "animation",
+          template: "react-composition-nexus",
+          props: {
+            parentComponent: "Profile",
+            components: ["Avatar", "PlayerInfo"],
+          },
         },
 
         {
@@ -1124,6 +1250,18 @@ function Profile() {
 
           content:
             "Reusable components accept data and behavior through props so the same design can work in many different places.",
+        },
+
+        {
+          id: "reusable-animation",
+          type: "animation",
+          template: "react-reusable-ui",
+          props: {
+            componentName: "ActionButton",
+            labelProp: "label",
+            actionProp: "onClick",
+            instances: ["Explore", "Continue", "Launch"],
+          },
         },
 
         {

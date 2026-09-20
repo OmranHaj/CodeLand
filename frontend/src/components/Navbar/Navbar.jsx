@@ -38,25 +38,25 @@ function Navbar() {
 
         {/* Desktop Navigation */}
         <nav className={styles.navLinks}>
-          <a href="#home">
+          <a href="/#home">
             <House size={17} />
             <span>Home</span>
           </a>
 
-          <a href="#why-codeland">
+          <a href="/#why-codeland">
             <Info size={17} />
             <span>Why CodeLand</span>
           </a>
 
-          <a href="#courses">
+          <Link to="/courses">
             <BookOpen size={17} />
             <span>Courses</span>
-          </a>
+          </Link>
 
-          <a href="#how-it-works">
+          <Link to="/student/dashboard">
             <Trophy size={17} />
-            <span>How It Works</span>
-          </a>
+            <span>My Space</span>
+          </Link>
         </nav>
 
         {/* Desktop Auth */}
@@ -85,30 +85,31 @@ function Navbar() {
 
       {/* Mobile Menu */}
       <div
+        inert={!menuOpen}
         className={`${styles.mobileMenu} ${
           menuOpen ? styles.mobileMenuOpen : ""
         }`}
       >
         <nav className={styles.mobileLinks}>
-          <a href="#home" onClick={closeMenu}>
+          <a href="/#home" onClick={closeMenu}>
             <House size={19} />
             <span>Home</span>
           </a>
 
-          <a href="#why-codeland" onClick={closeMenu}>
+          <a href="/#why-codeland" onClick={closeMenu}>
             <Info size={19} />
             <span>Why CodeLand</span>
           </a>
 
-          <a href="#courses" onClick={closeMenu}>
+          <Link to="/courses" onClick={closeMenu}>
             <BookOpen size={19} />
             <span>Courses</span>
-          </a>
+          </Link>
 
-          <a href="#how-it-works" onClick={closeMenu}>
+          <Link to="/student/dashboard" onClick={closeMenu}>
             <Trophy size={19} />
-            <span>How It Works</span>
-          </a>
+            <span>My Space</span>
+          </Link>
         </nav>
 
         <div className={styles.mobileActions}>

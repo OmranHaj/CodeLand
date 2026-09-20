@@ -19,6 +19,7 @@ import { FaGithub, FaDiscord } from "react-icons/fa";
 import { loginUser } from "../../services/authService";
 
 import styles from "./Login.module.css";
+import { startPreview } from "../../services/learningHub";
 
 function Login() {
   const navigate = useNavigate();
@@ -108,7 +109,7 @@ function Login() {
         );
 
         if (activePath) {
-          navigate("/student/world", {
+          navigate("/student/dashboard", {
             replace: true,
           });
 
@@ -272,9 +273,9 @@ function Login() {
                 <span>Remember me</span>
               </label>
 
-              <a href="#forgot-password" className={styles.forgotPassword}>
+              <Link to="/forgot-password" className={styles.forgotPassword}>
                 Forgot password?
-              </a>
+              </Link>
             </div>
 
             {/* ERROR */}
@@ -311,7 +312,7 @@ function Login() {
           <div className={styles.divider}>
             <span />
 
-            <p>or continue with</p>
+            <p>social sign-in · coming soon</p>
 
             <span />
           </div>
@@ -320,11 +321,12 @@ function Login() {
           {/* SOCIAL */}
           {/* ================================================= */}
 
+          <button type="button" className="auth-preview-button" onClick={() => { try { startPreview(); navigate("/student/dashboard"); } catch { setError("Please allow browser storage to start a preview."); } }}>Explore the student preview <ArrowRight size={16} /></button>
           <div className={styles.socialButtons}>
             <button
               type="button"
               className={styles.socialButton}
-              aria-label="Continue with Google"
+              aria-label="Google sign-in is not connected yet" disabled title="Social sign-in is not connected yet"
             >
               <FcGoogle size={24} />
 
@@ -334,7 +336,7 @@ function Login() {
             <button
               type="button"
               className={styles.socialButton}
-              aria-label="Continue with GitHub"
+              aria-label="GitHub sign-in is not connected yet" disabled title="Social sign-in is not connected yet"
             >
               <FaGithub size={23} />
 
@@ -344,7 +346,7 @@ function Login() {
             <button
               type="button"
               className={styles.socialButton}
-              aria-label="Continue with Discord"
+              aria-label="Discord sign-in is not connected yet" disabled title="Social sign-in is not connected yet"
             >
               <FaDiscord size={24} />
 

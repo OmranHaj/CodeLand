@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 
 import LessonRobot from "../../components/Learning/LessonRobot";
+import CppLessonAnimation from "../../components/Learning/CppLessonAnimation";
 
 import cppLogicGatesContent from "../../data/cppLogicGatesContent";
 
@@ -1391,6 +1392,13 @@ function CppLogicGates() {
                       .subtitle
                   }
                 </p>
+
+                {activeUnit.kind === "lesson" && (
+                  <CppLessonAnimation
+                    type={activeUnit.data.animation || activeUnit.data.id}
+                    lesson={activeUnit.data}
+                  />
+                )}
 
                 <div
                   className={

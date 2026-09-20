@@ -27,6 +27,7 @@ import {
 import { getLevelContent } from "../../services/learningContentService";
 
 import LessonRobot from "../../components/Learning/LessonRobot";
+import LessonAnimation from "../../components/Learning/animations/LessonAnimation";
 
 import styles from "./JavaScriptCore.module.css";
 
@@ -1333,6 +1334,12 @@ function JavaScriptCore() {
 
                 {activeUnit.kind === "lesson" &&
                   (activeUnit.data.blocks || []).map((block) => {
+                    if (block.type === "animation") {
+                      return (
+                        <LessonAnimation key={block.id} animation={block} />
+                      );
+                    }
+
                     if (block.type === "text") {
                       return (
                         <div key={block.id} className={styles.textBlock}>

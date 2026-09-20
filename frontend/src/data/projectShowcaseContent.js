@@ -1,5 +1,5 @@
 /* ====================================================== */
-/* PROJECT SHOWCASE CONTENT                               */
+/* PROJECT SHOWCASE CONTENT */
 /* ====================================================== */
 
 export const PROJECT_SHOWCASE_CONTENT = {
@@ -9,360 +9,1151 @@ export const PROJECT_SHOWCASE_CONTENT = {
 
   title: "Project Showcase",
 
-  subtitle: "Build something that is yours",
+  subtitle: "Build. Polish. Ship.",
 
   description:
-    "Bring everything together and create a complete project using HTML, CSS, JavaScript, and the UI thinking you learned throughout the Web World.",
+    "Turn everything you learned in HTML, CSS, JavaScript, and React into polished real-world projects.",
 
   version: 1,
 
   status: "published",
 
-  accent: "#ff6bd6",
+  accent: "#ffcf5a",
 
-  secondaryAccent: "#7c6cff",
+  secondaryAccent: "#ff6f91",
 
-  estimatedMinutes: 120,
-
-  /* ==================================================== */
-  /* PROJECT WORKSPACE                                    */
-  /* ==================================================== */
+  estimatedMinutes: 430,
 
   execution: {
     mode: "backend-runner",
-
     enabled: false,
-
-    language: "web-project",
+    language: "jsx",
   },
 
-  workspace: {
-    files: [
-      {
-        id: "html",
-        name: "index.html",
-        language: "html",
-      },
+  studio: {
+    label: "CAPSTONE STUDIO",
 
-      {
-        id: "css",
-        name: "styles.css",
-        language: "css",
-      },
+    headline: "You are not following tutorials anymore.",
 
+    description:
+      "Every mission starts with a product brief and ends with something you can proudly ship.",
+
+    level: "advanced-capstone",
+
+    rules: [
+      "Every build phase has deliverables and quality gates.",
+      "A phase is ready only when every required check is complete.",
+      "Your code draft is saved locally while you work.",
+      "Shipping a project requires a complete readiness pass.",
+    ],
+
+    workflow: [
       {
-        id: "javascript",
-        name: "script.js",
-        language: "javascript",
+        id: "brief",
+        label: "Brief",
+        status: "PLANNING",
+        description: "Understand the product, audience, and success criteria.",
+      },
+      {
+        id: "architecture",
+        label: "Architecture",
+        status: "PLANNING",
+        description:
+          "Plan components, data, and state ownership before building.",
+      },
+      {
+        id: "build",
+        label: "Build",
+        status: "BUILDING",
+        description: "Create the interface structure and core product surface.",
+      },
+      {
+        id: "behavior",
+        label: "Behavior",
+        status: "BUILDING",
+        description:
+          "Connect interaction, state, events, and application logic.",
+      },
+      {
+        id: "polish",
+        label: "Polish",
+        status: "TESTING",
+        description:
+          "Review responsiveness, accessibility, feedback, and visual quality.",
+      },
+      {
+        id: "ship",
+        label: "Ship",
+        status: "READY TO SHIP",
+        description:
+          "Run the final review and prepare the project for presentation.",
       },
     ],
 
-    previewEnabled: false,
+    phases: ["Brief", "Architecture", "Build", "Behavior", "Polish", "Ship"],
   },
 
   /* ==================================================== */
-  /* LESSONS                                              */
+  /* PROJECT MISSIONS */
   /* ==================================================== */
 
   lessons: [
-    {
-      id: "project-planning",
+    /* ================================================== */
+    /* PROJECT 1 */
+    /* ================================================== */
 
-      slug: "project-planning",
+    {
+      id: "showcase-creator-profile",
+
+      slug: "showcase-creator-profile",
 
       order: 1,
 
-      title: "Plan Your Project",
+      kind: "project",
 
-      subtitle: "Great projects start with a clear idea",
+      title: "Creator Profile",
+
+      subtitle: "Build a polished personal interface",
 
       description:
-        "Before writing code, decide what you want to build and break the idea into smaller parts.",
+        "Design and build a responsive creator profile using semantic structure, reusable React components, and refined visual hierarchy.",
 
-      difficulty: "beginner",
+      difficulty: "advanced",
 
-      xp: 250,
+      xp: 350,
 
-      estimatedMinutes: 25,
+      estimatedMinutes: 55,
 
       status: "published",
 
-      blocks: [
+      badge: "INTERFACE",
+
+      animation: {
+        id: "creator-profile-signature",
+        type: "animation",
+        template: "project-creator-profile",
+        props: {
+          creatorName: "Alex",
+          role: "Frontend Explorer",
+          skills: ["HTML", "CSS", "JavaScript", "React"],
+          projectName: "CodeLand Dashboard",
+        },
+      },
+
+      skills: [
+        "Semantic HTML",
+        "Responsive CSS",
+        "React Components",
+        "Props",
+        "Composition",
+      ],
+
+      brief:
+        "A young creator needs a profile page that introduces who they are, what they build, and the technologies they use. The interface must feel polished on both desktop and mobile.",
+
+      successDefinition:
+        "Ship a responsive profile that feels intentionally designed, uses reusable components, and remains clear across desktop and mobile.",
+
+      outcomes: [
+        "Break a complete design into reusable components.",
+        "Create a strong responsive layout.",
+        "Use props to keep repeated UI flexible.",
+        "Polish spacing, hierarchy, and interaction states.",
+      ],
+
+      phases: [
         {
-          id: "project-planning-intro",
+          id: "brief",
 
-          type: "text",
+          title: "Understand the Brief",
 
-          title: "From idea to project",
+          goal: "Identify the information hierarchy before writing any components.",
 
-          content:
-            "You have learned how to structure pages with HTML, style them with CSS, add behavior with JavaScript, and think in reusable interface pieces. Now it is time to combine those skills into one complete experience.",
+          deliverables: [
+            "Profile identity",
+            "Skills section",
+            "Project preview",
+            "Primary action",
+          ],
+
+          checkpoints: [
+            "The most important content is obvious.",
+            "The page has one clear primary action.",
+          ],
         },
 
         {
-          id: "project-planning-tip",
+          id: "architecture",
 
-          type: "tip",
+          title: "Plan the Components",
 
-          content:
-            "Keep your first project focused. A small project that works well is stronger than a huge project that is unfinished.",
+          goal: "Split the interface into small focused React components.",
+
+          deliverables: [
+            "ProfileHeader",
+            "SkillBadge",
+            "ProjectCard",
+            "ActionButton",
+          ],
+
+          checkpoints: [
+            "Repeated UI is componentized.",
+            "Props are used instead of duplicated markup.",
+          ],
         },
 
         {
-          id: "project-planning-steps",
+          id: "build",
 
-          type: "text",
+          title: "Build the Interface",
 
-          title: "Your build plan",
+          goal: "Create the complete structure and responsive layout.",
 
-          content:
-            "Start with the page structure, then create the visual design, then add interaction. Test each part before moving to the next.",
+          deliverables: ["Desktop layout", "Mobile layout", "Reusable cards"],
+
+          checkpoints: [
+            "No horizontal overflow.",
+            "Content remains readable on small screens.",
+          ],
+        },
+
+        {
+          id: "behavior",
+
+          title: "Add Interaction",
+
+          goal: "Add useful interaction without distracting from the content.",
+
+          deliverables: [
+            "Interactive project cards",
+            "Working CTA",
+            "Hover and focus states",
+          ],
+
+          checkpoints: [
+            "Interactive elements communicate their state.",
+            "Keyboard focus is visible.",
+          ],
+        },
+
+        {
+          id: "polish",
+
+          title: "Polish the Experience",
+
+          goal: "Refine typography, spacing, motion, and accessibility.",
+
+          deliverables: [
+            "Consistent spacing",
+            "Responsive typography",
+            "Subtle motion",
+          ],
+
+          checkpoints: [
+            "Motion supports understanding.",
+            "Contrast remains readable.",
+          ],
+        },
+
+        {
+          id: "ship",
+
+          title: "Ship",
+
+          goal: "Perform a final quality pass and prepare the project for presentation.",
+
+          deliverables: [
+            "Finished profile",
+            "Clean component structure",
+            "Presentation-ready result",
+          ],
+
+          checkpoints: [
+            "No placeholder content remains.",
+            "The interface works at multiple viewport sizes.",
+          ],
         },
       ],
 
-      mission: {
-        title: "Choose your project",
+      starterCode: `function SkillBadge({ children }) {
+  return (
+    <span>
+      {children}
+    </span>
+  );
+}
 
-        instructions:
-          "Choose one project idea and write a short goal describing what the final experience should do.",
+function CreatorProfile() {
+  return (
+    <main>
+      {/* Build your profile */}
+    </main>
+  );
+}
 
-        starterCode: `Project Name:
+export default CreatorProfile;`,
+    },
 
-My Goal:
+    /* ================================================== */
+    /* PROJECT 2 */
+    /* ================================================== */
 
-Main Features:
-1.
-2.
-3.
-`,
+    {
+      id: "showcase-quiz-engine",
 
-        validation: {
-          type: "projectPlanExists",
+      slug: "showcase-quiz-engine",
 
-          requiredSections: ["Project Name", "My Goal", "Main Features"],
+      order: 2,
+
+      kind: "project",
+
+      title: "Quiz Engine",
+
+      subtitle: "Turn data into an interactive experience",
+
+      description:
+        "Build a complete quiz experience with state, events, progress, conditional rendering, and reusable question data.",
+
+      difficulty: "advanced",
+
+      xp: 420,
+
+      estimatedMinutes: 65,
+
+      status: "published",
+
+      badge: "INTERACTION",
+
+      animation: {
+        id: "quiz-engine-signature",
+        type: "animation",
+        template: "project-quiz-engine",
+        props: {
+          question: "Which language styles a webpage?",
+          answers: ["HTML", "CSS", "JavaScript"],
+          correctAnswer: "CSS",
+          score: 1,
+          total: 1,
+        },
+      },
+
+      skills: [
+        "State",
+        "Events",
+        "Arrays",
+        "Conditional Rendering",
+        "Derived UI",
+      ],
+
+      brief:
+        "Create a quiz experience that presents one question at a time, tracks answers, shows progress, calculates a score, and displays a final result.",
+
+      successDefinition:
+        "Ship a restartable quiz flow with reliable scoring, clear progress, and reusable data-driven questions.",
+
+      outcomes: [
+        "Model application data using arrays and objects.",
+        "Manage multiple pieces of React state.",
+        "Derive interface output from state.",
+        "Handle complete user flows instead of isolated clicks.",
+      ],
+
+      phases: [
+        {
+          id: "brief",
+          title: "Define the Experience",
+          goal: "Understand the complete flow from the first question to the final result.",
+          deliverables: ["Question flow", "Answer flow", "Score screen"],
+          checkpoints: [
+            "The user always knows what to do next.",
+            "The end state is clearly defined.",
+          ],
         },
 
-        hints: [
-          "Choose something you would actually enjoy showing someone.",
+        {
+          id: "architecture",
+          title: "Model the Data",
+          goal: "Create reusable question objects instead of hard-coded screens.",
+          deliverables: [
+            "questions array",
+            "Question component",
+            "AnswerButton component",
+          ],
+          checkpoints: [
+            "Adding a question does not require new page markup.",
+            "Answers are rendered from data.",
+          ],
+        },
 
-          "Your goal can be one or two sentences.",
+        {
+          id: "build",
+          title: "Build the Quiz UI",
+          goal: "Create the question, answer, and progress interfaces.",
+          deliverables: [
+            "Question card",
+            "Answer options",
+            "Progress indicator",
+          ],
+          checkpoints: [
+            "Every question fits the same layout.",
+            "The current question is visually clear.",
+          ],
+        },
 
-          "Three clear features are enough to start.",
-        ],
+        {
+          id: "behavior",
+          title: "Create the Logic",
+          goal: "Connect answers to state, scoring, and navigation.",
+          deliverables: [
+            "Current question state",
+            "Score state",
+            "Answer handler",
+          ],
+          checkpoints: [
+            "A click advances exactly once.",
+            "Score updates only for correct answers.",
+          ],
+        },
+
+        {
+          id: "polish",
+          title: "Design Feedback",
+          goal: "Make correct, incorrect, loading, and completion states understandable.",
+          deliverables: [
+            "Answer feedback",
+            "Completion transition",
+            "Restart action",
+          ],
+          checkpoints: [
+            "Feedback is immediate.",
+            "Restart returns the app to a clean state.",
+          ],
+        },
+
+        {
+          id: "ship",
+          title: "Ship",
+          goal: "Test the complete journey and remove edge-case bugs.",
+          deliverables: [
+            "Finished quiz",
+            "Restartable flow",
+            "Stable score system",
+          ],
+          checkpoints: [
+            "The last question transitions correctly.",
+            "The quiz can be completed repeatedly.",
+          ],
+        },
+      ],
+
+      starterCode: `const questions = [
+  {
+    question: "Which language styles a webpage?",
+    answers: ["HTML", "CSS", "JavaScript"],
+    correct: "CSS",
+  },
+];
+
+function QuizApp() {
+  return (
+    <main>
+      {/* Build the quiz engine */}
+    </main>
+  );
+}
+
+export default QuizApp;`,
+    },
+
+    /* ================================================== */
+    /* PROJECT 3 */
+    /* ================================================== */
+
+    {
+      id: "showcase-mission-dashboard",
+
+      slug: "showcase-mission-dashboard",
+
+      order: 3,
+
+      kind: "project",
+
+      title: "Mission Dashboard",
+
+      subtitle: "Design a data-driven application",
+
+      description:
+        "Build a dashboard that renders missions from data and lets the user filter, inspect, and track their status.",
+
+      difficulty: "advanced",
+
+      xp: 480,
+
+      estimatedMinutes: 70,
+
+      status: "published",
+
+      badge: "DATA UI",
+
+      animation: {
+        id: "mission-dashboard-signature",
+        type: "animation",
+        template: "project-mission-dashboard",
+        props: {
+          activeFilter: "All",
+          missions: [
+            {
+              title: "HTML Foundations",
+              status: "Complete",
+              progress: 100,
+            },
+            {
+              title: "CSS Styling",
+              status: "Active",
+              progress: 72,
+            },
+            {
+              title: "React Nexus",
+              status: "Locked",
+              progress: 0,
+            },
+          ],
+        },
       },
+
+      skills: [
+        "Array Mapping",
+        "Filtering",
+        "Reusable Components",
+        "State",
+        "Conditional UI",
+      ],
+
+      brief:
+        "Build a mission control dashboard where users can browse missions, filter by status, and inspect progress without navigating away from the experience.",
+
+      successDefinition:
+        "Ship a responsive dashboard where filters, counts, selection, and empty states always agree with the underlying mission data.",
+
+      outcomes: [
+        "Turn structured data into reusable interface sections.",
+        "Build filtering from application state.",
+        "Create reusable cards with multiple visual states.",
+        "Design empty states and selected states.",
+      ],
+
+      phases: [
+        {
+          id: "brief",
+          title: "Understand the Dashboard",
+          goal: "Define what information a user needs to scan quickly.",
+          deliverables: ["Mission title", "Status", "Progress", "Difficulty"],
+          checkpoints: [
+            "Cards are easy to scan.",
+            "Status is understandable without opening a mission.",
+          ],
+        },
+
+        {
+          id: "architecture",
+          title: "Design the Data Model",
+          goal: "Represent missions with consistent objects.",
+          deliverables: ["missions array", "MissionCard", "FilterBar"],
+          checkpoints: [
+            "Every mission uses the same data shape.",
+            "Filters do not depend on hard-coded cards.",
+          ],
+        },
+
+        {
+          id: "build",
+          title: "Build the Dashboard",
+          goal: "Create the responsive dashboard and mission grid.",
+          deliverables: ["Header metrics", "Filter controls", "Mission grid"],
+          checkpoints: [
+            "The grid adapts to the viewport.",
+            "Cards retain a consistent rhythm.",
+          ],
+        },
+
+        {
+          id: "behavior",
+          title: "Connect Filters",
+          goal: "Use state to filter and select mission data.",
+          deliverables: [
+            "Status filter",
+            "Selected mission",
+            "Dynamic mission count",
+          ],
+          checkpoints: [
+            "Filters update immediately.",
+            "The visible count matches the rendered cards.",
+          ],
+        },
+
+        {
+          id: "polish",
+          title: "Handle Every State",
+          goal: "Design active, locked, complete, and empty states.",
+          deliverables: [
+            "Empty result state",
+            "Progress treatment",
+            "Selection feedback",
+          ],
+          checkpoints: [
+            "Empty filters do not create a broken screen.",
+            "State changes are visually obvious.",
+          ],
+        },
+
+        {
+          id: "ship",
+          title: "Ship",
+          goal: "Run a complete interaction and responsive QA pass.",
+          deliverables: [
+            "Finished dashboard",
+            "Responsive filters",
+            "Stable state flow",
+          ],
+          checkpoints: [
+            "All filters behave predictably.",
+            "No state produces broken layout.",
+          ],
+        },
+      ],
+
+      starterCode: `const missions = [
+  {
+    id: 1,
+    title: "HTML Foundations",
+    status: "complete",
+    progress: 100,
+  },
+];
+
+function MissionDashboard() {
+  return (
+    <main>
+      {/* Build the dashboard */}
+    </main>
+  );
+}
+
+export default MissionDashboard;`,
+    },
+
+    /* ================================================== */
+    /* PROJECT 4 */
+    /* ================================================== */
+
+    {
+      id: "showcase-launch-page",
+
+      slug: "showcase-launch-page",
+
+      order: 4,
+
+      kind: "project",
+
+      title: "Product Launch",
+
+      subtitle: "Create a premium responsive landing experience",
+
+      description:
+        "Build a polished launch page with responsive sections, reusable components, accessible interactions, and purposeful motion.",
+
+      difficulty: "advanced",
+
+      xp: 520,
+
+      estimatedMinutes: 75,
+
+      status: "published",
+
+      badge: "VISUAL SYSTEM",
+
+      animation: {
+        id: "product-launch-signature",
+        type: "animation",
+        template: "project-product-launch",
+        props: {
+          productName: "Nova",
+          headline: "Build faster. Launch smarter.",
+          sections: ["Hero", "Features", "Proof", "CTA"],
+        },
+      },
+
+      skills: [
+        "Responsive Design",
+        "Component Systems",
+        "CSS Grid",
+        "Flexbox",
+        "Motion",
+        "Accessibility",
+      ],
+
+      brief:
+        "A new digital product needs a launch page that explains its value immediately and feels premium across phones, tablets, and desktops.",
+
+      successDefinition:
+        "Ship a presentation-ready launch experience with a coherent design system, strong responsive behavior, and accessible purposeful motion.",
+
+      outcomes: [
+        "Build a complete visual system instead of disconnected sections.",
+        "Create fluid responsive layouts.",
+        "Use motion to guide attention.",
+        "Apply accessibility and usability checks.",
+      ],
+
+      phases: [
+        {
+          id: "brief",
+          title: "Define the Story",
+          goal: "Plan the order in which the page communicates value.",
+          deliverables: ["Hero", "Benefits", "Feature section", "Final CTA"],
+          checkpoints: [
+            "The hero communicates one clear message.",
+            "Sections follow a logical story.",
+          ],
+        },
+
+        {
+          id: "architecture",
+          title: "Build the Design System",
+          goal: "Create reusable primitives for typography, buttons, cards, and sections.",
+          deliverables: ["Button", "SectionHeading", "FeatureCard"],
+          checkpoints: [
+            "Repeated styles are reusable.",
+            "Components share consistent spacing.",
+          ],
+        },
+
+        {
+          id: "build",
+          title: "Create the Responsive Page",
+          goal: "Build every section and establish responsive behavior.",
+          deliverables: ["Hero layout", "Feature grid", "Responsive sections"],
+          checkpoints: [
+            "The layout works without fixed desktop assumptions.",
+            "No content becomes cramped on mobile.",
+          ],
+        },
+
+        {
+          id: "behavior",
+          title: "Add Purposeful Motion",
+          goal: "Use interaction and motion only where it improves understanding.",
+          deliverables: ["Hover states", "Section reveals", "CTA interaction"],
+          checkpoints: [
+            "Motion is subtle.",
+            "Reduced-motion users still get a complete experience.",
+          ],
+        },
+
+        {
+          id: "polish",
+          title: "Run the Quality Pass",
+          goal: "Refine visual rhythm, readability, focus states, and contrast.",
+          deliverables: [
+            "Typography pass",
+            "Accessibility pass",
+            "Spacing pass",
+          ],
+          checkpoints: [
+            "Keyboard navigation remains usable.",
+            "Text remains readable over every background.",
+          ],
+        },
+
+        {
+          id: "ship",
+          title: "Launch",
+          goal: "Prepare a presentation-ready final product.",
+          deliverables: [
+            "Final landing page",
+            "Mobile version",
+            "Desktop version",
+          ],
+          checkpoints: [
+            "Every section feels intentional.",
+            "The page is ready to demo.",
+          ],
+        },
+      ],
+
+      starterCode: `function ProductLaunch() {
+  return (
+    <main>
+      <section>
+        {/* Build the hero */}
+      </section>
+
+      <section>
+        {/* Build the product story */}
+      </section>
+    </main>
+  );
+}
+
+export default ProductLaunch;`,
+    },
+
+    /* ================================================== */
+    /* PROJECT 5 */
+    /* ================================================== */
+
+    {
+      id: "showcase-explorer-hub",
+
+      slug: "showcase-explorer-hub",
+
+      order: 5,
+
+      kind: "project",
+
+      title: "Explorer Hub",
+
+      subtitle: "Build a small product, not just a page",
+
+      description:
+        "Combine forms, state, derived data, components, events, lists, and reusable UI into a cohesive mini application.",
+
+      difficulty: "advanced",
+
+      xp: 650,
+
+      estimatedMinutes: 85,
+
+      status: "published",
+
+      badge: "PRODUCT APP",
+
+      animation: {
+        id: "explorer-hub-signature",
+        type: "animation",
+        template: "project-explorer-hub",
+        props: {
+          filter: "All",
+          goals: [
+            {
+              title: "Build Portfolio",
+              category: "Code",
+              complete: true,
+            },
+            {
+              title: "Learn React",
+              category: "Learn",
+              complete: false,
+            },
+            {
+              title: "Ship Project",
+              category: "Build",
+              complete: false,
+            },
+          ],
+        },
+      },
+
+      skills: [
+        "State Architecture",
+        "Controlled Forms",
+        "Derived Data",
+        "Component Composition",
+        "Reusable UI",
+      ],
+
+      brief:
+        "Build a personal learning hub where users can add goals, track their status, filter them, and see their overall progress.",
+
+      successDefinition:
+        "Ship a cohesive mini product where creating, completing, filtering, and measuring goals all work from one predictable state model.",
+
+      outcomes: [
+        "Think about state ownership before building.",
+        "Connect controlled forms to application data.",
+        "Build reusable components around real product behavior.",
+        "Create a complete create-update-filter experience.",
+      ],
+
+      phases: [
+        {
+          id: "brief",
+          title: "Map the Product",
+          goal: "Define the actions the user can perform and the states the app can enter.",
+          deliverables: [
+            "Create goal",
+            "Complete goal",
+            "Filter goals",
+            "Progress summary",
+          ],
+          checkpoints: [
+            "Every feature has a clear user action.",
+            "Application states are documented.",
+          ],
+        },
+
+        {
+          id: "architecture",
+          title: "Plan State Ownership",
+          goal: "Decide where data lives and which components receive it through props.",
+          deliverables: ["App state", "GoalForm", "GoalList", "GoalCard"],
+          checkpoints: [
+            "Shared state has one clear owner.",
+            "Child components receive only what they need.",
+          ],
+        },
+
+        {
+          id: "build",
+          title: "Build the Product Shell",
+          goal: "Create the form, metrics, filters, and goal list.",
+          deliverables: ["Dashboard shell", "Goal form", "Goal cards"],
+          checkpoints: [
+            "All major product sections are represented.",
+            "Layout remains usable with many goals.",
+          ],
+        },
+
+        {
+          id: "behavior",
+          title: "Connect the Product Logic",
+          goal: "Implement creation, completion, filtering, and derived progress.",
+          deliverables: [
+            "Add goal handler",
+            "Toggle complete handler",
+            "Filter state",
+            "Progress calculation",
+          ],
+          checkpoints: [
+            "State updates are immutable.",
+            "Progress is calculated from current data.",
+          ],
+        },
+
+        {
+          id: "polish",
+          title: "Design Product States",
+          goal: "Handle empty, active, complete, and filtered states beautifully.",
+          deliverables: ["Empty state", "Completed styling", "Filter feedback"],
+          checkpoints: [
+            "The app never feels visually broken.",
+            "Important state changes are obvious.",
+          ],
+        },
+
+        {
+          id: "ship",
+          title: "Ship the Product",
+          goal: "Test the full product lifecycle and prepare it for the final showcase.",
+          deliverables: [
+            "Finished mini app",
+            "Stable interactions",
+            "Presentation-ready UI",
+          ],
+          checkpoints: [
+            "Create, update, and filter all work together.",
+            "No feature depends on placeholder logic.",
+          ],
+        },
+      ],
+
+      starterCode: `import { useState } from "react";
+
+function ExplorerHub() {
+  const [goals, setGoals] = useState([]);
+
+  return (
+    <main>
+      {/* Build your product */}
+    </main>
+  );
+}
+
+export default ExplorerHub;`,
     },
   ],
 
   /* ==================================================== */
-  /* CHALLENGES                                           */
+  /* FINAL CAPSTONE */
   /* ==================================================== */
 
   challenges: [
     {
-      id: "final-web-project",
+      id: "showcase-final-portfolio",
 
-      slug: "final-web-project",
+      slug: "showcase-final-portfolio",
 
       order: 1,
 
-      title: "Build Your Web Project",
+      kind: "final-capstone",
 
-      subtitle: "The Web World final challenge",
+      title: "Portfolio Command Center",
+
+      subtitle: "Your final CodeLand build",
 
       description:
-        "Create a complete responsive web project that combines structure, styling, and interaction.",
+        "Design and build a personal portfolio that presents your strongest projects as a complete polished product.",
 
-      difficulty: "beginner",
+      difficulty: "capstone",
 
-      xp: 1000,
+      xp: 1200,
 
-      estimatedMinutes: 95,
+      estimatedMinutes: 110,
 
       status: "published",
 
-      projectBrief: {
-        title: "Your Final Mission",
+      badge: "FINAL BUILD",
 
-        description:
-          "Build a polished interactive web experience that you would be proud to add to your CodeLand showcase.",
-
-        ideas: [
-          "Personal portfolio",
-          "Mini quiz",
-          "Interactive game",
-          "Favorite movies page",
-          "Travel explorer",
-          "Study dashboard",
-          "Product landing page",
-        ],
+      animation: {
+        id: "final-portfolio-signature",
+        type: "animation",
+        template: "project-final-portfolio",
+        props: {
+          creatorName: "Alex",
+          projects: [
+            "Creator Profile",
+            "Quiz Engine",
+            "Mission Dashboard",
+            "Product Launch",
+            "Explorer Hub",
+          ],
+        },
       },
 
-      requirements: [
+      skills: [
+        "Product Planning",
+        "React Architecture",
+        "Responsive Design",
+        "Reusable UI",
+        "Interaction Design",
+        "Accessibility",
+        "Presentation",
+      ],
+
+      brief:
+        "Create a portfolio that introduces you, presents selected projects, communicates your skills, and gives visitors a clear way to explore your work.",
+
+      successDefinition:
+        "Ship a portfolio that clearly communicates who you are, proves your strongest frontend skills, and presents your work with professional visual and interaction quality.",
+
+      outcomes: [
+        "Plan and execute a complete frontend product independently.",
+        "Create a reusable component architecture.",
+        "Present multiple finished projects clearly.",
+        "Ship an interface worthy of your CodeLand journey.",
+      ],
+
+      phases: [
         {
-          id: "project-html",
-
-          title: "Solid HTML Structure",
-
-          description:
-            "Use meaningful HTML elements to create a clear page structure.",
-
-          validation: {
-            type: "projectHtmlStructure",
-          },
+          id: "brief",
+          title: "Choose Your Story",
+          goal: "Decide what your portfolio should communicate about you.",
+          deliverables: [
+            "Personal introduction",
+            "Selected projects",
+            "Skills",
+            "Contact action",
+          ],
+          checkpoints: [
+            "The portfolio has a clear audience.",
+            "Only strong work is included.",
+          ],
         },
 
         {
-          id: "project-css",
-
-          title: "Custom Styling",
-
-          description:
-            "Create your own colors, spacing, typography, and layout.",
-
-          validation: {
-            type: "projectCssExists",
-          },
+          id: "architecture",
+          title: "Design the System",
+          goal: "Plan the page structure and reusable component system.",
+          deliverables: [
+            "Navigation",
+            "ProjectCard",
+            "SectionHeading",
+            "ActionButton",
+          ],
+          checkpoints: [
+            "Repeated UI is reusable.",
+            "Page structure is understandable before styling.",
+          ],
         },
 
         {
-          id: "project-responsive",
-
-          title: "Responsive Design",
-
-          description: "Make sure the project works on different screen sizes.",
-
-          validation: {
-            type: "projectResponsiveCss",
-          },
+          id: "build",
+          title: "Build the Portfolio",
+          goal: "Create all primary sections and responsive layouts.",
+          deliverables: ["Hero", "Projects", "Skills", "About", "Contact"],
+          checkpoints: [
+            "All sections work on mobile.",
+            "Project content is easy to scan.",
+          ],
         },
 
         {
-          id: "project-javascript",
-
-          title: "JavaScript Interaction",
-
-          description: "Include at least one meaningful interactive behavior.",
-
-          validation: {
-            type: "projectJavaScriptInteraction",
-          },
+          id: "behavior",
+          title: "Add Experience",
+          goal: "Add navigation, interaction, and purposeful motion.",
+          deliverables: [
+            "Navigation behavior",
+            "Project interactions",
+            "Motion system",
+          ],
+          checkpoints: [
+            "Interactions are predictable.",
+            "Motion does not block content.",
+          ],
         },
 
         {
-          id: "project-quality",
+          id: "polish",
+          title: "Portfolio Review",
+          goal: "Perform a professional visual and accessibility review.",
+          deliverables: [
+            "Responsive QA",
+            "Accessibility QA",
+            "Content QA",
+            "Visual QA",
+          ],
+          checkpoints: [
+            "No unfinished copy remains.",
+            "Focus states are visible.",
+            "Spacing is consistent.",
+          ],
+        },
 
-          title: "Polished Experience",
-
-          description:
-            "Make the project feel complete with readable content and consistent design.",
-
-          validation: {
-            type: "projectQualityChecklist",
-          },
+        {
+          id: "ship",
+          title: "Launch Your Work",
+          goal: "Finalize the project and prepare it for presentation.",
+          deliverables: [
+            "Finished portfolio",
+            "Project showcase",
+            "Final presentation",
+          ],
+          checkpoints: [
+            "The project is demo-ready.",
+            "The result represents your strongest work.",
+          ],
         },
       ],
 
-      starterFiles: {
-        html: `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0"
-    />
-
-    <title>My CodeLand Project</title>
-
-    <link
-      rel="stylesheet"
-      href="styles.css"
-    />
-  </head>
-
-  <body>
+      starterCode: `function Portfolio() {
+  return (
     <main>
-      <h1>My Project</h1>
+      <section>
+        {/* Introduce yourself */}
+      </section>
 
-      <p>
-        Start building something amazing.
-      </p>
+      <section>
+        {/* Showcase your projects */}
+      </section>
+
+      <section>
+        {/* Show your skills */}
+      </section>
     </main>
-
-    <script src="script.js"></script>
-  </body>
-</html>
-`,
-
-        css: `* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-
-  min-height: 100vh;
-
-  font-family:
-    Arial,
-    sans-serif;
-
-  background: #0b1020;
-
-  color: #ffffff;
-}
-
-main {
-  width: min(
-    100% - 32px,
-    1100px
   );
-
-  margin: 0 auto;
-
-  padding: 64px 0;
 }
-`,
 
-        javascript: `const projectName =
-  "My CodeLand Project";
-
-console.log(
-  projectName
-);
-`,
-      },
-
-      validation: [
-        {
-          type: "projectHtmlStructure",
-        },
-
-        {
-          type: "projectCssExists",
-        },
-
-        {
-          type: "projectResponsiveCss",
-        },
-
-        {
-          type: "projectJavaScriptInteraction",
-        },
-      ],
-
-      hints: [
-        "Build the HTML structure before worrying about every visual detail.",
-
-        "Use Flexbox or Grid to organize your layout.",
-
-        "Add one interaction first, then improve it.",
-
-        "Test the project on both desktop and smaller screens.",
-
-        "Keep your colors, spacing, and typography consistent.",
-      ],
+export default Portfolio;`,
     },
   ],
 };

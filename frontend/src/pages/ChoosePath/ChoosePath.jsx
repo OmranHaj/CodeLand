@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import gsap from "gsap";
 
@@ -45,7 +45,7 @@ const CPP_PATH = {
 
   skills: ["C++ Basics", "OOP", "STL"],
 
-  estimatedJourney: "8 LEVELS",
+  estimatedJourney: "9 LEVELS",
 
   worldTitle: "C++ Core",
 
@@ -69,6 +69,7 @@ const displayPaths = learningPaths.map((path, index) =>
 );
 
 function getPathRoute(pathId) {
+  if (pathId === "python-explorer") return "/student/python-world";
   if (pathId === "cpp-developer") {
     return "/student/cpp-world";
   }
@@ -682,6 +683,7 @@ function ChoosePath() {
       {/* CONTENT */}
       {/* ================================================= */}
 
+      <Link to="/student/dashboard" className="world-dashboard-link">← My learning space</Link>
       <section className={styles.content}>
         {/* ================================================= */}
         {/* HERO */}

@@ -1,0 +1,1247 @@
+.animation {
+  --react-cyan: #61dafb;
+  --react-cyan-bright: #9aedff;
+  --react-blue: #4c8dff;
+
+  --react-violet: #8b6cff;
+  --react-violet-bright: #b7a5ff;
+
+  --react-green: #6df2b3;
+  --react-gold: #ffd36a;
+
+  margin-top: 28px;
+
+  overflow: hidden;
+
+  position: relative;
+
+  border: 1px solid rgba(97, 218, 251, 0.14);
+
+  border-radius: 20px;
+
+  color: #edf5ff;
+
+  background:
+    radial-gradient(
+      circle at 18% 12%,
+      rgba(97, 218, 251, 0.09),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 85% 15%,
+      rgba(139, 108, 255, 0.1),
+      transparent 34%
+    ),
+    linear-gradient(145deg, #071020, #090d1d 52%, #070a17);
+
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+/* ====================================================== */
+/* TOP BAR                                                */
+/* ====================================================== */
+
+.topBar {
+  min-height: 58px;
+
+  padding: 0 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  border-bottom: 1px solid rgba(97, 218, 251, 0.08);
+
+  background: rgba(5, 10, 24, 0.72);
+}
+
+.topIdentity {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.topIdentity span {
+  color: var(--react-cyan);
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 1.6px;
+}
+
+.topIdentity strong {
+  color: #edf5ff;
+
+  font-size: 12px;
+}
+
+.replayButton {
+  height: 32px;
+
+  padding: 0 11px;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  flex: 0 0 auto;
+
+  border: 1px solid rgba(97, 218, 251, 0.14);
+
+  border-radius: 9px;
+
+  color: #91a6bd;
+
+  background: rgba(97, 218, 251, 0.035);
+
+  cursor: pointer;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    background 0.18s ease;
+}
+
+.replayButton:hover {
+  transform: translateY(-1px);
+
+  color: #dff9ff;
+
+  border-color: rgba(97, 218, 251, 0.3);
+
+  background: rgba(97, 218, 251, 0.07);
+}
+
+/* ====================================================== */
+/* STAGE                                                  */
+/* ====================================================== */
+
+.stage {
+  min-height: 520px;
+
+  padding: 52px 18px 20px;
+
+  overflow: hidden;
+
+  position: relative;
+}
+
+.gridBackground {
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  opacity: 0.28;
+
+  background-image:
+    linear-gradient(rgba(97, 218, 251, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(97, 218, 251, 0.05) 1px, transparent 1px);
+
+  background-size: 32px 32px;
+
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 92%);
+}
+
+.stage::before {
+  content: "";
+
+  position: absolute;
+
+  width: 260px;
+  height: 260px;
+
+  left: 50%;
+  top: 37%;
+
+  transform: translate(-50%, -50%);
+
+  border-radius: 50%;
+
+  background: rgba(97, 218, 251, 0.06);
+
+  filter: blur(70px);
+
+  pointer-events: none;
+}
+
+.status {
+  min-height: 25px;
+
+  padding: 0 10px;
+
+  display: inline-flex;
+  align-items: center;
+
+  position: absolute;
+
+  top: 16px;
+  left: 18px;
+
+  z-index: 5;
+
+  border: 1px solid rgba(97, 218, 251, 0.12);
+
+  border-radius: 999px;
+
+  color: #8de6ff;
+
+  background: rgba(97, 218, 251, 0.045);
+
+  font-size: 7.5px;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+/* ====================================================== */
+/* PANELS                                                 */
+/* ====================================================== */
+
+.treePanel,
+.codePanel,
+.pipelinePanel,
+.browserPanel {
+  min-width: 0;
+
+  overflow: hidden;
+
+  position: relative;
+  z-index: 2;
+
+  border: 1px solid rgba(97, 218, 251, 0.1);
+
+  border-radius: 14px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(9, 16, 34, 0.96),
+    rgba(7, 11, 26, 0.94)
+  );
+
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.panelHeading {
+  min-height: 43px;
+
+  padding: 0 13px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  border-bottom: 1px solid rgba(97, 218, 251, 0.075);
+
+  color: var(--react-cyan);
+}
+
+.panelHeading > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.panelHeading span {
+  color: #557786;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 1.25px;
+}
+
+.panelHeading strong {
+  overflow: hidden;
+
+  color: #dfe7f7;
+
+  font-size: 10px;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ====================================================== */
+/* INTRO WORKSPACE                                        */
+/* ====================================================== */
+
+.introWorkspace {
+  display: grid;
+
+  grid-template-columns:
+    minmax(190px, 0.92fr)
+    minmax(190px, 1fr)
+    minmax(175px, 0.85fr);
+
+  gap: 12px;
+
+  position: relative;
+  z-index: 2;
+}
+
+/* ====================================================== */
+/* COMPONENT TREE                                         */
+/* ====================================================== */
+
+.treeStage {
+  min-height: 235px;
+
+  padding: 21px 13px 16px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 21px;
+}
+
+.node {
+  min-width: 116px;
+
+  padding: 10px 11px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  border: 1px solid rgba(97, 218, 251, 0.14);
+
+  border-radius: 11px;
+
+  color: var(--react-cyan);
+
+  background: linear-gradient(
+    145deg,
+    rgba(97, 218, 251, 0.075),
+    rgba(139, 108, 255, 0.035)
+  );
+
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.18),
+    0 0 24px rgba(97, 218, 251, 0.035);
+}
+
+.appNode {
+  border-color: rgba(139, 108, 255, 0.3);
+
+  color: var(--react-violet-bright);
+
+  background: linear-gradient(
+    145deg,
+    rgba(139, 108, 255, 0.13),
+    rgba(97, 218, 251, 0.05)
+  );
+}
+
+.node > div {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.node span {
+  color: #526884;
+
+  font-size: 6px;
+  font-weight: 900;
+
+  letter-spacing: 0.9px;
+}
+
+.node strong {
+  overflow: hidden;
+
+  color: #e9f3ff;
+
+  font-size: 9px;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.treeBranches {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 7px;
+}
+
+.branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 5px;
+}
+
+.branch .node {
+  width: 100%;
+  min-width: 0;
+
+  padding: 8px 7px;
+
+  justify-content: center;
+}
+
+.branch .node strong {
+  font-size: 7.5px;
+}
+
+.verticalConnector {
+  width: 1px;
+  height: 23px;
+
+  display: block;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(139, 108, 255, 0.12),
+    rgba(97, 218, 251, 0.7)
+  );
+
+  box-shadow: 0 0 10px rgba(97, 218, 251, 0.3);
+}
+
+/* ====================================================== */
+/* CODE                                                   */
+/* ====================================================== */
+
+.codeBlock {
+  min-height: 235px;
+
+  padding: 17px 15px;
+
+  overflow-x: auto;
+
+  color: #9cb4cf;
+
+  font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+
+  font-size: 8px;
+
+  line-height: 1.78;
+}
+
+.codeKeyword {
+  color: #c79cff;
+}
+
+.codeFunction,
+.codeComponent {
+  color: #71e1ff;
+}
+
+.codeVariable {
+  color: #ffd36a;
+}
+
+.codeString {
+  color: #7ce8ad;
+}
+
+.codeIndent {
+  padding-left: 12px;
+}
+
+.codeIndentLarge {
+  padding-left: 23px;
+}
+
+.codeIndentXL {
+  padding-left: 35px;
+}
+
+.codeSpacer {
+  height: 8px;
+}
+
+.expression {
+  display: inline-block;
+
+  padding: 0 3px;
+
+  border-radius: 4px;
+
+  color: #ffd36a;
+
+  background: rgba(255, 211, 106, 0.08);
+
+  box-shadow: 0 0 12px rgba(255, 211, 106, 0.08);
+}
+
+/* ====================================================== */
+/* BROWSER                                                */
+/* ====================================================== */
+
+.browserPanel {
+  min-height: 280px;
+}
+
+.browserBar {
+  height: 35px;
+
+  padding: 0 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border-bottom: 1px solid rgba(97, 218, 251, 0.07);
+
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.browserBar > div {
+  display: flex;
+
+  gap: 4px;
+}
+
+.browserBar i {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #47536c;
+}
+
+.browserBar i:first-child {
+  background: #ff6d84;
+}
+
+.browserBar i:nth-child(2) {
+  background: #ffd36a;
+}
+
+.browserBar i:nth-child(3) {
+  background: #6df2b3;
+}
+
+.browserBar span {
+  color: #58657e;
+
+  font-size: 6.5px;
+}
+
+.browserBody {
+  min-height: 243px;
+
+  padding: 24px 16px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  position: relative;
+
+  background:
+    radial-gradient(
+      circle at 50% 38%,
+      rgba(97, 218, 251, 0.08),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 50% 72%,
+      rgba(139, 108, 255, 0.055),
+      transparent 40%
+    );
+}
+
+.previewHeader {
+  width: 100%;
+
+  padding-bottom: 8px;
+
+  border-bottom: 1px solid rgba(97, 218, 251, 0.08);
+
+  color: var(--react-cyan);
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.previewCard {
+  width: 100%;
+
+  padding: 13px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  border: 1px solid rgba(97, 218, 251, 0.13);
+
+  border-radius: 10px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(97, 218, 251, 0.055),
+    rgba(139, 108, 255, 0.04)
+  );
+}
+
+.previewCard span,
+.previewEyebrow {
+  color: #657893;
+
+  font-size: 6px;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+.previewCard strong {
+  color: #eef6ff;
+
+  font-size: 11px;
+}
+
+.previewCard small {
+  color: #8290a9;
+
+  font-size: 7.5px;
+}
+
+.previewButton {
+  width: 100%;
+
+  height: 31px;
+
+  border: 1px solid rgba(97, 218, 251, 0.18);
+
+  border-radius: 8px;
+
+  color: #d8f9ff;
+
+  background: linear-gradient(
+    90deg,
+    rgba(139, 108, 255, 0.2),
+    rgba(97, 218, 251, 0.14)
+  );
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.browserBody h3 {
+  margin: 0;
+
+  color: #f2f7ff;
+
+  font-size: 22px;
+
+  letter-spacing: -0.7px;
+}
+
+.browserBody p {
+  margin: 0;
+
+  color: #7f8ba5;
+
+  text-align: center;
+
+  font-size: 8px;
+
+  line-height: 1.65;
+}
+
+/* ====================================================== */
+/* REUSE FLOW                                             */
+/* ====================================================== */
+
+.reuseFlow {
+  margin-top: 13px;
+
+  padding: 12px;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(120px, 0.8fr)
+    auto
+    minmax(0, 2fr);
+
+  align-items: center;
+
+  gap: 11px;
+
+  position: relative;
+  z-index: 2;
+
+  border: 1px solid rgba(139, 108, 255, 0.09);
+
+  border-radius: 13px;
+
+  background: rgba(139, 108, 255, 0.025);
+}
+
+.reuseCopies {
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 7px;
+}
+
+.reuseNode {
+  min-width: 0;
+
+  padding: 9px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  border: 1px solid rgba(97, 218, 251, 0.11);
+
+  border-radius: 8px;
+
+  background: rgba(97, 218, 251, 0.035);
+}
+
+.reuseSource {
+  border-color: rgba(139, 108, 255, 0.25);
+
+  background: rgba(139, 108, 255, 0.07);
+}
+
+.reuseNode span {
+  color: #536580;
+
+  font-size: 5.5px;
+  font-weight: 900;
+
+  letter-spacing: 0.8px;
+}
+
+.reuseNode strong {
+  overflow: hidden;
+
+  color: #dfeaff;
+
+  font-size: 7.5px;
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.reuseArrow {
+  color: var(--react-cyan);
+
+  font-size: 16px;
+}
+
+/* ====================================================== */
+/* JSX WORKSPACE                                          */
+/* ====================================================== */
+
+.jsxWorkspace {
+  display: grid;
+
+  grid-template-columns:
+    minmax(200px, 1fr)
+    minmax(190px, 0.95fr)
+    minmax(175px, 0.82fr);
+
+  gap: 12px;
+
+  position: relative;
+  z-index: 2;
+}
+
+.pipelinePanel {
+  min-height: 280px;
+}
+
+.pipelineStage {
+  min-height: 235px;
+
+  padding: 18px 13px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+}
+
+.compiler {
+  width: 77px;
+  height: 77px;
+
+  display: grid;
+  place-items: center;
+
+  position: relative;
+
+  border: 1px solid rgba(97, 218, 251, 0.24);
+
+  border-radius: 50%;
+
+  color: var(--react-cyan);
+
+  background: radial-gradient(
+    circle,
+    rgba(97, 218, 251, 0.14),
+    rgba(139, 108, 255, 0.06) 55%,
+    rgba(5, 9, 22, 0.9)
+  );
+
+  box-shadow:
+    0 0 31px rgba(97, 218, 251, 0.13),
+    inset 0 0 20px rgba(97, 218, 251, 0.07);
+}
+
+.compiler strong {
+  position: absolute;
+
+  bottom: 12px;
+
+  color: #dffaff;
+
+  font-size: 7px;
+  font-weight: 900;
+}
+
+.compilerRing {
+  position: absolute;
+
+  inset: -8px;
+
+  border: 1px solid rgba(97, 218, 251, 0.17);
+
+  border-radius: 50%;
+}
+
+.compilerRingInner {
+  inset: 8px;
+
+  border-color: rgba(139, 108, 255, 0.24);
+}
+
+.compilerRingOuter::after {
+  content: "";
+
+  width: 5px;
+  height: 5px;
+
+  position: absolute;
+
+  left: 50%;
+  top: -3px;
+
+  border-radius: 50%;
+
+  background: var(--react-cyan);
+
+  box-shadow: 0 0 10px var(--react-cyan);
+}
+
+.packetTrack {
+  width: 82%;
+
+  height: 2px;
+
+  position: relative;
+
+  background: linear-gradient(
+    90deg,
+    rgba(139, 108, 255, 0.2),
+    rgba(97, 218, 251, 0.72)
+  );
+
+  box-shadow: 0 0 11px rgba(97, 218, 251, 0.18);
+}
+
+.dataPacket {
+  padding: 4px 7px;
+
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  transform: translate(-50%, -50%);
+
+  border: 1px solid rgba(97, 218, 251, 0.22);
+
+  border-radius: 999px;
+
+  color: #adf0ff;
+
+  background: #0b1729;
+
+  font-size: 5.5px;
+  font-weight: 900;
+
+  letter-spacing: 0.7px;
+
+  white-space: nowrap;
+}
+
+.pipelineNodes {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto
+    minmax(0, 1fr);
+
+  align-items: center;
+
+  gap: 6px;
+}
+
+.pipelineNode {
+  min-width: 0;
+
+  padding: 9px 7px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  border: 1px solid rgba(97, 218, 251, 0.1);
+
+  border-radius: 8px;
+
+  text-align: center;
+
+  background: rgba(97, 218, 251, 0.035);
+}
+
+.pipelineNode span {
+  color: #536985;
+
+  font-size: 5.5px;
+  font-weight: 900;
+}
+
+.pipelineNode strong {
+  color: #dce9fb;
+
+  font-size: 7px;
+}
+
+.pipelineArrow {
+  color: var(--react-violet-bright);
+
+  font-size: 11px;
+}
+
+/* ====================================================== */
+/* SUMMARY                                                */
+/* ====================================================== */
+
+.summary {
+  margin-top: 14px;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 8px;
+
+  position: relative;
+  z-index: 2;
+}
+
+.summaryCard {
+  min-width: 0;
+
+  padding: 11px 10px;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 8px;
+
+  border: 1px solid rgba(97, 218, 251, 0.08);
+
+  border-radius: 10px;
+
+  background: rgba(97, 218, 251, 0.022);
+}
+
+.summaryCard > span {
+  width: 22px;
+  height: 22px;
+
+  flex: 0 0 auto;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(139, 108, 255, 0.16);
+
+  border-radius: 7px;
+
+  color: var(--react-violet-bright);
+
+  background: rgba(139, 108, 255, 0.055);
+
+  font-size: 6.5px;
+  font-weight: 900;
+}
+
+.summaryCard > div {
+  min-width: 0;
+}
+
+.summaryCard strong {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: #dce8f8;
+
+  font-size: 8px;
+}
+
+.summaryCard p {
+  margin: 0;
+
+  color: #677791;
+
+  font-size: 6.5px;
+
+  line-height: 1.45;
+}
+
+.completeBadge {
+  width: fit-content;
+
+  margin: 13px auto 0;
+
+  padding: 6px 9px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  position: relative;
+  z-index: 2;
+
+  border: 1px solid rgba(109, 242, 179, 0.2);
+
+  border-radius: 999px;
+
+  color: var(--react-green);
+
+  background: rgba(109, 242, 179, 0.045);
+
+  font-size: 6.5px;
+  font-weight: 900;
+
+  letter-spacing: 0.6px;
+
+  text-transform: uppercase;
+
+  box-shadow: 0 0 22px rgba(109, 242, 179, 0.06);
+}
+
+/* ====================================================== */
+/* EXPLANATION                                            */
+/* ====================================================== */
+
+.explanation {
+  padding: 15px 18px;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 9px;
+
+  border-top: 1px solid rgba(97, 218, 251, 0.07);
+
+  background: rgba(4, 8, 19, 0.46);
+}
+
+.explanation > div {
+  min-width: 0;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 9px;
+}
+
+.explanation > div > span,
+.explanation > div > svg {
+  min-width: 29px;
+  height: 29px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  border: 1px solid rgba(97, 218, 251, 0.12);
+
+  border-radius: 8px;
+
+  color: var(--react-cyan);
+
+  background: rgba(97, 218, 251, 0.04);
+
+  font-size: 6px;
+  font-weight: 900;
+}
+
+.explanation > div > div {
+  min-width: 0;
+}
+
+.explanation strong {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: #d9e4f5;
+
+  font-size: 8px;
+}
+
+.explanation p {
+  margin: 0;
+
+  color: #68778f;
+
+  font-size: 6.5px;
+
+  line-height: 1.5;
+}
+
+/* ====================================================== */
+/* FOOTER                                                 */
+/* ====================================================== */
+
+.footerSignal {
+  min-height: 35px;
+
+  padding: 0 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  border-top: 1px solid rgba(139, 108, 255, 0.07);
+
+  color: #617188;
+
+  background: rgba(4, 7, 17, 0.58);
+
+  font-size: 6.5px;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+}
+
+.footerSignal svg {
+  color: var(--react-violet-bright);
+}
+
+/* ====================================================== */
+/* RESPONSIVE                                             */
+/* ====================================================== */
+
+@media (max-width: 1180px) {
+  .introWorkspace,
+  .jsxWorkspace {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .browserPanel {
+    grid-column: 1 / -1;
+  }
+
+  .browserBody {
+    min-height: 180px;
+  }
+}
+
+@media (max-width: 760px) {
+  .stage {
+    padding-inline: 13px;
+  }
+
+  .introWorkspace,
+  .jsxWorkspace {
+    grid-template-columns: 1fr;
+  }
+
+  .browserPanel {
+    grid-column: auto;
+  }
+
+  .reuseFlow {
+    grid-template-columns: 1fr;
+  }
+
+  .reuseArrow {
+    transform: rotate(90deg);
+
+    justify-self: center;
+  }
+
+  .summary,
+  .explanation {
+    grid-template-columns: 1fr;
+  }
+
+  .treeBranches {
+    grid-template-columns: 1fr;
+  }
+
+  .verticalConnector {
+    height: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .replayButton {
+    transition: none;
+  }
+}

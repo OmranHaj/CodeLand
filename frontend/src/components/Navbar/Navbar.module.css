@@ -14,6 +14,8 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+/* Keep the existing identity while giving navigation room at laptop sizes. */
+
 .container {
   width: min(100% - 40px, 80%);
   height: 100px;
@@ -446,3 +448,15 @@
     text-decoration: none;
   }
 }
+
+/* Responsive navigation refinements. */
+.container { width: min(1180px, calc(100% - 48px)); height: 82px; gap: 24px; }
+.logoIcon { width: 39px; height: 41px; }
+.logoText { font-size: 30px; }
+.navLinks { gap: 24px; }
+.navLinks a { font-size: 13px; white-space: nowrap; }
+.actions { gap: 10px; }
+.loginButton,.registerButton { font-size: 12px; padding: 11px 16px; }
+.mobileMenu[inert] { visibility: hidden; }
+@media(max-width:1000px) { .navLinks,.actions { display: none; } .burgerButton { display: flex; } }
+@media(max-width:600px) { .container { width: calc(100% - 32px); height: 72px; } .logoText { font-size: 27px; } }

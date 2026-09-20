@@ -1,4 +1,4 @@
-import { Code2, Terminal, Gamepad2, ArrowRight } from "lucide-react";
+import { Code2, Terminal, Cpu, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import styles from "./LearningPaths.module.css";
 
@@ -19,10 +19,10 @@ function LearningPaths() {
       level: "Beginner",
     },
     {
-      icon: <Gamepad2 size={30} />,
-      title: "Game Development",
+      icon: <Cpu size={30} />,
+      title: "C++ Development",
       description:
-        "Learn coding concepts by creating simple games and interactive experiences.",
+        "Build powerful programs through logic, memory, and object-oriented design.",
       level: "Beginner",
     },
   ];
@@ -57,7 +57,7 @@ function LearningPaths() {
 
               <p>{path.description}</p>
 
-              <Link to="/login" className={styles.pathButton}>
+              <Link to={path.title === "Python Programming" ? "/courses?path=Python" : path.title === "C++ Development" ? "/courses?path=C%2B%2B" : "/courses?path=Web"} className={styles.pathButton}>
                 Explore Path
                 <ArrowRight size={17} />
               </Link>

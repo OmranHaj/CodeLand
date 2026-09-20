@@ -1,24 +1,17 @@
-/* ====================================================== */
-/* JAVASCRIPT CORE CONTENT */
-/* ====================================================== */
-
 export const JAVASCRIPT_CORE_CONTENT = {
   id: "javascript-core",
   slug: "javascript-core",
 
   title: "JavaScript Core",
-
   subtitle: "Bring your pages to life",
 
   description:
     "Learn variables, conditions, loops, functions, arrays, objects, events, and DOM basics while building interactive web experiences.",
 
   version: 1,
-
   status: "published",
 
   accent: "#ffd84d",
-
   secondaryAccent: "#ff9f43",
 
   estimatedMinutes: 220,
@@ -40,30 +33,23 @@ export const JAVASCRIPT_CORE_CONTENT = {
 
     {
       id: "js-intro",
-
       slug: "js-intro",
-
       order: 1,
 
       title: "Welcome to JavaScript",
-
       subtitle: "Make websites interactive",
 
       description:
         "Discover what JavaScript does and write your first lines of code.",
 
       difficulty: "beginner",
-
       xp: 70,
-
       estimatedMinutes: 12,
-
       status: "published",
 
       blocks: [
         {
           id: "js-intro-story",
-
           type: "text",
 
           title: "HTML builds. CSS styles. JavaScript acts.",
@@ -73,8 +59,20 @@ export const JAVASCRIPT_CORE_CONTENT = {
         },
 
         {
-          id: "js-intro-tip",
+          id: "js-intro-animation",
+          type: "animation",
+          template: "js-intro-engine",
 
+          props: {
+            buttonText: "Activate",
+            initialMessage: "Waiting for JavaScript...",
+            updatedMessage: "JavaScript is working!",
+            eventName: "click",
+          },
+        },
+
+        {
+          id: "js-intro-tip",
           type: "tip",
 
           content:
@@ -83,9 +81,7 @@ export const JAVASCRIPT_CORE_CONTENT = {
 
         {
           id: "js-intro-example",
-
           type: "code",
-
           language: "javascript",
 
           code: `console.log("Hello CodeLand!");`,
@@ -121,30 +117,23 @@ export const JAVASCRIPT_CORE_CONTENT = {
 
     {
       id: "js-variables",
-
       slug: "js-variables",
-
       order: 2,
 
       title: "Variables",
-
       subtitle: "Store information in code",
 
       description:
         "Learn how const and let help you store values and reuse them later.",
 
       difficulty: "beginner",
-
       xp: 80,
-
       estimatedMinutes: 16,
-
       status: "published",
 
       blocks: [
         {
           id: "variables-text",
-
           type: "text",
 
           title: "Give data a name",
@@ -154,10 +143,21 @@ export const JAVASCRIPT_CORE_CONTENT = {
         },
 
         {
+          id: "variables-animation",
+          type: "animation",
+          template: "js-variable-memory",
+
+          props: {
+            variableName: "score",
+            initialValue: 10,
+            updatedValue: 25,
+            declaration: "let",
+          },
+        },
+
+        {
           id: "variables-example",
-
           type: "code",
-
           language: "javascript",
 
           code: `const name = "Maya";
@@ -200,30 +200,23 @@ console.log(score);`,
 
     {
       id: "js-data-types",
-
       slug: "js-data-types",
-
       order: 3,
 
       title: "Data Types",
-
       subtitle: "Understand the values you work with",
 
       description:
         "Learn strings, numbers, booleans, and how JavaScript treats different kinds of data.",
 
       difficulty: "beginner",
-
       xp: 90,
-
       estimatedMinutes: 16,
-
       status: "published",
 
       blocks: [
         {
           id: "types-text",
-
           type: "text",
 
           title: "Not all values are the same",
@@ -233,10 +226,20 @@ console.log(score);`,
         },
 
         {
+          id: "types-animation",
+          type: "animation",
+          template: "js-data-type-scanner",
+
+          props: {
+            stringValue: "CodeLand",
+            numberValue: 42,
+            booleanValue: true,
+          },
+        },
+
+        {
           id: "types-example",
-
           type: "code",
-
           language: "javascript",
 
           code: `const username = "Sam";
@@ -263,12 +266,10 @@ const isReady = false;`,
               name: "username",
               expectedType: "string",
             },
-
             {
               name: "level",
               expectedType: "number",
             },
-
             {
               name: "isReady",
               expectedType: "boolean",
@@ -292,30 +293,23 @@ const isReady = false;`,
 
     {
       id: "js-conditions",
-
       slug: "js-conditions",
-
       order: 4,
 
       title: "Conditions",
-
       subtitle: "Let your code make decisions",
 
       description:
         "Use if and else to make JavaScript choose what should happen.",
 
       difficulty: "beginner",
-
       xp: 100,
-
       estimatedMinutes: 20,
-
       status: "published",
 
       blocks: [
         {
           id: "conditions-text",
-
           type: "text",
 
           title: "If this, then that",
@@ -325,10 +319,21 @@ const isReady = false;`,
         },
 
         {
+          id: "conditions-animation",
+          type: "animation",
+          template: "js-condition-gate",
+
+          props: {
+            score: 12,
+            threshold: 10,
+            successText: "Level complete!",
+            failText: "Keep going!",
+          },
+        },
+
+        {
           id: "conditions-example",
-
           type: "code",
-
           language: "javascript",
 
           code: `const score = 12;
@@ -376,29 +381,22 @@ if (score >= 10) {
 
     {
       id: "js-loops",
-
       slug: "js-loops",
-
       order: 5,
 
       title: "Loops",
-
       subtitle: "Repeat work without repeating code",
 
       description: "Use loops to repeat an action several times.",
 
       difficulty: "beginner",
-
       xp: 110,
-
       estimatedMinutes: 22,
-
       status: "published",
 
       blocks: [
         {
           id: "loops-text",
-
           type: "text",
 
           title: "Repeat with purpose",
@@ -408,10 +406,20 @@ if (score >= 10) {
         },
 
         {
+          id: "loops-animation",
+          type: "animation",
+          template: "js-loop-runner",
+
+          props: {
+            start: 1,
+            end: 5,
+            variableName: "i",
+          },
+        },
+
+        {
           id: "loops-example",
-
           type: "code",
-
           language: "javascript",
 
           code: `for (let i = 1; i <= 3; i++) {
@@ -431,7 +439,6 @@ if (score >= 10) {
 
         validation: {
           type: "consoleOutputEquals",
-
           expectedOutput: ["1", "2", "3", "4", "5"],
         },
 
@@ -451,30 +458,23 @@ if (score >= 10) {
 
     {
       id: "js-functions",
-
       slug: "js-functions",
-
       order: 6,
 
       title: "Functions",
-
       subtitle: "Package logic into reusable actions",
 
       description:
         "Create functions that can receive information and return results.",
 
       difficulty: "beginner",
-
       xp: 120,
-
       estimatedMinutes: 24,
-
       status: "published",
 
       blocks: [
         {
           id: "functions-text",
-
           type: "text",
 
           title: "Write it once. Use it again.",
@@ -484,10 +484,21 @@ if (score >= 10) {
         },
 
         {
+          id: "functions-animation",
+          type: "animation",
+          template: "js-function-engine",
+
+          props: {
+            functionName: "greet",
+            parameterName: "name",
+            argumentValue: "CodeLand",
+            returnedValue: "Hello CodeLand",
+          },
+        },
+
+        {
           id: "functions-example",
-
           type: "code",
-
           language: "javascript",
 
           code: `function greet(name) {
@@ -539,29 +550,22 @@ console.log(greet("CodeLand"));`,
 
     {
       id: "js-arrays",
-
       slug: "js-arrays",
-
       order: 7,
 
       title: "Arrays",
-
       subtitle: "Keep multiple values together",
 
       description: "Learn how arrays store lists of related values.",
 
       difficulty: "beginner",
-
       xp: 130,
-
       estimatedMinutes: 22,
-
       status: "published",
 
       blocks: [
         {
           id: "arrays-text",
-
           type: "text",
 
           title: "One variable. Many values.",
@@ -571,10 +575,20 @@ console.log(greet("CodeLand"));`,
         },
 
         {
+          id: "arrays-animation",
+          type: "animation",
+          template: "js-array-vault",
+
+          props: {
+            arrayName: "colors",
+            items: ["red", "blue", "green"],
+            selectedIndex: 0,
+          },
+        },
+
+        {
           id: "arrays-example",
-
           type: "code",
-
           language: "javascript",
 
           code: `const colors = ["red", "blue", "green"];
@@ -595,9 +609,7 @@ console.log(colors);`,
 
         validation: {
           type: "arrayEquals",
-
           variable: "colors",
-
           expectedValue: ["red", "blue", "green"],
         },
 
@@ -617,29 +629,22 @@ console.log(colors);`,
 
     {
       id: "js-objects",
-
       slug: "js-objects",
-
       order: 8,
 
       title: "Objects",
-
       subtitle: "Describe things with properties",
 
       description: "Use objects to group related information about one thing.",
 
       difficulty: "beginner",
-
       xp: 140,
-
       estimatedMinutes: 24,
-
       status: "published",
 
       blocks: [
         {
           id: "objects-text",
-
           type: "text",
 
           title: "Data with meaning",
@@ -649,10 +654,26 @@ console.log(colors);`,
         },
 
         {
+          id: "objects-animation",
+          type: "animation",
+          template: "js-object-builder",
+
+          props: {
+            objectName: "player",
+
+            properties: {
+              name: "Alex",
+              level: 5,
+              online: true,
+            },
+
+            selectedProperty: "level",
+          },
+        },
+
+        {
           id: "objects-example",
-
           type: "code",
-
           language: "javascript",
 
           code: `const player = {
@@ -677,9 +698,7 @@ console.log(player);`,
 
         validation: {
           type: "objectHasProperties",
-
           variable: "player",
-
           properties: ["name", "level", "online"],
         },
 
@@ -699,30 +718,23 @@ console.log(player);`,
 
     {
       id: "js-events",
-
       slug: "js-events",
-
       order: 9,
 
       title: "Events",
-
       subtitle: "React to what users do",
 
       description:
         "Learn how clicks and other events make web pages interactive.",
 
       difficulty: "beginner",
-
       xp: 150,
-
       estimatedMinutes: 24,
-
       status: "published",
 
       blocks: [
         {
           id: "events-text",
-
           type: "text",
 
           title: "Listen for interaction",
@@ -732,10 +744,20 @@ console.log(player);`,
         },
 
         {
+          id: "events-animation",
+          type: "animation",
+          template: "js-event-pulse",
+
+          props: {
+            eventName: "click",
+            buttonLabel: "Launch",
+            message: "Button clicked!",
+          },
+        },
+
+        {
           id: "events-example",
-
           type: "code",
-
           language: "javascript",
 
           code: `button.addEventListener("click", () => {
@@ -762,9 +784,7 @@ console.log(player);`,
 
         validation: {
           type: "domEventListenerExists",
-
           selector: "#magicButton",
-
           event: "click",
         },
 
@@ -784,29 +804,22 @@ console.log(player);`,
 
     {
       id: "js-dom",
-
       slug: "js-dom",
-
       order: 10,
 
       title: "DOM Basics",
-
       subtitle: "Change the page with JavaScript",
 
       description: "Use JavaScript to find elements and update what users see.",
 
       difficulty: "beginner",
-
       xp: 170,
-
       estimatedMinutes: 28,
-
       status: "published",
 
       blocks: [
         {
           id: "dom-text",
-
           type: "text",
 
           title: "JavaScript meets HTML",
@@ -816,10 +829,20 @@ console.log(player);`,
         },
 
         {
+          id: "dom-animation",
+          type: "animation",
+          template: "js-dom-runtime",
+
+          props: {
+            selector: "#message",
+            initialText: "Waiting for JavaScript...",
+            updatedText: "JavaScript is working!",
+          },
+        },
+
+        {
           id: "dom-example",
-
           type: "code",
-
           language: "javascript",
 
           code: `const title =
@@ -848,9 +871,7 @@ title.textContent =
 
         validation: {
           type: "domTextEquals",
-
           selector: "#message",
-
           expectedText: "JavaScript is working!",
         },
 
@@ -876,24 +897,18 @@ title.textContent =
 
     {
       id: "js-score-calculator",
-
       slug: "js-score-calculator",
-
       order: 1,
 
       title: "Score Calculator",
-
       subtitle: "Use variables and math",
 
       description:
         "Calculate a player's final score using JavaScript variables.",
 
       difficulty: "beginner",
-
       xp: 180,
-
       estimatedMinutes: 22,
-
       status: "published",
 
       starterCode: `const baseScore = 50;
@@ -906,9 +921,7 @@ console.log(finalScore);`,
       validation: [
         {
           type: "variableEquals",
-
           variable: "finalScore",
-
           expectedValue: 75,
         },
       ],
@@ -924,23 +937,17 @@ console.log(finalScore);`,
 
     {
       id: "js-access-check",
-
       slug: "js-access-check",
-
       order: 2,
 
       title: "Access Check",
-
       subtitle: "Use conditions",
 
       description: "Decide whether a player can enter a level.",
 
       difficulty: "beginner",
-
       xp: 200,
-
       estimatedMinutes: 24,
-
       status: "published",
 
       starterCode: `const playerLevel = 5;
@@ -954,7 +961,6 @@ console.log(finalScore);`,
       validation: [
         {
           type: "consoleOutputEquals",
-
           expectedOutput: ["Access granted"],
         },
       ],
@@ -970,23 +976,17 @@ console.log(finalScore);`,
 
     {
       id: "js-level-loop",
-
       slug: "js-level-loop",
-
       order: 3,
 
       title: "Level Loop",
-
       subtitle: "Practice loops",
 
       description: "Use a loop to print a sequence of unlocked levels.",
 
       difficulty: "beginner",
-
       xp: 220,
-
       estimatedMinutes: 26,
-
       status: "published",
 
       starterCode: `// Print:
@@ -1015,24 +1015,18 @@ console.log(finalScore);`,
 
     {
       id: "js-team-function",
-
       slug: "js-team-function",
-
       order: 4,
 
       title: "Team Greeting",
-
       subtitle: "Practice functions",
 
       description:
         "Build a reusable function that creates a greeting for any coder.",
 
       difficulty: "beginner",
-
       xp: 240,
-
       estimatedMinutes: 28,
-
       status: "published",
 
       starterCode: `function welcomeCoder(name) {
@@ -1052,11 +1046,13 @@ console.log(
           tests: [
             {
               args: ["Lina"],
+
               expectedValue: "Welcome Lina!",
             },
 
             {
               args: ["Omar"],
+
               expectedValue: "Welcome Omar!",
             },
           ],
@@ -1074,23 +1070,17 @@ console.log(
 
     {
       id: "js-project-list",
-
       slug: "js-project-list",
-
       order: 5,
 
       title: "Project List",
-
       subtitle: "Use arrays and loops together",
 
       description: "Store project names in an array and print each one.",
 
       difficulty: "beginner",
-
       xp: 280,
-
       estimatedMinutes: 30,
-
       status: "published",
 
       starterCode: `const projects = [
@@ -1121,24 +1111,18 @@ console.log(
 
     {
       id: "js-final-interactive-card",
-
       slug: "js-final-interactive-card",
-
       order: 6,
 
       title: "Interactive Card Mission",
-
       subtitle: "JavaScript Core final challenge",
 
       description:
         "Use DOM selection, events, variables, and conditions to make an interactive card.",
 
       difficulty: "beginner",
-
       xp: 450,
-
       estimatedMinutes: 45,
-
       status: "published",
 
       starterHtml: `<section class="card">

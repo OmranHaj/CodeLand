@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 import LessonRobot from "../../components/Learning/LessonRobot";
+import CppLessonAnimation from "../../components/Learning/CppLessonAnimation";
 
 import cppArrayMatrixContent from "../../data/cppArrayMatrixContent";
 
@@ -919,6 +920,13 @@ function CppArrayMatrix() {
                 <h1>{activeUnit.data.title}</h1>
 
                 <p className={styles.subtitle}>{activeUnit.data.subtitle}</p>
+
+                {activeUnit.kind === "lesson" && (
+                  <CppLessonAnimation
+                    type={activeUnit.data.animation || activeUnit.data.id}
+                    lesson={activeUnit.data}
+                  />
+                )}
 
                 <div className={styles.meta}>
                   <span>{activeUnit.data.difficulty}</span>

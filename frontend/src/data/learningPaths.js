@@ -1,4 +1,4 @@
-import { Code2, Gamepad2, TerminalSquare } from "lucide-react";
+import { Code2, Cpu, TerminalSquare } from "lucide-react";
 
 export const learningPaths = [
   {
@@ -32,69 +32,55 @@ export const learningPaths = [
   },
 
   {
-    id: "game-maker",
-
-    title: "Game Maker",
-
-    eyebrow: "CREATE & PLAY",
-
-    description:
-      "Learn programming by building interactive games, mechanics, challenges, and playable worlds.",
-
-    icon: Gamepad2,
-
-    accent: "#ff6b9d",
-
-    secondaryAccent: "#ffb347",
-
-    difficulty: "Beginner Friendly",
-
-    estimatedJourney: "5 Worlds",
-
-    skills: [
-      "Logic",
-      "JavaScript",
-      "Game Mechanics",
-      "Canvas",
-      "Game Projects",
-    ],
-
-    worldTitle: "The Game Frontier",
-
-    worldDescription:
-      "An adventurous world filled with arenas, machines, challenges, and interactive missions.",
-
-    route: "/student/world",
+    id: "cpp-developer",
+    title: "C++ Developer",
+    eyebrow: "SYSTEMS · LOGIC · PERFORMANCE",
+    description: "Build a strong foundation in C++, from your first program to object-oriented design and complete systems.",
+    icon: Cpu,
+    accent: "#2f8cff",
+    secondaryAccent: "#7be7ff",
+    difficulty: "Beginner to Advanced",
+    estimatedJourney: "9 Worlds",
+    skills: ["C++", "Logic", "Memory", "OOP", "STL"],
+    worldTitle: "C++ Core",
+    worldDescription: "Discover a world of logic, memory and powerful systems.",
+    route: "/student/cpp-world",
   },
 
   {
     id: "python-explorer",
 
-    title: "Python Explorer",
+    title: "Algorithm & Data Structures",
 
-    eyebrow: "EXPLORE CODE",
+    eyebrow: "ALGORITHMS · DATA STRUCTURES",
 
     description:
-      "Master programming fundamentals, problem solving, data, and automation through Python.",
+      "Master fundamental and advanced algorithms, data structures, trees, graphs, sorting, and dynamic programming through interactive 3D visualizations.",
 
     icon: TerminalSquare,
 
-    accent: "#36d399",
+    accent: "#10b981",
 
-    secondaryAccent: "#3b82f6",
+    secondaryAccent: "#f59e0b",
 
-    difficulty: "Beginner Friendly",
+    difficulty: "Beginner to Advanced",
 
-    estimatedJourney: "5 Worlds",
+    estimatedJourney: "8 Sectors",
 
-    skills: ["Programming", "Python", "Logic", "Data", "Python Projects"],
+    skills: [
+      "Arrays & Lists",
+      "Stacks & Queues",
+      "Sorting & Searching",
+      "Trees & Graphs",
+      "Dynamic Programming",
+    ],
 
-    worldTitle: "The Python Nexus",
+    worldTitle: "The Quantum Citadel",
 
     worldDescription:
-      "A mysterious technological research world powered by logic, data, and automation.",
+      "An ultra-luxurious quantum cyber realm of algorithmic structures, floating node networks, and real-time visualizers.",
 
-    route: "/student/world",
+    route: "/student/python-world",
   },
 ];
 

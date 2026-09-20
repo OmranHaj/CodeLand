@@ -1,8 +1,10 @@
 import { HTML_FOUNDATIONS_CONTENT } from "../data/htmlFoundationsContent";
+import { getUser } from "./learningHub";
 import { CSS_STYLING_CONTENT } from "../data/cssStylingContent";
 import { JAVASCRIPT_CORE_CONTENT } from "../data/javascriptCoreContent";
 import { REACT_NEXUS_CONTENT } from "../data/reactNexusContent";
 import { PROJECT_SHOWCASE_CONTENT } from "../data/projectShowcaseContent";
+
 /* ====================================================== */
 /* CONFIG */
 /* ====================================================== */
@@ -12,15 +14,34 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const USE_MOCK_API =
   String(import.meta.env.VITE_USE_MOCK_API).toLowerCase() === "true";
 
+/*
+  TEMP:
+  These levels are still being developed from
+  local frontend content files.
+
+  Remove levels from this list later when their
+  backend content is ready.
+*/
+
+const FORCE_LOCAL_LEVELS = [
+  "javascript-core",
+  "react-nexus",
+  "project-showcase",
+];
+
 /* ====================================================== */
 /* MOCK CONTENT */
 /* ====================================================== */
 
 const MOCK_LEVEL_CONTENT = {
   "html-foundations": HTML_FOUNDATIONS_CONTENT,
+
   "css-styling": CSS_STYLING_CONTENT,
+
   "javascript-core": JAVASCRIPT_CORE_CONTENT,
+
   "react-nexus": REACT_NEXUS_CONTENT,
+
   "project-showcase": PROJECT_SHOWCASE_CONTENT,
 };
 
@@ -151,11 +172,36 @@ export async function getLevelContent(levelId) {
     throw new Error("A level id is required.");
   }
 
-  if (USE_MOCK_API) {
-    return getMockLevelContent(levelId);
+  const normalizedLevelId = normalizeLevelId(levelId);
+
+  /*
+    TEMP:
+    Force selected frontend levels to use
+    their local content while development
+    is still in progress.
+  */
+
+  if (FORCE_LOCAL_LEVELS.includes(normalizedLevelId)) {
+    const content = await getMockLevelContent(normalizedLevelId);
+
+    console.log(`🔥 ${normalizedLevelId.toUpperCase()} SOURCE: LOCAL MOCK`);
+
+    return content;
   }
 
-  return requestLevelContent(levelId);
+  /*
+    Global mock mode.
+  */
+
+  if (USE_MOCK_API || getUser()?.isDemo) {
+    return getMockLevelContent(normalizedLevelId);
+  }
+
+  /*
+    Otherwise use the real backend API.
+  */
+
+  return requestLevelContent(normalizedLevelId);
 }
 
 /* ====================================================== */
@@ -300,5 +346,7 @@ export function getLearningContentConfig() {
     apiUrl: API_URL,
 
     useMockApi: USE_MOCK_API,
+
+    forceLocalLevels: [...FORCE_LOCAL_LEVELS],
   };
 }

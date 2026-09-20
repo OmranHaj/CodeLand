@@ -1,0 +1,794 @@
+/* ==========================================================================
+   PARENT OBSERVATORY DASHBOARD STYLES
+   Futuristic, Glassmorphism, 3D Tilt Cards, Responsive & Print-Ready
+   ========================================================================== */
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+}
+
+/* Header Section */
+.topHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.headerTitleArea h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin: 0 0 8px 0;
+  background: linear-gradient(135deg, #ffffff 40%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.headerSubtitle {
+  color: #94a3b8;
+  font-size: 13px;
+  max-width: 600px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid #2e3852;
+  background: #131a2e;
+  color: #e2e8f0;
+}
+
+.actionBtn:hover {
+  background: #1e2942;
+  border-color: #6366f1;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.2);
+}
+
+.actionBtnPrimary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-color: #a78bfa;
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(139, 92, 246, 0.3);
+}
+
+.actionBtnPrimary:hover {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  border-color: #c4b5fd;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+}
+
+/* Child Selector Bar */
+.childSelectorBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  background: rgba(16, 22, 39, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid #232d47;
+  border-radius: 16px;
+  flex-wrap: wrap;
+}
+
+.childTabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.childTab {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: #0f1526;
+  border: 1px solid #25304c;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #94a3b8;
+}
+
+.childTab:hover {
+  background: #172037;
+  border-color: #43527a;
+  color: #f1f5f9;
+}
+
+.childTabActive {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(16, 22, 39, 0.9));
+  border-color: #6366f1;
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+}
+
+.childAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 13px;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.childTabInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.childTabName {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.childTabMeta {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.childTabActive .childTabMeta {
+  color: #a5b4fc;
+}
+
+.linkChildBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px dashed #3e4c6d;
+  color: #a5b4fc;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.linkChildBtn:hover {
+  border-color: #818cf8;
+  background: rgba(99, 102, 241, 0.08);
+  color: #ffffff;
+}
+
+/* Hero Section (3D Mastery Beacon & Overview) */
+.heroGrid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+}
+
+.beaconCard {
+  background: linear-gradient(165deg, #12182b, #0c1120);
+  border: 1px solid #232d47;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.beaconHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.beaconBadge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  text-transform: uppercase;
+}
+
+.beaconStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.beaconStatusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+}
+
+/* 4 Quick Stat Cards with 3D Tilt Hover */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.statCard {
+  background: linear-gradient(145deg, #111728, #0d1222);
+  border: 1px solid #222d45;
+  border-radius: 18px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, box-shadow 0.3s;
+  cursor: default;
+}
+
+.statCard:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: #6366f1;
+  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.15);
+}
+
+.statTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.statIconWrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: #818cf8;
+}
+
+.statTrend {
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #34d399;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+}
+
+.statMain {
+  margin-top: 14px;
+}
+
+.statValue {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #f8fafc;
+  line-height: 1.1;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 6px;
+}
+
+.statSubtext {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* 30-Day Activity Heatmap */
+.panel {
+  background: #0f1527;
+  border: 1px solid #202b44;
+  border-radius: 20px;
+  padding: 24px;
+  position: relative;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.panelTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+}
+
+.panelSubtitle {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 3px;
+}
+
+.heatmapLegend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #64748b;
+}
+
+.legendBox {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.heatmapGrid {
+  display: grid;
+  grid-template-columns: repeat(15, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.heatmapCell {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.heatmapCell:hover {
+  transform: scale(1.15);
+  z-index: 5;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  border-color: #818cf8;
+}
+
+.heatmapCellEmpty {
+  background: #141b30;
+  color: #475569;
+}
+
+.heatmapCellLow {
+  background: rgba(16, 185, 129, 0.25);
+  color: #6ee7b7;
+}
+
+.heatmapCellMed {
+  background: rgba(16, 185, 129, 0.55);
+  color: #ecfdf5;
+}
+
+.heatmapCellHigh {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+}
+
+.heatmapFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #1c263d;
+  font-size: 11px;
+  color: #94a3b8;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* 2-Column Analytics Grid */
+.analyticsGrid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 24px;
+}
+
+/* Weekly Study Hours Bars */
+.weeklyBars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.weekRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.weekLabel {
+  width: 110px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.weekTrack {
+  flex: 1;
+  height: 22px;
+  background: #141b30;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.weekFill {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  transition: width 0.6s ease;
+  position: relative;
+}
+
+.weekTargetLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(245, 158, 11, 0.7);
+  z-index: 2;
+}
+
+.weekHours {
+  width: 60px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+/* Subject Mastery Progress */
+.subjectList {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.subjectCard {
+  background: #12182c;
+  border: 1px solid #1f2a44;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.subjectHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.subjectTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.subjectSectors {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.progressBar {
+  height: 8px;
+  background: #172138;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.skillChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.skillChip {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+/* AI Insights & Conversation Starters */
+.aiInsightCard {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(16, 22, 39, 0.85));
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  border-radius: 18px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.insightHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.insightIconWrap {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(139, 92, 246, 0.2);
+  color: #c4b5fd;
+}
+
+.insightPromptBox {
+  background: #0d1222;
+  border: 1px dashed rgba(167, 139, 250, 0.4);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  font-size: 12px;
+  color: #e2e8f0;
+  line-height: 1.6;
+}
+
+.insightPromptBox strong {
+  color: #c4b5fd;
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* Milestones & Badges */
+.badgeList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.badgeRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #12182c;
+  border: 1px solid #1f2a44;
+  transition: transform 0.2s ease;
+}
+
+.badgeRow:hover {
+  transform: translateX(4px);
+  border-color: #6366f1;
+}
+
+.badgeIcon {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #172138;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.badgeContent {
+  flex: 1;
+}
+
+.badgeTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.badgeDesc {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.badgeDate {
+  font-size: 10px;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+/* Goal Setter & Cheer Box */
+.cheerSection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.cheerInput {
+  width: 100%;
+  background: #0b1020;
+  border: 1px solid #28334e;
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #f1f5f9;
+  font-size: 12px;
+  outline: none;
+}
+
+.cheerInput:focus {
+  border-color: #8b5cf6;
+}
+
+.cheerChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cheerChip {
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #141b30;
+  border: 1px solid #263352;
+  color: #c4b5fd;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cheerChip:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: #8b5cf6;
+}
+
+/* Link Child Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modalBox {
+  background: #0f1527;
+  border: 1px solid #2a3655;
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+.modalClose {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.modalClose:hover {
+  color: #ffffff;
+}
+
+/* Print Styling */
+@media print {
+  .headerActions,
+  .linkChildBtn,
+  .cheerSection,
+  .beaconCard,
+  .modalOverlay {
+    display: none !important;
+  }
+
+  .dashboard {
+    color: #000000 !important;
+    background: #ffffff !important;
+  }
+
+  .panel, .statCard, .subjectCard, .aiInsightCard {
+    background: #ffffff !important;
+    border: 1px solid #cccccc !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  .headerTitleArea h1 {
+    -webkit-text-fill-color: #000000 !important;
+    color: #000000 !important;
+  }
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1050px) {
+  .heroGrid {
+    grid-template-columns: 1fr;
+  }
+  .analyticsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+  .heatmapGrid {
+    grid-template-columns: repeat(10, 1fr);
+  }
+}
