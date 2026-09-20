@@ -1,0 +1,61 @@
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthService } from './auth.service.js';
+import { RegisterParentDto } from './dto/register-parent.dto.js';
+import { RegisterChildDto } from './dto/register-child.dto.js';
+import { LoginDto } from './dto/login.dto.js';
+import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+
+@Controller('auth')
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  /**
+   * Endpoint: POST /auth/register/parent
+   * Registers a new Parent and returns user info with parentCode and JWT.
+   */
+  @Post('register/parent')
+  @HttpCode(HttpStatus.CREATED)
+  async registerParent(@Body() dto: RegisterParentDto) {
+    return this.authService.registerParent(dto);
+  }
+
+  /**
+   * Endpoint: POST /auth/register/child
+   * Registers a new Child linked via parentCode and returns user info with JWT.
+   */
+  @Post('register/child')
+  @HttpCode(HttpStatus.CREATED)
+  async registerChild(@Body() dto: RegisterChildDto) {
+    return this.authService.registerChild(dto);
+  }
+
+  /**
+   * Endpoint: POST /auth/login
+   * Standard login for both Parents and Children.
+   */
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() dto: LoginDto) {
+    return this.authService.login(dto);
+  }
+
+  /**
+   * Endpoint: GET /auth/me
+   * Protected route to retrieve the current authenticated user's profile.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  @HttpCode(HttpStatus.OK)
+  async getProfile(@Request() req: { user: unknown }) {
+    return req.user;
+  }
+}

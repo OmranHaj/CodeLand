@@ -9,10 +9,22 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum Role {
+  PARENT
+  CHILD
 }
+
+model User {
+  id         String    @id @default(uuid())
+  email      String    @unique
+  name       String?
+  password   String
+  role       Role      @default(PARENT)
+  parentCode String?   @unique
+  parentId   String?
+  parent     User?     @relation("ParentChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children   User[]    @relation("ParentChildren")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
