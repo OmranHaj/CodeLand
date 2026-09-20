@@ -1,10 +1,211 @@
-.robot {
+/* ====================================================== */
+/* REGISTER SUCCESS */
+/* ====================================================== */
+
+.successPanel {
   width: 100%;
-  height: 100%;
-  min-height: 520px;
+  max-width: 470px;
+
+  margin-inline: auto;
+
+  text-align: center;
 }
 
-.robot canvas {
-  width: 100% !important;
-  height: 100% !important;
+.successIcon {
+  width: 64px;
+  height: 64px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  color: #ffffff;
+
+  background: linear-gradient(135deg, #22c55e, #14b8a6);
+
+  box-shadow: 0 12px 35px rgba(34, 197, 94, 0.22);
+}
+
+.successPanel h1 {
+  margin: 0 0 12px;
+
+  color: #ffffff;
+
+  font-size: clamp(32px, 3vw, 44px);
+
+  line-height: 1.05;
+
+  letter-spacing: -1.4px;
+}
+
+.successPanel > p {
+  max-width: 430px;
+
+  margin: 0 auto 24px;
+
+  color: #8c9aae;
+
+  font-size: 13px;
+
+  line-height: 1.65;
+}
+
+/* ====================================================== */
+/* INVITATION CODE */
+/* ====================================================== */
+
+.inviteCodeBox {
+  width: 100%;
+
+  margin-bottom: 22px;
+
+  padding: 14px 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  border: 1px solid rgba(124, 92, 252, 0.25);
+
+  border-radius: 13px;
+
+  background: linear-gradient(
+    135deg,
+    rgba(124, 92, 252, 0.1),
+    rgba(53, 194, 255, 0.035)
+  );
+}
+
+.inviteCodeInfo {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  gap: 3px;
+}
+
+.inviteCodeInfo span {
+  color: #7f8da3;
+
+  font-size: 10px;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.6px;
+}
+
+.inviteCodeInfo strong {
+  color: #c7baff;
+
+  font-size: 21px;
+  font-weight: 800;
+
+  letter-spacing: 1.5px;
+}
+
+.copyButton {
+  min-width: 82px;
+
+  height: 38px;
+
+  padding-inline: 12px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  border-radius: 9px;
+
+  background: rgba(255, 255, 255, 0.04);
+
+  color: #d9e1ed;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.copyButton:hover {
+  background: rgba(124, 92, 252, 0.1);
+
+  border-color: rgba(124, 92, 252, 0.35);
+
+  transform: translateY(-1px);
+}
+
+/*
+  createButton is also used on Link
+*/
+
+.createButton {
+  text-decoration: none;
+}
+
+/* ====================================================== */
+/* DISABLED INPUTS */
+/* ====================================================== */
+
+.field input:disabled {
+  opacity: 0.62;
+
+  cursor: not-allowed;
+}
+
+/* ====================================================== */
+/* DISABLED CHANGE BUTTON */
+/* ====================================================== */
+
+.changeTypeButton:disabled {
+  opacity: 0.45;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+/* ====================================================== */
+/* SUCCESS MOBILE */
+/* ====================================================== */
+
+@media (max-width: 600px) {
+  .successIcon {
+    width: 56px;
+    height: 56px;
+
+    margin-bottom: 14px;
+  }
+
+  .successPanel h1 {
+    font-size: 30px;
+  }
+
+  .successPanel > p {
+    font-size: 12px;
+  }
+
+  .inviteCodeBox {
+    padding: 12px;
+  }
+
+  .inviteCodeInfo strong {
+    font-size: 18px;
+  }
 }

@@ -1178,3 +1178,59 @@
     padding: 7px 9px;
   }
 }
+/* ====================================================== */
+/* PASSWORD VISIBILITY */
+/* ====================================================== */
+
+.passwordInputWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.passwordInputWrapper input {
+  width: 100%;
+  padding-right: 44px;
+}
+
+.passwordToggle {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform: translateY(-50%);
+
+  padding: 0;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  color: #718096;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.passwordToggle:hover:not(:disabled) {
+  color: #ffffff;
+}
+
+.passwordToggle:focus-visible {
+  color: #baaaff;
+}
+
+.passwordToggle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

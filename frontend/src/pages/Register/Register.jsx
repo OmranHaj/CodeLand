@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import registerVisual from "../../assets/images/register-visual.png";
 import parentRegisterVisual from "../../assets/images/parent-register-visual.png";
@@ -12,17 +12,27 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  Eye,
+  EyeOff,
 } from "lucide-react";
+
+import {
+  registerParent,
+  verifyParentCode,
+  registerStudent,
+} from "../../services/authService";
 
 import styles from "./Register.module.css";
 
 function Register() {
+  const navigate = useNavigate();
+
   const [accountType, setAccountType] = useState("");
   const [step, setStep] = useState("choose");
 
-  // =========================================
-  // PARENT FORM
-  // =========================================
+  /* ====================================================== */
+  /* PARENT */
+  /* ====================================================== */
 
   const [parentForm, setParentForm] = useState({
     fullName: "",
@@ -31,17 +41,24 @@ function Register() {
     confirmPassword: "",
   });
 
-  // =========================================
-  // STUDENT PARENT CODE
-  // =========================================
+  const [parentError, setParentError] = useState("");
+  const [parentLoading, setParentLoading] = useState(false);
+
+  const [showParentPassword, setShowParentPassword] = useState(false);
+  const [showParentConfirmPassword, setShowParentConfirmPassword] =
+    useState(false);
+
+  /* ====================================================== */
+  /* STUDENT CODE */
+  /* ====================================================== */
 
   const [studentCode, setStudentCode] = useState("");
   const [codeError, setCodeError] = useState("");
   const [checkingCode, setCheckingCode] = useState(false);
 
-  // =========================================
-  // STUDENT FORM
-  // =========================================
+  /* ====================================================== */
+  /* STUDENT */
+  /* ====================================================== */
 
   const [studentForm, setStudentForm] = useState({
     email: "",
@@ -50,10 +67,15 @@ function Register() {
   });
 
   const [studentError, setStudentError] = useState("");
+  const [studentLoading, setStudentLoading] = useState(false);
 
-  // =========================================
-  // CHOOSE ACCOUNT TYPE
-  // =========================================
+  const [showStudentPassword, setShowStudentPassword] = useState(false);
+  const [showStudentConfirmPassword, setShowStudentConfirmPassword] =
+    useState(false);
+
+  /* ====================================================== */
+  /* ACCOUNT TYPE */
+  /* ====================================================== */
 
   const handleContinue = () => {
     if (!accountType) return;
@@ -67,43 +89,9 @@ function Register() {
     }
   };
 
-  // =========================================
-  // CHECK PARENT CODE
-  // =========================================
-
-  const handleParentCodeSubmit = async (e) => {
-    e.preventDefault();
-
-    setCodeError("");
-
-    if (!studentCode.trim()) {
-      setCodeError("Please enter your parent code.");
-      return;
-    }
-
-    setCheckingCode(true);
-
-    // Temporary mock backend delay
-    await new Promise((resolve) => setTimeout(resolve, 700));
-
-    // Temporary test code
-    if (studentCode.trim().toUpperCase() !== "CL-1234") {
-      setCodeError("Invalid parent code. Please check the code and try again.");
-
-      setCheckingCode(false);
-      return;
-    }
-
-    setCheckingCode(false);
-
-    console.log("Parent code valid:", studentCode);
-
-    setStep("student");
-  };
-
-  // =========================================
-  // PARENT FORM CHANGE
-  // =========================================
+  /* ====================================================== */
+  /* PARENT FORM CHANGE */
+  /* ====================================================== */
 
   const handleParentChange = (e) => {
     const { name, value } = e.target;
@@ -112,26 +100,103 @@ function Register() {
       ...prev,
       [name]: value,
     }));
+
+    setParentError("");
   };
 
-  // =========================================
-  // PARENT SUBMIT
-  // =========================================
+  /* ====================================================== */
+  /* CREATE PARENT */
+  /* ====================================================== */
 
-  const handleParentSubmit = (e) => {
+  const handleParentSubmit = async (e) => {
     e.preventDefault();
 
-    if (parentForm.password !== parentForm.confirmPassword) {
-      console.log("Parent passwords do not match.");
+    setParentError("");
+
+    if (
+      !parentForm.fullName.trim() ||
+      !parentForm.email.trim() ||
+      !parentForm.password ||
+      !parentForm.confirmPassword
+    ) {
+      setParentError("Please complete all fields.");
       return;
     }
 
-    console.log("Parent account:", parentForm);
+    if (parentForm.password.length < 8) {
+      setParentError("Password must be at least 8 characters.");
+      return;
+    }
+
+    if (parentForm.password !== parentForm.confirmPassword) {
+      setParentError("Passwords do not match.");
+      return;
+    }
+
+    setParentLoading(true);
+
+    const normalizedEmail = parentForm.email.trim().toLowerCase();
+
+    try {
+      await registerParent({
+        fullName: parentForm.fullName.trim(),
+        email: normalizedEmail,
+        password: parentForm.password,
+      });
+
+      navigate("/login", {
+        replace: true,
+        state: {
+          registered: true,
+          accountType: "parent",
+          email: normalizedEmail,
+          message: "Parent account created successfully. Please log in.",
+        },
+      });
+    } catch (error) {
+      setParentError(error.message || "Unable to create your account.");
+    } finally {
+      setParentLoading(false);
+    }
   };
 
-  // =========================================
-  // STUDENT FORM CHANGE
-  // =========================================
+  /* ====================================================== */
+  /* VERIFY PARENT CODE */
+  /* ====================================================== */
+
+  const handleParentCodeSubmit = async (e) => {
+    e.preventDefault();
+
+    setCodeError("");
+
+    const normalizedCode = studentCode.trim().toUpperCase();
+
+    if (!normalizedCode) {
+      setCodeError("Please enter your parent code.");
+      return;
+    }
+
+    setCheckingCode(true);
+
+    try {
+      const data = await verifyParentCode(normalizedCode);
+
+      if (data?.valid === false) {
+        throw new Error("Invalid parent code.");
+      }
+
+      setStudentCode(data?.code || normalizedCode);
+      setStep("student");
+    } catch (error) {
+      setCodeError(error.message || "Unable to verify parent code.");
+    } finally {
+      setCheckingCode(false);
+    }
+  };
+
+  /* ====================================================== */
+  /* STUDENT FORM CHANGE */
+  /* ====================================================== */
 
   const handleStudentChange = (e) => {
     const { name, value } = e.target;
@@ -144,14 +209,23 @@ function Register() {
     setStudentError("");
   };
 
-  // =========================================
-  // STUDENT SUBMIT
-  // =========================================
+  /* ====================================================== */
+  /* CREATE STUDENT */
+  /* ====================================================== */
 
-  const handleStudentSubmit = (e) => {
+  const handleStudentSubmit = async (e) => {
     e.preventDefault();
 
     setStudentError("");
+
+    if (
+      !studentForm.email.trim() ||
+      !studentForm.password ||
+      !studentForm.confirmPassword
+    ) {
+      setStudentError("Please complete all fields.");
+      return;
+    }
 
     if (studentForm.password.length < 8) {
       setStudentError("Password must be at least 8 characters.");
@@ -163,18 +237,36 @@ function Register() {
       return;
     }
 
-    const studentData = {
-      parentCode: studentCode,
-      email: studentForm.email,
-      password: studentForm.password,
-    };
+    setStudentLoading(true);
 
-    console.log("Student account:", studentData);
+    const normalizedEmail = studentForm.email.trim().toLowerCase();
+
+    try {
+      await registerStudent({
+        parentCode: studentCode.trim().toUpperCase(),
+        email: normalizedEmail,
+        password: studentForm.password,
+      });
+
+      navigate("/login", {
+        replace: true,
+        state: {
+          registered: true,
+          accountType: "student",
+          email: normalizedEmail,
+          message: "Student account created successfully. Please log in.",
+        },
+      });
+    } catch (error) {
+      setStudentError(error.message || "Unable to create your account.");
+    } finally {
+      setStudentLoading(false);
+    }
   };
 
-  // =========================================
-  // VISUAL IMAGE
-  // =========================================
+  /* ====================================================== */
+  /* VISUAL IMAGE */
+  /* ====================================================== */
 
   const getVisualImage = () => {
     if (step === "parent") {
@@ -202,25 +294,21 @@ function Register() {
 
   return (
     <main className={styles.page}>
-      <div className={styles.glowOne}></div>
-      <div className={styles.glowTwo}></div>
+      <div className={styles.glowOne} />
+      <div className={styles.glowTwo} />
 
       <div className={styles.registerCard}>
-        {/* ================================= */}
-        {/* LEFT SIDE */}
-        {/* ================================= */}
+        {/* ================================================= */}
+        {/* LEFT VISUAL */}
+        {/* ================================================= */}
 
         <div className={styles.visualSide}>
           <img src={getVisualImage()} alt={getVisualAlt()} />
 
-          <div className={styles.imageOverlay}></div>
-
-          {/* ================================= */}
-          {/* TEXT OVER IMAGE */}
-          {/* ================================= */}
+          <div className={styles.imageOverlay} />
 
           <div className={styles.visualText}>
-            {/* PARENT VISUAL TEXT */}
+            {/* PARENT */}
 
             {step === "parent" && (
               <>
@@ -240,7 +328,7 @@ function Register() {
               </>
             )}
 
-            {/* STUDENT VISUAL TEXT */}
+            {/* STUDENT */}
 
             {(step === "studentCode" || step === "student") && (
               <>
@@ -260,7 +348,7 @@ function Register() {
               </>
             )}
 
-            {/* DEFAULT VISUAL TEXT */}
+            {/* DEFAULT */}
 
             {step === "choose" && (
               <>
@@ -282,9 +370,9 @@ function Register() {
           </div>
         </div>
 
-        {/* ================================= */}
+        {/* ================================================= */}
         {/* RIGHT SIDE */}
-        {/* ================================= */}
+        {/* ================================================= */}
 
         <div className={styles.formSide}>
           {/* TOP BAR */}
@@ -306,9 +394,9 @@ function Register() {
             </Link>
           </div>
 
-          {/* ================================= */}
-          {/* STEP 1 - CHOOSE ACCOUNT */}
-          {/* ================================= */}
+          {/* ================================================= */}
+          {/* CHOOSE ACCOUNT */}
+          {/* ================================================= */}
 
           {step === "choose" && (
             <div className={styles.stepContent}>
@@ -324,7 +412,7 @@ function Register() {
               </div>
 
               <div className={styles.accountTypes}>
-                {/* Parent */}
+                {/* PARENT */}
 
                 <button
                   type="button"
@@ -353,7 +441,7 @@ function Register() {
                   <span className={styles.accountLabel}>I'm a Parent</span>
                 </button>
 
-                {/* Student */}
+                {/* STUDENT */}
 
                 <button
                   type="button"
@@ -397,16 +485,20 @@ function Register() {
             </div>
           )}
 
-          {/* ================================= */}
-          {/* STEP 2 - PARENT */}
-          {/* ================================= */}
+          {/* ================================================= */}
+          {/* PARENT REGISTER */}
+          {/* ================================================= */}
 
           {step === "parent" && (
             <div className={styles.stepContent}>
               <button
                 type="button"
                 className={styles.changeTypeButton}
-                onClick={() => setStep("choose")}
+                disabled={parentLoading}
+                onClick={() => {
+                  setStep("choose");
+                  setParentError("");
+                }}
               >
                 <ArrowLeft size={15} />
                 Change account type
@@ -418,8 +510,8 @@ function Register() {
                 <h1>Create Parent Account</h1>
 
                 <p>
-                  Create your account first. Your child will be able to connect
-                  later using your invitation code.
+                  Create your account first. Your child will connect later using
+                  your invitation code.
                 </p>
               </div>
 
@@ -427,6 +519,8 @@ function Register() {
                 className={styles.registerForm}
                 onSubmit={handleParentSubmit}
               >
+                {/* FULL NAME */}
+
                 <div className={styles.field}>
                   <label htmlFor="fullName">Full Name</label>
 
@@ -438,9 +532,12 @@ function Register() {
                     autoComplete="name"
                     value={parentForm.fullName}
                     onChange={handleParentChange}
+                    disabled={parentLoading}
                     required
                   />
                 </div>
+
+                {/* EMAIL */}
 
                 <div className={styles.field}>
                   <label htmlFor="email">Email</label>
@@ -453,45 +550,116 @@ function Register() {
                     autoComplete="email"
                     value={parentForm.email}
                     onChange={handleParentChange}
+                    disabled={parentLoading}
                     required
                   />
                 </div>
 
+                {/* PASSWORDS */}
+
                 <div className={styles.passwordRow}>
+                  {/* PASSWORD */}
+
                   <div className={styles.field}>
                     <label htmlFor="password">Password</label>
 
-                    <input
-                      id="password"
-                      name="password"
-                      type="password"
-                      placeholder="Password"
-                      autoComplete="new-password"
-                      value={parentForm.password}
-                      onChange={handleParentChange}
-                      required
-                    />
+                    <div className={styles.passwordInputWrapper}>
+                      <input
+                        id="password"
+                        name="password"
+                        type={showParentPassword ? "text" : "password"}
+                        placeholder="Password"
+                        autoComplete="new-password"
+                        value={parentForm.password}
+                        onChange={handleParentChange}
+                        minLength={8}
+                        disabled={parentLoading}
+                        required
+                      />
+
+                      <button
+                        type="button"
+                        className={styles.passwordToggle}
+                        disabled={parentLoading}
+                        onClick={() => setShowParentPassword((prev) => !prev)}
+                        aria-label={
+                          showParentPassword ? "Hide password" : "Show password"
+                        }
+                      >
+                        {showParentPassword ? (
+                          <EyeOff size={17} />
+                        ) : (
+                          <Eye size={17} />
+                        )}
+                      </button>
+                    </div>
                   </div>
+
+                  {/* CONFIRM PASSWORD */}
 
                   <div className={styles.field}>
                     <label htmlFor="confirmPassword">Confirm Password</label>
 
-                    <input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type="password"
-                      placeholder="Repeat password"
-                      autoComplete="new-password"
-                      value={parentForm.confirmPassword}
-                      onChange={handleParentChange}
-                      required
-                    />
+                    <div className={styles.passwordInputWrapper}>
+                      <input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type={showParentConfirmPassword ? "text" : "password"}
+                        placeholder="Repeat password"
+                        autoComplete="new-password"
+                        value={parentForm.confirmPassword}
+                        onChange={handleParentChange}
+                        minLength={8}
+                        disabled={parentLoading}
+                        required
+                      />
+
+                      <button
+                        type="button"
+                        className={styles.passwordToggle}
+                        disabled={parentLoading}
+                        onClick={() =>
+                          setShowParentConfirmPassword((prev) => !prev)
+                        }
+                        aria-label={
+                          showParentConfirmPassword
+                            ? "Hide password"
+                            : "Show password"
+                        }
+                      >
+                        {showParentConfirmPassword ? (
+                          <EyeOff size={17} />
+                        ) : (
+                          <Eye size={17} />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <button type="submit" className={styles.createButton}>
-                  Create Parent Account
-                  <ArrowRight size={17} />
+                {/* ERROR */}
+
+                {parentError && (
+                  <div className={styles.errorMessage} role="alert">
+                    {parentError}
+                  </div>
+                )}
+
+                {/* SUBMIT */}
+
+                <button
+                  type="submit"
+                  className={styles.createButton}
+                  disabled={parentLoading}
+                >
+                  {parentLoading ? (
+                    "Creating account..."
+                  ) : (
+                    <>
+                      Create Parent Account
+                      <ArrowRight size={17} />
+                    </>
+                  )}
                 </button>
               </form>
 
@@ -502,15 +670,16 @@ function Register() {
             </div>
           )}
 
-          {/* ================================= */}
-          {/* STEP 2 - STUDENT PARENT CODE */}
-          {/* ================================= */}
+          {/* ================================================= */}
+          {/* STUDENT PARENT CODE */}
+          {/* ================================================= */}
 
           {step === "studentCode" && (
             <div className={styles.stepContent}>
               <button
                 type="button"
                 className={styles.changeTypeButton}
+                disabled={checkingCode}
                 onClick={() => {
                   setStep("choose");
                   setStudentCode("");
@@ -528,7 +697,7 @@ function Register() {
 
                 <p>
                   Ask your parent for their CodeLand invitation code to connect
-                  your student account.
+                  your account.
                 </p>
               </div>
 
@@ -545,9 +714,9 @@ function Register() {
                     placeholder="Example: CL-1234"
                     autoComplete="off"
                     value={studentCode}
+                    disabled={checkingCode}
                     onChange={(e) => {
                       setStudentCode(e.target.value.toUpperCase());
-
                       setCodeError("");
                     }}
                     required
@@ -559,7 +728,9 @@ function Register() {
                 </p>
 
                 {codeError && (
-                  <div className={styles.errorMessage}>{codeError}</div>
+                  <div className={styles.errorMessage} role="alert">
+                    {codeError}
+                  </div>
                 )}
 
                 <button
@@ -568,7 +739,7 @@ function Register() {
                   disabled={checkingCode}
                 >
                   {checkingCode ? (
-                    <span>Checking code...</span>
+                    "Checking code..."
                   ) : (
                     <>
                       Continue
@@ -585,15 +756,16 @@ function Register() {
             </div>
           )}
 
-          {/* ================================= */}
-          {/* STEP 3 - STUDENT ACCOUNT */}
-          {/* ================================= */}
+          {/* ================================================= */}
+          {/* STUDENT REGISTER */}
+          {/* ================================================= */}
 
           {step === "student" && (
             <div className={styles.stepContent}>
               <button
                 type="button"
                 className={styles.changeTypeButton}
+                disabled={studentLoading}
                 onClick={() => {
                   setStep("studentCode");
                   setStudentError("");
@@ -614,7 +786,7 @@ function Register() {
                 </p>
               </div>
 
-              {/* Verified Parent */}
+              {/* VERIFIED CODE */}
 
               <div className={styles.verifiedCode}>
                 <div className={styles.verifiedIcon}>
@@ -623,17 +795,18 @@ function Register() {
 
                 <div className={styles.verifiedInfo}>
                   <span>Parent connected</span>
-
                   <strong>{studentCode}</strong>
                 </div>
               </div>
 
-              {/* Student Form */}
+              {/* STUDENT FORM */}
 
               <form
                 className={styles.registerForm}
                 onSubmit={handleStudentSubmit}
               >
+                {/* EMAIL */}
+
                 <div className={styles.field}>
                   <label htmlFor="studentEmail">Email</label>
 
@@ -645,53 +818,120 @@ function Register() {
                     autoComplete="email"
                     value={studentForm.email}
                     onChange={handleStudentChange}
+                    disabled={studentLoading}
                     required
                   />
                 </div>
 
+                {/* PASSWORDS */}
+
                 <div className={styles.passwordRow}>
+                  {/* PASSWORD */}
+
                   <div className={styles.field}>
                     <label htmlFor="studentPassword">Password</label>
 
-                    <input
-                      id="studentPassword"
-                      name="password"
-                      type="password"
-                      placeholder="Password"
-                      autoComplete="new-password"
-                      value={studentForm.password}
-                      onChange={handleStudentChange}
-                      minLength={8}
-                      required
-                    />
+                    <div className={styles.passwordInputWrapper}>
+                      <input
+                        id="studentPassword"
+                        name="password"
+                        type={showStudentPassword ? "text" : "password"}
+                        placeholder="Password"
+                        autoComplete="new-password"
+                        value={studentForm.password}
+                        onChange={handleStudentChange}
+                        minLength={8}
+                        disabled={studentLoading}
+                        required
+                      />
+
+                      <button
+                        type="button"
+                        className={styles.passwordToggle}
+                        disabled={studentLoading}
+                        onClick={() => setShowStudentPassword((prev) => !prev)}
+                        aria-label={
+                          showStudentPassword
+                            ? "Hide password"
+                            : "Show password"
+                        }
+                      >
+                        {showStudentPassword ? (
+                          <EyeOff size={17} />
+                        ) : (
+                          <Eye size={17} />
+                        )}
+                      </button>
+                    </div>
                   </div>
+
+                  {/* CONFIRM PASSWORD */}
 
                   <div className={styles.field}>
                     <label htmlFor="studentConfirmPassword">
                       Confirm Password
                     </label>
 
-                    <input
-                      id="studentConfirmPassword"
-                      name="confirmPassword"
-                      type="password"
-                      placeholder="Repeat password"
-                      autoComplete="new-password"
-                      value={studentForm.confirmPassword}
-                      onChange={handleStudentChange}
-                      minLength={8}
-                      required
-                    />
+                    <div className={styles.passwordInputWrapper}>
+                      <input
+                        id="studentConfirmPassword"
+                        name="confirmPassword"
+                        type={showStudentConfirmPassword ? "text" : "password"}
+                        placeholder="Repeat password"
+                        autoComplete="new-password"
+                        value={studentForm.confirmPassword}
+                        onChange={handleStudentChange}
+                        minLength={8}
+                        disabled={studentLoading}
+                        required
+                      />
+
+                      <button
+                        type="button"
+                        className={styles.passwordToggle}
+                        disabled={studentLoading}
+                        onClick={() =>
+                          setShowStudentConfirmPassword((prev) => !prev)
+                        }
+                        aria-label={
+                          showStudentConfirmPassword
+                            ? "Hide password"
+                            : "Show password"
+                        }
+                      >
+                        {showStudentConfirmPassword ? (
+                          <EyeOff size={17} />
+                        ) : (
+                          <Eye size={17} />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
+                {/* ERROR */}
+
                 {studentError && (
-                  <div className={styles.errorMessage}>{studentError}</div>
+                  <div className={styles.errorMessage} role="alert">
+                    {studentError}
+                  </div>
                 )}
 
-                <button type="submit" className={styles.createButton}>
-                  Create Student Account
-                  <ArrowRight size={17} />
+                {/* SUBMIT */}
+
+                <button
+                  type="submit"
+                  className={styles.createButton}
+                  disabled={studentLoading}
+                >
+                  {studentLoading ? (
+                    "Creating account..."
+                  ) : (
+                    <>
+                      Create Student Account
+                      <ArrowRight size={17} />
+                    </>
+                  )}
                 </button>
               </form>
 

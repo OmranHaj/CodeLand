@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import loginVisual from "../../assets/images/login-visual.png";
 
@@ -22,54 +22,140 @@ import styles from "./Login.module.css";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Form data
-  const [email, setEmail] = useState("");
+  /* ====================================================== */
+  /* DATA COMING FROM REGISTER */
+  /* ====================================================== */
+
+  const registeredEmail = location.state?.email || "";
+
+  const registrationMessage = location.state?.message || "";
+
+  /* ====================================================== */
+  /* FORM */
+  /* ====================================================== */
+
+  const [email, setEmail] = useState(registeredEmail);
+
   const [password, setPassword] = useState("");
 
-  // Form states
+  /* ====================================================== */
+  /* FORM STATES */
+  /* ====================================================== */
+
   const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState("");
 
-  // UI states
+  const [successMessage, setSuccessMessage] = useState(registrationMessage);
+
+  /* ====================================================== */
+  /* UI STATES */
+  /* ====================================================== */
+
   const [showPassword, setShowPassword] = useState(false);
+
   const [isSwapped, setIsSwapped] = useState(false);
+
+  /* ====================================================== */
+  /* LOGIN */
+  /* ====================================================== */
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     setError("");
+    setSuccessMessage("");
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail || !password) {
+      setError("Please enter your email and password.");
+
+      return;
+    }
+
     setLoading(true);
 
     try {
       const data = await loginUser({
-        email,
+        email: normalizedEmail,
         password,
       });
 
-      console.log("Login success:", data);
+      const role = data?.user?.role;
+      localStorage.setItem("codeland_current_user", JSON.stringify(data.user));
+      /*
+        Parent account
+      */
 
-      // Later we can change this to /dashboard
-      navigate("/");
+      if (role === "parent") {
+        navigate("/parent/dashboard", {
+          replace: true,
+        });
+
+        return;
+      }
+
+      /*
+        Student account
+      */
+
+      if (role === "student") {
+        const activePath = localStorage.getItem(
+          `codeland_active_path_${data.user.id}`,
+        );
+
+        if (activePath) {
+          navigate("/student/world", {
+            replace: true,
+          });
+
+          return;
+        }
+
+        navigate("/student/choose-path", {
+          replace: true,
+        });
+
+        return;
+      }
+
+      /*
+        Unknown role
+      */
+
+      throw new Error("Unable to determine your account type.");
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Unable to log in. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  /* ====================================================== */
+  /* RENDER */
+  /* ====================================================== */
+
   return (
     <main className={styles.page}>
-      <div className={styles.glowOne}></div>
-      <div className={styles.glowTwo}></div>
+      <div className={styles.glowOne} />
+
+      <div className={styles.glowTwo} />
 
       <div className={`${styles.loginCard} ${isSwapped ? styles.swapped : ""}`}>
-        {/* LEFT SIDE */}
+        {/* ================================================= */}
+        {/* FORM SIDE */}
+        {/* ================================================= */}
+
         <div className={styles.formSide}>
           <Link to="/" className={styles.backButton}>
             <ArrowLeft size={17} />
             Back to Home
           </Link>
+
+          {/* LOGO */}
 
           <Link to="/" className={styles.logo}>
             <div className={styles.logoIcon}>
@@ -77,9 +163,12 @@ function Login() {
             </div>
 
             <span className={styles.logoText}>
-              Code<span>Land</span>
+              Code
+              <span>Land</span>
             </span>
           </Link>
+
+          {/* HEADING */}
 
           <div className={styles.heading}>
             <h1>Welcome Back!</h1>
@@ -87,17 +176,35 @@ function Login() {
             <p>Log in to continue your coding journey.</p>
           </div>
 
+          {/* FORM */}
+
           <form
             className={styles.form}
             onSubmit={handleSubmit}
-            onFocusCapture={() => setIsSwapped(true)}
+            onFocusCapture={() => {
+              if (window.innerWidth > 1100) {
+                setIsSwapped(true);
+              }
+            }}
             onBlurCapture={(e) => {
-              if (!e.currentTarget.contains(e.relatedTarget)) {
+              if (
+                window.innerWidth > 1100 &&
+                !e.currentTarget.contains(e.relatedTarget)
+              ) {
                 setIsSwapped(false);
               }
             }}
           >
-            {/* Email */}
+            {/* REGISTER SUCCESS */}
+
+            {successMessage && (
+              <div className={styles.successMessage} role="status">
+                {successMessage}
+              </div>
+            )}
+
+            {/* EMAIL */}
+
             <div className={styles.field}>
               <label htmlFor="email">Email</label>
 
@@ -110,13 +217,19 @@ function Login() {
                   placeholder="you@example.com"
                   autoComplete="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+
+                    setError("");
+                  }}
                   required
                 />
               </div>
             </div>
 
-            {/* Password */}
+            {/* PASSWORD */}
+
             <div className={styles.field}>
               <label htmlFor="password">Password</label>
 
@@ -129,13 +242,19 @@ function Login() {
                   placeholder="Enter your password"
                   autoComplete="current-password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+
+                    setError("");
+                  }}
                   required
                 />
 
                 <button
                   type="button"
                   className={styles.eyeButton}
+                  disabled={loading}
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -144,10 +263,12 @@ function Login() {
               </div>
             </div>
 
-            {/* Remember / Forgot */}
+            {/* OPTIONS */}
+
             <div className={styles.formOptions}>
               <label className={styles.remember}>
-                <input type="checkbox" />
+                <input type="checkbox" disabled={loading} />
+
                 <span>Remember me</span>
               </label>
 
@@ -156,10 +277,16 @@ function Login() {
               </a>
             </div>
 
-            {/* Error */}
-            {error && <div className={styles.errorMessage}>{error}</div>}
+            {/* ERROR */}
 
-            {/* Login Button */}
+            {error && (
+              <div className={styles.errorMessage} role="alert">
+                {error}
+              </div>
+            )}
+
+            {/* LOGIN BUTTON */}
+
             <button
               type="submit"
               className={styles.loginButton}
@@ -170,20 +297,29 @@ function Login() {
               ) : (
                 <>
                   <span>Log In</span>
+
                   <ArrowRight size={18} />
                 </>
               )}
             </button>
           </form>
 
-          {/* Divider */}
+          {/* ================================================= */}
+          {/* DIVIDER */}
+          {/* ================================================= */}
+
           <div className={styles.divider}>
-            <span></span>
+            <span />
+
             <p>or continue with</p>
-            <span></span>
+
+            <span />
           </div>
 
-          {/* Social */}
+          {/* ================================================= */}
+          {/* SOCIAL */}
+          {/* ================================================= */}
+
           <div className={styles.socialButtons}>
             <button
               type="button"
@@ -191,6 +327,7 @@ function Login() {
               aria-label="Continue with Google"
             >
               <FcGoogle size={24} />
+
               <span>Google</span>
             </button>
 
@@ -200,6 +337,7 @@ function Login() {
               aria-label="Continue with GitHub"
             >
               <FaGithub size={23} />
+
               <span>GitHub</span>
             </button>
 
@@ -209,22 +347,29 @@ function Login() {
               aria-label="Continue with Discord"
             >
               <FaDiscord size={24} />
+
               <span>Discord</span>
             </button>
           </div>
 
-          {/* Register */}
+          {/* ================================================= */}
+          {/* REGISTER */}
+          {/* ================================================= */}
+
           <p className={styles.registerText}>
             Don't have an account?
             <Link to="/register">Create Account</Link>
           </p>
         </div>
 
-        {/* RIGHT SIDE */}
+        {/* ================================================= */}
+        {/* VISUAL SIDE */}
+        {/* ================================================= */}
+
         <div className={styles.visualSide}>
           <img src={loginVisual} alt="CodeLand coding world" />
 
-          <div className={styles.imageOverlay}></div>
+          <div className={styles.imageOverlay} />
 
           <div className={styles.visualContent}>
             <span className={styles.visualBadge}>CODELAND</span>
