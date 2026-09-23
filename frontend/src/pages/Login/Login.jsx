@@ -19,7 +19,7 @@ import { FaGithub, FaDiscord } from "react-icons/fa";
 import { loginUser } from "../../services/authService";
 
 import styles from "./Login.module.css";
-import { startPreview } from "../../services/learningHub";
+import { getHomeRoute, startPreview } from "../../services/learningHub";
 
 function Login() {
   const navigate = useNavigate();
@@ -31,7 +31,9 @@ function Login() {
 
   const registeredEmail = location.state?.email || "";
 
-  const registrationMessage = location.state?.message || "";
+  const registrationMessage =
+    location.state?.message ||
+    (location.state?.from ? "Please log in to access this page." : "");
 
   /* ====================================================== */
   /* FORM */
@@ -87,12 +89,19 @@ function Login() {
 
       const role = data?.user?.role;
       localStorage.setItem("codeland_current_user", JSON.stringify(data.user));
+      const fromPath = location.state?.from?.pathname;
+
       /*
         Parent account
       */
 
       if (role === "parent") {
-        navigate("/parent/dashboard", {
+        const target =
+          fromPath && !fromPath.startsWith("/student")
+            ? fromPath
+            : "/parent/dashboard";
+
+        navigate(target, {
           replace: true,
         });
 
@@ -104,6 +113,14 @@ function Login() {
       */
 
       if (role === "student") {
+        if (fromPath && !fromPath.startsWith("/parent")) {
+          navigate(fromPath, {
+            replace: true,
+          });
+
+          return;
+        }
+
         const activePath = localStorage.getItem(
           `codeland_active_path_${data.user.id}`,
         );
@@ -158,7 +175,7 @@ function Login() {
 
           {/* LOGO */}
 
-          <Link to="/" className={styles.logo}>
+          <Link to={getHomeRoute()} className={styles.logo}>
             <div className={styles.logoIcon}>
               <Bot size={24} />
             </div>

@@ -21,6 +21,7 @@ import {
   verifyParentCode,
   registerStudent,
 } from "../../services/authService";
+import { getHomeRoute } from "../../services/learningHub";
 
 import styles from "./Register.module.css";
 
@@ -61,6 +62,7 @@ function Register() {
   /* ====================================================== */
 
   const [studentForm, setStudentForm] = useState({
+    fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -219,6 +221,7 @@ function Register() {
     setStudentError("");
 
     if (
+      !studentForm.fullName.trim() ||
       !studentForm.email.trim() ||
       !studentForm.password ||
       !studentForm.confirmPassword
@@ -244,6 +247,7 @@ function Register() {
     try {
       await registerStudent({
         parentCode: studentCode.trim().toUpperCase(),
+        fullName: studentForm.fullName.trim(),
         email: normalizedEmail,
         password: studentForm.password,
       });
@@ -383,7 +387,7 @@ function Register() {
               Back to Home
             </Link>
 
-            <Link to="/" className={styles.logo}>
+            <Link to={getHomeRoute()} className={styles.logo}>
               <div className={styles.logoIcon}>
                 <Bot size={21} />
               </div>
@@ -805,6 +809,24 @@ function Register() {
                 className={styles.registerForm}
                 onSubmit={handleStudentSubmit}
               >
+                {/* FULL NAME */}
+
+                <div className={styles.field}>
+                  <label htmlFor="studentFullName">Full Name</label>
+
+                  <input
+                    id="studentFullName"
+                    name="fullName"
+                    type="text"
+                    placeholder="Student full name"
+                    autoComplete="name"
+                    value={studentForm.fullName}
+                    onChange={handleStudentChange}
+                    disabled={studentLoading}
+                    required
+                  />
+                </div>
+
                 {/* EMAIL */}
 
                 <div className={styles.field}>

@@ -9,6 +9,19 @@ export function writeStored(key, value) {
   window.dispatchEvent(new Event("codeland:update"));
 }
 export function getUser() { return readStored("codeland_current_user"); }
+export function getHomeRoute(user = getUser()) {
+  if (!user || user.isDemo) {
+    return "/";
+  }
+  const role = (user.role || "").toLowerCase();
+  if (role === "parent") {
+    return "/parent/dashboard";
+  }
+  if (role === "student" || role === "child") {
+    return "/student/dashboard";
+  }
+  return "/";
+}
 export function userKey(user = getUser()) { return user?.id || user?.email || "guest"; }
 export function getProfile(user = getUser()) {
   const stored = readStored(`codeland_profile_${userKey(user)}`, {});

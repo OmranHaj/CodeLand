@@ -1,15 +1,19 @@
+import { Link } from "react-router-dom";
 import { Bot, Mail } from "lucide-react";
+import { getHomeRoute } from "../../services/learningHub";
 
 import styles from "./Footer.module.css";
 
 function Footer() {
+  const homeRoute = getHomeRoute();
+
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
         <div className={styles.top}>
           {/* Brand */}
           <div className={styles.brand}>
-            <a href="/" className={styles.logo}>
+            <Link to={homeRoute} className={styles.logo}>
               <div className={styles.logoIcon}>
                 <Bot size={22} />
               </div>
@@ -17,7 +21,7 @@ function Footer() {
               <span className={styles.logoText}>
                 Code<span>Land</span>
               </span>
-            </a>
+            </Link>
 
             <p>
               Interactive coding experiences designed to help young learners

@@ -24,6 +24,8 @@ const USE_MOCK_API =
 */
 
 const FORCE_LOCAL_LEVELS = [
+  "html-foundations",
+  "css-styling",
   "javascript-core",
   "react-nexus",
   "project-showcase",
@@ -115,52 +117,55 @@ async function getMockLevelContent(levelId) {
 async function requestLevelContent(levelId) {
   const normalizedLevelId = normalizeLevelId(levelId);
 
-  const response = await fetch(
-    `${API_URL}/learning/levels/${encodeURIComponent(normalizedLevelId)}`,
-    {
-      method: "GET",
+  try {
+    const response = await fetch(
+      `${API_URL}/learning/levels/${encodeURIComponent(normalizedLevelId)}`,
+      {
+        method: "GET",
 
-      headers: {
-        Accept: "application/json",
+        headers: {
+          Accept: "application/json",
+        },
       },
-    },
-  );
+    );
 
-  if (!response.ok) {
-    let message = "Unable to load learning content.";
+    if (!response.ok) {
+      if (MOCK_LEVEL_CONTENT[normalizedLevelId]) {
+        console.warn(
+          `[CodeLand] Backend learning endpoint not found for "${normalizedLevelId}". Falling back to local content.`,
+        );
+        return getMockLevelContent(normalizedLevelId);
+      }
 
-    try {
-      const errorData = await response.json();
+      let message = "Unable to load learning content.";
 
-      message = errorData?.message || errorData?.error || message;
-    } catch {
-      // Keep fallback message.
+      try {
+        const errorData = await response.json();
+
+        message = errorData?.message || errorData?.error || message;
+      } catch {
+        // Keep fallback message.
+      }
+
+      throw new Error(message);
     }
 
-    throw new Error(message);
+    const data = await response.json();
+
+    const content = data?.level || data?.data || data;
+
+    return normalizeLevelContent(content);
+  } catch (error) {
+    if (MOCK_LEVEL_CONTENT[normalizedLevelId]) {
+      console.warn(
+        `[CodeLand] Failed to connect to backend for "${normalizedLevelId}". Falling back to local content.`,
+        error,
+      );
+      return getMockLevelContent(normalizedLevelId);
+    }
+
+    throw error;
   }
-
-  const data = await response.json();
-
-  /*
-    This supports both:
-
-    {
-      level: {...}
-    }
-
-    and:
-
-    {
-      data: {...}
-    }
-
-    and a direct level object.
-  */
-
-  const content = data?.level || data?.data || data;
-
-  return normalizeLevelContent(content);
 }
 
 /* ====================================================== */

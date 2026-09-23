@@ -366,10 +366,10 @@ async function mockVerifyParentCode(code) {
 /* MOCK REGISTER STUDENT */
 /* ====================================================== */
 
-async function mockRegisterStudent({ parentCode, email, password }) {
+async function mockRegisterStudent({ fullName, parentCode, email, password }) {
   await delay();
 
-  if (!parentCode?.trim() || !email?.trim() || !password) {
+  if (!fullName?.trim() || !parentCode?.trim() || !email?.trim() || !password) {
     throw new Error("All fields are required.");
   }
 
@@ -416,6 +416,8 @@ async function mockRegisterStudent({ parentCode, email, password }) {
 
   const user = {
     id: generateId(),
+
+    fullName: fullName.trim(),
 
     email: normalizedEmail,
 

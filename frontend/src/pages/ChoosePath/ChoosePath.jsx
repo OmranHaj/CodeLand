@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 
 import { Link, useNavigate } from "react-router-dom";
+import { getHomeRoute } from "../../services/learningHub";
 
 import gsap from "gsap";
 
@@ -646,7 +647,7 @@ function ChoosePath() {
         <button
           type="button"
           className={styles.logo}
-          onClick={() => navigate("/")}
+          onClick={() => navigate(getHomeRoute())}
         >
           <span className={styles.logoIcon}>
             <Bot size={21} />

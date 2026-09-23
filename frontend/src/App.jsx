@@ -1,6 +1,7 @@
 import { lazy, Suspense, useSyncExternalStore } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { RouteEffects, RouteErrorBoundary } from "./components/Hub/RouteSupport";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 
 const Home = lazy(() => import("./pages/Home/Home"));
 const Login = lazy(() => import("./pages/Login/Login"));
@@ -44,111 +45,316 @@ const NotFound = lazy(() => import("./pages/Hub/NotFound"));
 function subscribeSession(callback) {
   window.addEventListener("codeland:update", callback);
   window.addEventListener("storage", callback);
-  return () => { window.removeEventListener("codeland:update", callback); window.removeEventListener("storage", callback); };
+  return () => {
+    window.removeEventListener("codeland:update", callback);
+    window.removeEventListener("storage", callback);
+  };
 }
+
 function getSessionSnapshot() {
-  try { return localStorage.getItem("codeland_current_user") || "guest"; } catch { return "guest"; }
+  try {
+    return localStorage.getItem("codeland_current_user") || "guest";
+  } catch {
+    return "guest";
+  }
 }
 
 function App() {
   const location = useLocation();
   const session = useSyncExternalStore(subscribeSession, getSessionSnapshot);
+
   return (
-    <><RouteEffects /><RouteErrorBoundary key={`${location.pathname}:${session}`}><Suspense fallback={<div className="route-status" role="status"><span className="route-spinner" /><p>Opening your next adventure…</p></div>}><Routes>
-      <Route path="/student/dashboard" element={<Dashboard />} />
-      <Route path="/courses" element={<Courses />} />
-      <Route path="/challenges" element={<Challenges key="arena" />} />
-      <Route path="/challenges/:challengeId" element={<Challenges key={location.pathname} />} />
-      <Route path="/student/achievements" element={<Achievements />} />
-      <Route path="/student/settings" element={<Settings />} />
-      <Route path="/student/profile" element={<Settings />} />
-      <Route path="/student/python-world" element={<PythonWorld key={location.search} />} />
-      <Route path="/student/algorithm-lab/:sectorId" element={<AlgorithmLab />} />
-      <Route path="/student/algorithm-lab" element={<AlgorithmLab />} />
-      <Route path="/parent/dashboard" element={<ParentDashboard />} />
-      <Route path="/parent/curriculum" element={<ParentCurriculum />} />
-      <Route path="/parent/reports" element={<ParentReports />} />
-      <Route path="/parent/guide" element={<ParentGuide />} />
-      <Route path="/help" element={<Help />} />
-      <Route path="/forgot-password" element={<Help />} />
-      <Route path="*" element={<NotFound />} />
-      {/* PUBLIC */}
-      <Route path="/" element={<Home />} />
+    <>
+      <RouteEffects />
+      <RouteErrorBoundary key={`${location.pathname}:${session}`}>
+        <Suspense
+          fallback={
+            <div className="route-status" role="status">
+              <span className="route-spinner" />
+              <p>Opening your next adventure…</p>
+            </div>
+          }
+        >
+          <Routes>
+            {/* ================================================= */}
+            {/* PUBLIC ROUTES */}
+            {/* ================================================= */}
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/forgot-password" element={<Help />} />
 
-      <Route path="/login" element={<Login />} />
+            {/* ================================================= */}
+            {/* AUTHENTICATED ROUTES (STUDENT & PARENT) */}
+            {/* ================================================= */}
+            <Route
+              path="/courses"
+              element={
+                <ProtectedRoute>
+                  <Courses />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/challenges"
+              element={
+                <ProtectedRoute>
+                  <Challenges key="arena" />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/challenges/:challengeId"
+              element={
+                <ProtectedRoute>
+                  <Challenges key={location.pathname} />
+                </ProtectedRoute>
+              }
+            />
 
-      <Route path="/register" element={<Register />} />
+            {/* ================================================= */}
+            {/* STUDENT ONLY ROUTES */}
+            {/* ================================================= */}
+            <Route
+              path="/student/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/achievements"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <Achievements />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/settings"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/profile"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/python-world"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <PythonWorld key={location.search} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/algorithm-lab/:sectorId"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <AlgorithmLab />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/algorithm-lab"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <AlgorithmLab />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/choose-path"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <ChoosePath />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/world"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <StudentWorld />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/level/html-foundations"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <HTMLFoundations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/level/css-styling"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <CSSStyling />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/level/javascript-core"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <JavaScriptCore />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/level/react-nexus"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <ReactNexus />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/level/project-showcase"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <ProjectShowcase />
+                </ProtectedRoute>
+              }
+            />
 
-      {/* PATH SELECTION */}
-      <Route path="/student/choose-path" element={<ChoosePath />} />
+            {/* C++ WORLD */}
+            <Route
+              path="/student/cpp-world"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <CppWorld />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/level/cpp-syntax-core"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <CppSyntaxCore />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/level/cpp-data-circuits"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <CppDataCircuits />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/level/cpp-logic-gates"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <CppLogicGates />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/level/cpp-function-engine"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <CppFunctionEngine />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/level/cpp-array-matrix"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <CppArrayMatrix />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/level/cpp-memory-vault"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <CppMemoryVault />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/level/cpp-object-forge"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <CppObjectForge />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/level/cpp-stl-command"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <CppStlCommand />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/level/cpp-final-system"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <CppFinalSystem />
+                </ProtectedRoute>
+              }
+            />
 
-      {/* WEB CREATOR */}
-      <Route path="/student/world" element={<StudentWorld />} />
+            {/* ================================================= */}
+            {/* PARENT ONLY ROUTES */}
+            {/* ================================================= */}
+            <Route
+              path="/parent/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["parent"]}>
+                  <ParentDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/parent/curriculum"
+              element={
+                <ProtectedRoute allowedRoles={["parent"]}>
+                  <ParentCurriculum />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/parent/reports"
+              element={
+                <ProtectedRoute allowedRoles={["parent"]}>
+                  <ParentReports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/parent/guide"
+              element={
+                <ProtectedRoute allowedRoles={["parent"]}>
+                  <ParentGuide />
+                </ProtectedRoute>
+              }
+            />
 
-      <Route
-        path="/student/level/html-foundations"
-        element={<HTMLFoundations />}
-      />
-
-      <Route path="/student/level/css-styling" element={<CSSStyling />} />
-
-      <Route
-        path="/student/level/javascript-core"
-        element={<JavaScriptCore />}
-      />
-
-      <Route path="/student/level/react-nexus" element={<ReactNexus />} />
-
-      <Route
-        path="/student/level/project-showcase"
-        element={<ProjectShowcase />}
-      />
-
-      {/* C++ CORE */}
-      <Route path="/student/cpp-world" element={<CppWorld />} />
-
-      <Route
-        path="/student/level/cpp-syntax-core"
-        element={<CppSyntaxCore />}
-      />
-
-      <Route
-        path="/student/level/cpp-data-circuits"
-        element={<CppDataCircuits />}
-      />
-
-      <Route
-        path="/student/level/cpp-logic-gates"
-        element={<CppLogicGates />}
-      />
-
-      <Route
-        path="/student/level/cpp-function-engine"
-        element={<CppFunctionEngine />}
-      />
-
-      <Route
-        path="/student/level/cpp-array-matrix"
-        element={<CppArrayMatrix />}
-      />
-
-      <Route
-        path="/student/level/cpp-memory-vault"
-        element={<CppMemoryVault />}
-      />
-      <Route
-        path="/student/level/cpp-object-forge"
-        element={<CppObjectForge />}
-      />
-      <Route
-        path="/student/level/cpp-stl-command"
-        element={<CppStlCommand />}
-      />
-      <Route
-        path="/student/level/cpp-final-system"
-        element={<CppFinalSystem />}
-      />
-    </Routes></Suspense></RouteErrorBoundary></>
+            {/* ================================================= */}
+            {/* 404 NOT FOUND */}
+            {/* ================================================= */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </RouteErrorBoundary>
+    </>
   );
 }
 
