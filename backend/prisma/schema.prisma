@@ -65,7 +65,7 @@ model ProjectSubmission {
 }
 
 model Achievement {
-  id              String            @id
+  id              String            @id @default(uuid())
   title           String
   description     String
   badgeUrl        String?
@@ -76,7 +76,7 @@ model Achievement {
 }
 
 model ChallengeSubmission {
-  id            String   @id
+  id            String   @id @default(uuid())
   userId        String
   challengeId   String
   submittedCode String
@@ -89,7 +89,7 @@ model ChallengeSubmission {
 }
 
 model LearningProgress {
-  id                    String         @id
+  id                    String         @id @default(uuid())
   userId                String
   trackId               String
   levelId               String
@@ -108,7 +108,7 @@ model LearningProgress {
 }
 
 model ParentCheer {
-  id                              String    @id
+  id                              String    @id @default(uuid())
   parentId                        String
   childId                         String
   message                         String
@@ -122,7 +122,7 @@ model ParentCheer {
 }
 
 model UserAchievement {
-  id            String      @id
+  id            String      @id @default(uuid())
   userId        String
   achievementId String
   unlockedAt    DateTime    @default(now())
@@ -134,7 +134,7 @@ model UserAchievement {
 }
 
 model UserProfile {
-  id              String   @id
+  id              String   @id @default(uuid())
   userId          String   @unique
   avatarTheme     String   @default("violet")
   dailyGoal       Int      @default(3)

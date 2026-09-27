@@ -255,6 +255,19 @@ export class LearningService {
           durationMinutes: 10,
         },
       });
+
+      // 6. If this unit was a challenge, record it in ChallengeSubmission table
+      if (isChallenge) {
+        await this.prisma.challengeSubmission.create({
+          data: {
+            userId,
+            challengeId: normalizedUnitSlug,
+            submittedCode: 'Completed in curriculum track',
+            passed: true,
+            xpEarned: actualXpToAdd,
+          },
+        });
+      }
     }
 
     return {
@@ -288,6 +301,109 @@ export class LearningService {
     return {
       user,
       progress: progressRecords,
+    };
+  }
+
+  /**
+   * Records a challenge submission, saves code and test result,
+   * and awards XP if this is the first successful completion.
+   */
+  async submitChallenge(
+    userId: string,
+    challengeId: string,
+    submittedCode: string = '',
+    passed: boolean = false,
+    xpEarned: number = 50,
+  ) {
+    const normalizedChallengeId = String(challengeId).trim();
+
+    // Check if user has already passed this challenge
+    const priorPass = await this.prisma.challengeSubmission.findFirst({
+      where: {
+        userId,
+        challengeId: normalizedChallengeId,
+        passed: true,
+      },
+    });
+
+    const isNewPass = passed && !priorPass;
+    const actualXpToAdd = isNewPass ? xpEarned || 50 : 0;
+
+    // Create submission record
+    const submission = await this.prisma.challengeSubmission.create({
+      data: {
+        userId,
+        challengeId: normalizedChallengeId,
+        submittedCode: submittedCode || '',
+        passed,
+        xpEarned: actualXpToAdd,
+      },
+    });
+
+    // If passed for the first time, increment user total XP and log daily activity
+    if (actualXpToAdd > 0) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          totalXp: { increment: actualXpToAdd },
+          lastActiveAt: new Date(),
+        },
+      });
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      await this.prisma.dailyActivity.upsert({
+        where: {
+          userId_date: {
+            userId,
+            date: today,
+          },
+        },
+        update: {
+          challengesCompleted: { increment: 1 },
+          xpEarned: { increment: actualXpToAdd },
+          durationMinutes: { increment: 10 },
+        },
+        create: {
+          userId,
+          date: today,
+          lessonsCompleted: 0,
+          challengesCompleted: 1,
+          xpEarned: actualXpToAdd,
+          durationMinutes: 10,
+        },
+      });
+    }
+
+    return {
+      success: true,
+      submission,
+      isNewPass,
+      xpEarned: actualXpToAdd,
+    };
+  }
+
+  /**
+   * Retrieves all challenge submissions and list of passed challenge IDs for student.
+   */
+  async getMyChallengeSubmissions(userId: string) {
+    const submissions = await this.prisma.challengeSubmission.findMany({
+      where: { userId },
+      orderBy: { submittedAt: 'desc' },
+      take: 100,
+    });
+
+    const passedSubmissions = submissions.filter((s) => s.passed);
+    const passedChallengeIds = Array.from(
+      new Set(passedSubmissions.map((s) => s.challengeId)),
+    );
+
+    return {
+      totalSubmissions: submissions.length,
+      totalPassed: passedChallengeIds.length,
+      passedChallengeIds,
+      submissions,
     };
   }
 }

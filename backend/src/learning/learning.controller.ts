@@ -13,6 +13,7 @@ import { LearningService } from './learning.service.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 
 import { CompleteLessonDto } from './dto/complete-lesson.dto.js';
+import { SubmitChallengeDto } from './dto/submit-challenge.dto.js';
 
 interface RequestWithUser {
   user: {
@@ -75,5 +76,36 @@ export class LearningController {
   @HttpCode(HttpStatus.OK)
   async getMyProgress(@Request() req: RequestWithUser) {
     return this.learningService.getStudentProgress(req.user.id);
+  }
+
+  /**
+   * Endpoint: POST /learning/challenges/submit
+   * Records code challenge submission and awards XP if completed successfully.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('challenges/submit')
+  @HttpCode(HttpStatus.OK)
+  async submitChallenge(
+    @Request() req: RequestWithUser,
+    @Body() dto: SubmitChallengeDto,
+  ) {
+    return this.learningService.submitChallenge(
+      req.user.id,
+      dto.challengeId,
+      dto.submittedCode,
+      dto.passed,
+      dto.xpEarned ?? 50,
+    );
+  }
+
+  /**
+   * Endpoint: GET /learning/challenges/my-submissions
+   * Retrieves all challenge submissions for the authenticated student.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('challenges/my-submissions')
+  @HttpCode(HttpStatus.OK)
+  async getMySubmissions(@Request() req: RequestWithUser) {
+    return this.learningService.getMyChallengeSubmissions(req.user.id);
   }
 }

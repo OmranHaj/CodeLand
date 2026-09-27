@@ -405,3 +405,42 @@ export async function fetchStudentProgress() {
   }
 }
 
+export async function submitChallengeProgress(
+  challengeId,
+  submittedCode = "",
+  passed = false,
+  xpEarned = 25,
+) {
+  try {
+    const token = localStorage.getItem("codeland_token");
+    if (!token) return null;
+
+    return await apiRequest("/learning/challenges/submit", {
+      method: "POST",
+      body: JSON.stringify({
+        challengeId: String(challengeId),
+        submittedCode: String(submittedCode),
+        passed: Boolean(passed),
+        xpEarned: Number(xpEarned) || 25,
+      }),
+    });
+  } catch (err) {
+    console.warn("[CodeLand] Submit challenge warning:", err);
+    return null;
+  }
+}
+
+export async function fetchMyChallengeSubmissions() {
+  try {
+    const token = localStorage.getItem("codeland_token");
+    if (!token) return null;
+
+    return await apiRequest("/learning/challenges/my-submissions", {
+      method: "GET",
+    });
+  } catch (err) {
+    console.warn("[CodeLand] Fetch challenge submissions warning:", err);
+    return null;
+  }
+}
+

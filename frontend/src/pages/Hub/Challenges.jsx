@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect } from "react";
+import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -19,6 +19,10 @@ import Arena3DStage from "../../components/Hub/Arena3DStage";
 import { practiceChallenges } from "../../data/hubContent";
 import { getSummary, userKey, writeStored } from "../../services/learningHub";
 import soundEngine from "../../services/soundEngine";
+import {
+  submitChallengeProgress,
+  fetchMyChallengeSubmissions,
+} from "../../services/learningContentService";
 
 const CATEGORY_THEMES = {
   HTML: {
@@ -88,6 +92,35 @@ export default function Challenges() {
 
   const cardsContainerRef = useRef(null);
   const missionRef = useRef(null);
+
+  // Sync challenge completions from backend database
+  useEffect(() => {
+    let isMounted = true;
+    fetchMyChallengeSubmissions()
+      .then((data) => {
+        if (!isMounted || !data?.passedChallengeIds) return;
+        const remoteIds = data.passedChallengeIds
+          .map((id) => Number(id))
+          .filter((n) => Number.isInteger(n) && n >= 1 && n <= 6);
+        if (remoteIds.length > 0) {
+          setCompleted((prev) => {
+            const merged = Array.from(new Set([...prev, ...remoteIds]));
+            try {
+              writeStored(`codeland_practice_${userKey()}`, merged);
+            } catch {
+              // ignore storage errors
+            }
+            return merged;
+          });
+        }
+      })
+      .catch((err) => {
+        console.warn("[CodeLand] Failed to load challenge submissions:", err);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const challenge = practiceChallenges.find(
     (item) => String(item.id) === challengeId,
@@ -171,6 +204,13 @@ export default function Challenges() {
   const check = () => {
     if (!challenge) return;
     const correct = selected === challenge.answer;
+    const submittedText = challenge.options[selected] || String(selected);
+
+    // Sync challenge submission to PostgreSQL backend!
+    submitChallengeProgress(challenge.id, submittedText, correct, 25).catch((err) => {
+      console.warn("[CodeLand] Submit challenge sync error:", err);
+    });
+
     if (correct) {
       soundEngine.playSuccess();
       if (!completed.includes(challenge.id)) {
