@@ -21,6 +21,7 @@ import {
   saveAlgoWorldProgress,
 } from "../../data/algorithmWorldLevels";
 import { userKey, readStored, writeStored } from "../../services/learningHub";
+import { recordLessonCompletion, fetchStudentProgress } from "../../services/learningContentService";
 import styles from "./AlgorithmLab.module.css";
 
 export default function AlgorithmLab() {
@@ -37,6 +38,42 @@ export default function AlgorithmLab() {
   const [worldProgress, setWorldProgress] = useState(() =>
     loadAlgoWorldProgress(userId)
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchStudentProgress()
+      .then((res) => {
+        if (cancelled || !res?.progress || !Array.isArray(res.progress)) return;
+        const algoRecords = res.progress.filter((p) => p.levelId?.startsWith("algo-"));
+        if (algoRecords.length > 0) {
+          const dbCompletedLessons = [];
+          const dbCompletedSectors = [];
+          algoRecords.forEach((rec) => {
+            if (Array.isArray(rec.completedLessonIds)) {
+              dbCompletedLessons.push(...rec.completedLessonIds);
+            }
+            if (rec.status === "COMPLETED") {
+              dbCompletedSectors.push(rec.levelId);
+            }
+          });
+
+          setWorldProgress((current) => ({
+            ...current,
+            completedLessons: Array.from(
+              new Set([...current.completedLessons, ...dbCompletedLessons])
+            ),
+            completedSectors: Array.from(
+              new Set([...current.completedSectors, ...dbCompletedSectors])
+            ),
+          }));
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Robot Reaction State ("idle", "happy", "sad")
   const [robotReaction, setRobotReaction] = useState("idle");
@@ -102,6 +139,7 @@ export default function AlgorithmLab() {
         };
         setWorldProgress(nextProgress);
         saveAlgoWorldProgress(userId, nextProgress);
+        recordLessonCompletion(currentSector.id, currentLesson.id, 75, "lesson");
 
         // Sync legacy python keys
         try {

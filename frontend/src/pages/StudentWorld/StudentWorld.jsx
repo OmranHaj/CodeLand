@@ -23,6 +23,7 @@ import {
   buildWebWorldLevels,
   loadWebWorldProgress,
 } from "../../data/webWorldLevels";
+import { fetchStudentProgress } from "../../services/learningContentService";
 
 import styles from "./StudentWorld.module.css";
 
@@ -107,6 +108,41 @@ function StudentWorld() {
     return () => {
       window.removeEventListener("focus", syncWorldProgress);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [userId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchStudentProgress()
+      .then((res) => {
+        if (cancelled || !res?.progress || !Array.isArray(res.progress)) return;
+        const webRecords = res.progress.filter(
+          (p) =>
+            p.trackId === "web-creator" ||
+            (!p.levelId.startsWith("cpp-") && !p.levelId.startsWith("algo-"))
+        );
+        if (webRecords.length > 0) {
+          setWorldProgress((current) => {
+            const completedLevelIds = [...(current.completedLevelIds || [])];
+            const levelProgress = { ...(current.levelProgress || {}) };
+            webRecords.forEach((rec) => {
+              levelProgress[rec.levelId] = rec.progressPercent || 0;
+              if (rec.status === "COMPLETED" && !completedLevelIds.includes(rec.levelId)) {
+                completedLevelIds.push(rec.levelId);
+              }
+            });
+            return {
+              ...current,
+              completedLevelIds: Array.from(new Set(completedLevelIds)),
+              levelProgress,
+            };
+          });
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
     };
   }, [userId]);
 

@@ -30,6 +30,7 @@ import {
   resetAlgoWorldProgress,
 } from "../../data/algorithmWorldLevels";
 import { userKey, writeStored, readStored } from "../../services/learningHub";
+import { fetchStudentProgress } from "../../services/learningContentService";
 import styles from "./AlgorithmWorld.module.css";
 
 export default function PythonWorld() {
@@ -40,6 +41,42 @@ export default function PythonWorld() {
   const [worldProgress, setWorldProgress] = useState(() =>
     loadAlgoWorldProgress(userId)
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchStudentProgress()
+      .then((res) => {
+        if (cancelled || !res?.progress || !Array.isArray(res.progress)) return;
+        const algoRecords = res.progress.filter((p) => p.levelId?.startsWith("algo-"));
+        if (algoRecords.length > 0) {
+          const dbCompletedLessons = [];
+          const dbCompletedSectors = [];
+          algoRecords.forEach((rec) => {
+            if (Array.isArray(rec.completedLessonIds)) {
+              dbCompletedLessons.push(...rec.completedLessonIds);
+            }
+            if (rec.status === "COMPLETED") {
+              dbCompletedSectors.push(rec.levelId);
+            }
+          });
+
+          setWorldProgress((current) => ({
+            ...current,
+            completedLessons: Array.from(
+              new Set([...current.completedLessons, ...dbCompletedLessons])
+            ),
+            completedSectors: Array.from(
+              new Set([...current.completedSectors, ...dbCompletedSectors])
+            ),
+          }));
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const [selectedSectorId, setSelectedSectorId] = useState("algo-arrays");
   const [overviewMode, setOverviewMode] = useState(true);

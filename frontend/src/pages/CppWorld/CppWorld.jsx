@@ -34,6 +34,7 @@ import {
   loadCppWorldProgress,
   resetCppWorldProgress,
 } from "../../data/cppWorldLevels";
+import { fetchStudentProgress } from "../../services/learningContentService";
 
 import styles from "./CppWorld.module.css";
 
@@ -274,6 +275,37 @@ function CppWorld() {
   const [worldProgress, setWorldProgress] = useState(() =>
     loadCppWorldProgress(userId),
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchStudentProgress()
+      .then((res) => {
+        if (cancelled || !res?.progress || !Array.isArray(res.progress)) return;
+        const cppRecords = res.progress.filter((p) => p.levelId?.startsWith("cpp-"));
+        if (cppRecords.length > 0) {
+          const completedLevelIds = [...(worldProgress.completedLevelIds || [])];
+          const levelProgress = { ...(worldProgress.levelProgress || {}) };
+
+          cppRecords.forEach((rec) => {
+            levelProgress[rec.levelId] = rec.progressPercent || 0;
+            if (rec.status === "COMPLETED" && !completedLevelIds.includes(rec.levelId)) {
+              completedLevelIds.push(rec.levelId);
+            }
+          });
+
+          setWorldProgress((current) => ({
+            ...current,
+            completedLevelIds: Array.from(new Set(completedLevelIds)),
+            levelProgress,
+          }));
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const [selectedLevelId, setSelectedLevelId] = useState(null);
 

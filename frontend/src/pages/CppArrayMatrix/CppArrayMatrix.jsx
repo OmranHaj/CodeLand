@@ -29,6 +29,7 @@ import {
   completeCppWorldLevel,
   updateCppWorldLevelProgress,
 } from "../../data/cppWorldLevels";
+import { recordLessonCompletion, fetchStudentProgress } from "../../services/learningContentService";
 
 import styles from "./CppArrayMatrix.module.css";
 
@@ -188,6 +189,38 @@ function CppArrayMatrix() {
       });
     }
   }, [currentUser, navigate]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchStudentProgress()
+      .then((res) => {
+        if (cancelled || !res?.progress || !Array.isArray(res.progress)) return;
+        const dbLevelProg = res.progress.find((p) => p.levelId === LEVEL_ID);
+        if (dbLevelProg) {
+          setLearningProgress((current) => ({
+            ...current,
+            completedLessonIds: Array.from(
+              new Set([
+                ...current.completedLessonIds,
+                ...(Array.isArray(dbLevelProg.completedLessonIds) ? dbLevelProg.completedLessonIds : []),
+              ]),
+            ),
+            completedChallengeIds: Array.from(
+              new Set([
+                ...current.completedChallengeIds,
+                ...(Array.isArray(dbLevelProg.completedChallengeIds) ? dbLevelProg.completedChallengeIds : []),
+              ]),
+            ),
+            xp: Math.max(current.xp, Number(dbLevelProg.xp) || 0),
+          }));
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   /* ==================================================== */
   /* SAVE */
@@ -487,6 +520,8 @@ function CppArrayMatrix() {
     } else {
       updateCppWorldLevelProgress(userId, LEVEL_ID, nextPercent);
     }
+
+    recordLessonCompletion(LEVEL_ID, unit.id, reward, unit.kind);
 
     if (reward > 0) {
       setXpToast((current) => ({

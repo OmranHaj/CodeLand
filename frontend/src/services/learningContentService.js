@@ -4,6 +4,15 @@ import { CSS_STYLING_CONTENT } from "../data/cssStylingContent";
 import { JAVASCRIPT_CORE_CONTENT } from "../data/javascriptCoreContent";
 import { REACT_NEXUS_CONTENT } from "../data/reactNexusContent";
 import { PROJECT_SHOWCASE_CONTENT } from "../data/projectShowcaseContent";
+import cppSyntaxCoreContent from "../data/cppSyntaxCoreContent";
+import cppDataCircuitsContent from "../data/cppDataCircuitsContent";
+import cppLogicGatesContent from "../data/cppLogicGatesContent";
+import cppFunctionEngineContent from "../data/cppFunctionEngineContent";
+import cppArrayMatrixContent from "../data/cppArrayMatrixContent";
+import cppMemoryVaultContent from "../data/cppMemoryVaultContent";
+import cppObjectForgeContent from "../data/cppObjectForgeContent";
+import cppStlCommandContent from "../data/cppStlCommandContent";
+import cppFinalSystemContent from "../data/cppFinalSystemContent";
 import { apiRequest } from "./api";
 
 /* ====================================================== */
@@ -42,6 +51,16 @@ const MOCK_LEVEL_CONTENT = {
   "react-nexus": REACT_NEXUS_CONTENT,
 
   "project-showcase": PROJECT_SHOWCASE_CONTENT,
+
+  "cpp-syntax-core": cppSyntaxCoreContent,
+  "cpp-data-circuits": cppDataCircuitsContent,
+  "cpp-logic-gates": cppLogicGatesContent,
+  "cpp-function-engine": cppFunctionEngineContent,
+  "cpp-array-matrix": cppArrayMatrixContent,
+  "cpp-memory-vault": cppMemoryVaultContent,
+  "cpp-object-forge": cppObjectForgeContent,
+  "cpp-stl-command": cppStlCommandContent,
+  "cpp-final-system": cppFinalSystemContent,
 };
 
 /* ====================================================== */
