@@ -29,6 +29,7 @@ import {
   buildParentChildrenList,
   generate30DayActivity
 } from "../../data/parentMockData";
+import { getParentChildren } from "../../services/parentService";
 import styles from "./ParentDashboard.module.css";
 
 export default function ParentDashboard() {
@@ -73,22 +74,49 @@ export default function ParentDashboard() {
 
   const inviteCode = user?.parentCode || user?.inviteCode || getParentInviteCode(user) || "";
 
-  const mockMode = import.meta.env.VITE_USE_MOCK_API === "true";
-  const storedUsers = mockMode ? readStored("codeland_mock_users", []) : [];
+  const [realChildren, setRealChildren] = useState([]);
 
-  // Build the list of children (sample or linked)
+  useEffect(() => {
+    async function loadChildren() {
+      const data = await getParentChildren();
+      if (Array.isArray(data) && data.length > 0) {
+        setRealChildren(data);
+      }
+    }
+    loadChildren();
+  }, []);
+
+  // const mockMode = import.meta.env.VITE_USE_MOCK_API === "true";
+  // const storedUsers = mockMode ? readStored("codeland_mock_users", []) : [];
+
+  // Build the list of children (real from backend)
   const children = useMemo(() => {
-    return buildParentChildrenList(storedUsers, user?.id);
-  }, [storedUsers, user?.id]);
+    if (realChildren.length > 0) {
+      return buildParentChildrenList(realChildren, user?.id);
+    }
+    // Mock data fallback commented out:
+    // return buildParentChildrenList(storedUsers, user?.id);
+    return buildParentChildrenList([]);
+  }, [realChildren, user?.id]);
 
   const [selectedChildId, setSelectedChildId] = useState(children[0]?.id);
+
+  useEffect(() => {
+    if (children.length > 0 && !children.some((c) => c.id === selectedChildId)) {
+      setSelectedChildId(children[0]?.id);
+    }
+  }, [children, selectedChildId]);
 
   const selectedChild = useMemo(() => {
     return children.find((c) => c.id === selectedChildId) || children[0];
   }, [children, selectedChildId]);
 
-  // Generate 30-day activity telemetry for the selected child
+  // 30-day activity telemetry from real database records (or fallback if empty)
   const activityDays = useMemo(() => {
+    if (Array.isArray(selectedChild?.dailyActivities) && selectedChild.dailyActivities.length > 0) {
+      return selectedChild.dailyActivities;
+    }
+    // Fallback if no database activity logged yet:
     return generate30DayActivity(selectedChild?.activityLevel || "high");
   }, [selectedChild]);
 

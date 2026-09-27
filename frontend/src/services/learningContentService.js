@@ -4,31 +4,28 @@ import { CSS_STYLING_CONTENT } from "../data/cssStylingContent";
 import { JAVASCRIPT_CORE_CONTENT } from "../data/javascriptCoreContent";
 import { REACT_NEXUS_CONTENT } from "../data/reactNexusContent";
 import { PROJECT_SHOWCASE_CONTENT } from "../data/projectShowcaseContent";
+import { apiRequest } from "./api";
 
 /* ====================================================== */
 /* CONFIG */
 /* ====================================================== */
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const USE_MOCK_API =
   String(import.meta.env.VITE_USE_MOCK_API).toLowerCase() === "true";
 
 /*
-  TEMP:
-  These levels are still being developed from
-  local frontend content files.
-
-  Remove levels from this list later when their
-  backend content is ready.
+  Levels previously forced to local mock are now served
+  directly from PostgreSQL via /learning/levels/:levelId.
 */
 
 const FORCE_LOCAL_LEVELS = [
-  "html-foundations",
-  "css-styling",
-  "javascript-core",
-  "react-nexus",
-  "project-showcase",
+  // "html-foundations",
+  // "css-styling",
+  // "javascript-core",
+  // "react-nexus",
+  // "project-showcase",
 ];
 
 /* ====================================================== */
@@ -355,3 +352,37 @@ export function getLearningContentConfig() {
     forceLocalLevels: [...FORCE_LOCAL_LEVELS],
   };
 }
+
+/* ====================================================== */
+/* BACKEND SYNC */
+/* ====================================================== */
+
+export async function recordLessonCompletion(levelId, lessonId, xp = 25, unitType = "lesson") {
+  try {
+    const token = localStorage.getItem("codeland_token");
+    if (!token) return null;
+
+    return await apiRequest("/learning/complete-lesson", {
+      method: "POST",
+      body: JSON.stringify({ levelId, lessonId, xpEarned: xp, unitType }),
+    });
+  } catch (err) {
+    console.warn("[CodeLand] Progress sync warning:", err);
+    return null;
+  }
+}
+
+export async function fetchStudentProgress() {
+  try {
+    const token = localStorage.getItem("codeland_token");
+    if (!token) return null;
+
+    return await apiRequest("/learning/progress/me", {
+      method: "GET",
+    });
+  } catch (err) {
+    console.warn("[CodeLand] Fetch progress warning:", err);
+    return null;
+  }
+}
+

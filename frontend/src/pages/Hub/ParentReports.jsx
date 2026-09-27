@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   FileText,
@@ -17,17 +17,42 @@ import {
 import HubLayout from "../../components/Hub/HubLayout";
 import { getUser, readStored } from "../../services/learningHub";
 import { buildParentChildrenList } from "../../data/parentMockData";
+import { getParentChildren } from "../../services/parentService";
 
 export default function ParentReports() {
   const user = getUser();
-  const mockMode = import.meta.env.VITE_USE_MOCK_API === "true";
-  const storedUsers = mockMode ? readStored("codeland_mock_users", []) : [];
+  const [realChildren, setRealChildren] = useState([]);
+
+  useEffect(() => {
+    async function loadChildren() {
+      const data = await getParentChildren();
+      if (Array.isArray(data) && data.length > 0) {
+        setRealChildren(data);
+      }
+    }
+    loadChildren();
+  }, []);
+
+  // const mockMode = import.meta.env.VITE_USE_MOCK_API === "true";
+  // const storedUsers = mockMode ? readStored("codeland_mock_users", []) : [];
 
   const children = useMemo(() => {
-    return buildParentChildrenList(storedUsers, user?.id);
-  }, [storedUsers, user?.id]);
+    if (realChildren.length > 0) {
+      return buildParentChildrenList(realChildren, user?.id);
+    }
+    // Mock data fallback commented out:
+    // return buildParentChildrenList(storedUsers, user?.id);
+    return buildParentChildrenList([]);
+  }, [realChildren, user?.id]);
 
   const [selectedChildId, setSelectedChildId] = useState(children[0]?.id);
+
+  useEffect(() => {
+    if (children.length > 0 && !children.some((c) => c.id === selectedChildId)) {
+      setSelectedChildId(children[0]?.id);
+    }
+  }, [children, selectedChildId]);
+
   const selectedChild = useMemo(() => {
     return children.find((c) => c.id === selectedChildId) || children[0];
   }, [children, selectedChildId]);

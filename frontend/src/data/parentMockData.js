@@ -222,9 +222,18 @@ export function buildParentChildrenList(storedUsers = [], parentId = null) {
     const sample = SAMPLE_CHILDREN[idx % SAMPLE_CHILDREN.length];
     return {
       ...sample,
+      ...student,
       id: student.id,
-      fullName: student.fullName || student.email?.split("@")[0] || sample.fullName,
-      avatar: (student.fullName || student.email || "E")[0].toUpperCase()
+      fullName: student.fullName || student.name || student.email?.split("@")[0] || sample.fullName,
+      avatar: student.avatar || (student.fullName || student.name || student.email || "E")[0].toUpperCase(),
+      totalXp: student.totalXp !== undefined ? student.totalXp : sample.totalXp,
+      streakDays: student.streakDays !== undefined ? student.streakDays : sample.streakDays,
+      level: student.level || sample.level,
+      rankTitle: student.rankTitle || sample.rankTitle,
+      themeColor: student.themeColor || sample.themeColor,
+      weeklyGoalHours: student.weeklyGoalHours ?? sample.weeklyGoalHours,
+      monthlyHours: student.monthlyHours !== undefined ? student.monthlyHours : sample.monthlyHours,
+      dailyActivities: student.dailyActivities || sample.dailyActivities,
     };
   });
 }

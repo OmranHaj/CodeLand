@@ -1,17 +1,16 @@
 import { apiRequest } from "./api";
 
-const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API === "true";
-
-const MOCK_USERS_KEY = "codeland_mock_users";
+// const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API === "true";
+// const MOCK_USERS_KEY = "codeland_mock_users";
 
 /* ====================================================== */
 /* LOGIN */
 /* ====================================================== */
 
 export async function loginUser(credentials) {
-  if (USE_MOCK_API) {
-    return mockLogin(credentials);
-  }
+  // if (USE_MOCK_API) {
+  //   return mockLogin(credentials);
+  // }
 
   const data = await apiRequest("/auth/login", {
     method: "POST",
@@ -41,9 +40,9 @@ export async function loginUser(credentials) {
 /* ====================================================== */
 
 export async function registerParent(parentData) {
-  if (USE_MOCK_API) {
-    return mockRegisterParent(parentData);
-  }
+  // if (USE_MOCK_API) {
+  //   return mockRegisterParent(parentData);
+  // }
 
   const payload = {
     email: parentData.email,
@@ -80,9 +79,9 @@ export async function registerParent(parentData) {
 /* ====================================================== */
 
 export async function verifyParentCode(code) {
-  if (USE_MOCK_API) {
-    return mockVerifyParentCode(code);
-  }
+  // if (USE_MOCK_API) {
+  //   return mockVerifyParentCode(code);
+  // }
 
   return apiRequest("/auth/verify-parent-code", {
     method: "POST",
@@ -97,9 +96,9 @@ export async function verifyParentCode(code) {
 /* ====================================================== */
 
 export async function registerStudent(studentData) {
-  if (USE_MOCK_API) {
-    return mockRegisterStudent(studentData);
-  }
+  // if (USE_MOCK_API) {
+  //   return mockRegisterStudent(studentData);
+  // }
 
   const payload = {
     parentCode: studentData.parentCode,
@@ -131,19 +130,16 @@ export async function registerStudent(studentData) {
   return data;
 }
 
-/* ====================================================== */
-/* MOCK DELAY */
-/* ====================================================== */
+/*
+======================================================
+MOCK IMPLEMENTATION (COMMENTED OUT - USING REAL BACKEND)
+======================================================
 
 function delay(ms = 700) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
 }
-
-/* ====================================================== */
-/* MOCK STORAGE */
-/* ====================================================== */
 
 function getMockUsers() {
   try {
@@ -164,10 +160,6 @@ function getMockUsers() {
 function saveMockUsers(users) {
   localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(users));
 }
-
-/* ====================================================== */
-/* HELPERS */
-/* ====================================================== */
 
 function normalizeEmail(email) {
   return email.trim().toLowerCase();
@@ -195,10 +187,6 @@ function generateParentCode() {
   return `CL-${code}`;
 }
 
-/* ====================================================== */
-/* PUBLIC USER */
-/* ====================================================== */
-
 function sanitizeUser(user) {
   if (!user) return null;
 
@@ -206,10 +194,6 @@ function sanitizeUser(user) {
 
   return safeUser;
 }
-
-/* ====================================================== */
-/* MOCK LOGIN */
-/* ====================================================== */
 
 async function mockLogin({ email, password }) {
   await delay(700);
@@ -241,10 +225,6 @@ async function mockLogin({ email, password }) {
   };
 }
 
-/* ====================================================== */
-/* MOCK REGISTER PARENT */
-/* ====================================================== */
-
 async function mockRegisterParent({ fullName, email, password }) {
   await delay();
 
@@ -269,11 +249,6 @@ async function mockRegisterParent({ fullName, email, password }) {
   }
 
   let inviteCode = generateParentCode();
-
-  /*
-    Make sure the generated code
-    is not already being used.
-  */
 
   while (users.some((user) => user.inviteCode === inviteCode)) {
     inviteCode = generateParentCode();
@@ -308,10 +283,6 @@ async function mockRegisterParent({ fullName, email, password }) {
   };
 }
 
-/* ====================================================== */
-/* MOCK VERIFY PARENT CODE */
-/* ====================================================== */
-
 async function mockVerifyParentCode(code) {
   await delay();
 
@@ -326,17 +297,6 @@ async function mockVerifyParentCode(code) {
   const parent = users.find(
     (user) => user.role === "parent" && user.inviteCode === normalizedCode,
   );
-
-  /*
-    Temporary fallback code.
-
-    This keeps CL-1234 available
-    while developing the frontend.
-
-    Later, when the backend is ready,
-    this disappears automatically
-    because the real API will be used.
-  */
 
   if (!parent && normalizedCode !== "CL-1234") {
     throw new Error(
@@ -362,10 +322,6 @@ async function mockVerifyParentCode(code) {
   };
 }
 
-/* ====================================================== */
-/* MOCK REGISTER STUDENT */
-/* ====================================================== */
-
 async function mockRegisterStudent({ fullName, parentCode, email, password }) {
   await delay();
 
@@ -383,10 +339,6 @@ async function mockRegisterStudent({ fullName, parentCode, email, password }) {
 
   const users = getMockUsers();
 
-  /* ==================================================== */
-  /* CHECK EMAIL */
-  /* ==================================================== */
-
   const emailExists = users.some(
     (user) => normalizeEmail(user.email) === normalizedEmail,
   );
@@ -394,10 +346,6 @@ async function mockRegisterStudent({ fullName, parentCode, email, password }) {
   if (emailExists) {
     throw new Error("An account with this email already exists.");
   }
-
-  /* ==================================================== */
-  /* FIND PARENT */
-  /* ==================================================== */
 
   const parent = users.find(
     (user) =>
@@ -409,10 +357,6 @@ async function mockRegisterStudent({ fullName, parentCode, email, password }) {
   if (!parent && !isTemporaryCode) {
     throw new Error("Invalid parent code.");
   }
-
-  /* ==================================================== */
-  /* CREATE STUDENT */
-  /* ==================================================== */
 
   const user = {
     id: generateId(),
@@ -442,3 +386,4 @@ async function mockRegisterStudent({ fullName, parentCode, email, password }) {
     user: sanitizeUser(user),
   };
 }
+*/

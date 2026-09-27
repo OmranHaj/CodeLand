@@ -26,7 +26,7 @@ import {
   updateWebWorldLevelProgress,
 } from "../../data/webWorldLevels";
 
-import { getLevelContent } from "../../services/learningContentService";
+import { getLevelContent, recordLessonCompletion, fetchStudentProgress } from "../../services/learningContentService";
 
 import LessonRobot from "../../components/Learning/LessonRobot";
 import LessonAnimation from "../../components/Learning/animations/LessonAnimation";
@@ -320,13 +320,38 @@ function ReactNexus() {
       try {
         setLoading(true);
 
-        const data = await getLevelContent(LEVEL_ID);
+        const [data, progressRes] = await Promise.all([
+          getLevelContent(LEVEL_ID),
+          fetchStudentProgress().catch(() => null),
+        ]);
 
         if (cancelled) {
           return;
         }
 
         setContent(data);
+
+        if (progressRes?.progress && Array.isArray(progressRes.progress)) {
+          const dbLevelProg = progressRes.progress.find((p) => p.levelId === LEVEL_ID);
+          if (dbLevelProg) {
+            setLearningProgress((current) => ({
+              ...current,
+              completedLessonIds: Array.from(
+                new Set([
+                  ...current.completedLessonIds,
+                  ...(Array.isArray(dbLevelProg.completedLessonIds) ? dbLevelProg.completedLessonIds : []),
+                ]),
+              ),
+              completedChallengeIds: Array.from(
+                new Set([
+                  ...current.completedChallengeIds,
+                  ...(Array.isArray(dbLevelProg.completedChallengeIds) ? dbLevelProg.completedChallengeIds : []),
+                ]),
+              ),
+              xp: Math.max(current.xp, Number(dbLevelProg.xp) || 0),
+            }));
+          }
+        }
 
         setLoadError("");
       } catch (error) {
@@ -675,6 +700,8 @@ function ReactNexus() {
     } else {
       updateWebWorldLevelProgress(userId, LEVEL_ID, nextPercent);
     }
+
+    recordLessonCompletion(LEVEL_ID, unit.id, reward, unit.kind);
 
     if (reward > 0) {
       setXpToast((current) => ({

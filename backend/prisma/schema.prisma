@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,22 +6,234 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id                                     String                @id @default(uuid())
+  email                                  String                @unique
+  name                                   String?
+  password                               String
+  role                                   Role                  @default(PARENT)
+  parentCode                             String?               @unique
+  parentId                               String?
+  streakDays                             Int                   @default(0)
+  totalXp                                Int                   @default(0)
+  lastActiveAt                           DateTime              @default(now())
+  createdAt                              DateTime              @default(now())
+  updatedAt                              DateTime              @updatedAt
+  ChallengeSubmission                    ChallengeSubmission[]
+  dailyActivities                        DailyActivity[]
+  LearningProgress                       LearningProgress[]
+  ParentCheer_ParentCheer_childIdToUser  ParentCheer[]         @relation("ParentCheer_childIdToUser")
+  ParentCheer_ParentCheer_parentIdToUser ParentCheer[]         @relation("ParentCheer_parentIdToUser")
+  submissions                            ProjectSubmission[]
+  parent                                 User?                 @relation("ParentChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children                               User[]                @relation("ParentChildren")
+  UserAchievement                        UserAchievement[]
+  UserProfile                            UserProfile?
+
+  @@index([parentId])
+}
+
+model DailyActivity {
+  id                  String   @id @default(uuid())
+  userId              String
+  date                DateTime
+  durationMinutes     Int      @default(0)
+  lessonsCompleted    Int      @default(0)
+  challengesCompleted Int      @default(0)
+  xpEarned            Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+model ProjectSubmission {
+  id           String   @id @default(uuid())
+  userId       String
+  levelId      String
+  sourceCode   String
+  reviewChecks Json
+  score        Int      @default(0)
+  passed       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, levelId])
+}
+
+model Achievement {
+  id              String            @id
+  title           String
+  description     String
+  badgeUrl        String?
+  criteria        String?
+  xpReward        Int               @default(50)
+  createdAt       DateTime          @default(now())
+  UserAchievement UserAchievement[]
+}
+
+model ChallengeSubmission {
+  id            String   @id
+  userId        String
+  challengeId   String
+  submittedCode String
+  passed        Boolean  @default(false)
+  xpEarned      Int      @default(0)
+  submittedAt   DateTime @default(now())
+  User          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, challengeId])
+}
+
+model LearningProgress {
+  id                    String         @id
+  userId                String
+  trackId               String
+  levelId               String
+  completedLessonIds    Json           @default("[]")
+  completedChallengeIds Json           @default("[]")
+  xp                    Int            @default(0)
+  progressPercent       Float          @default(0)
+  status                ProgressStatus @default(LOCKED)
+  lastAccessedAt        DateTime       @default(now())
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime
+  User                  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, levelId])
+  @@index([userId, trackId])
+}
+
+model ParentCheer {
+  id                              String    @id
+  parentId                        String
+  childId                         String
+  message                         String
+  readAt                          DateTime?
+  createdAt                       DateTime  @default(now())
+  User_ParentCheer_childIdToUser  User      @relation("ParentCheer_childIdToUser", fields: [childId], references: [id], onDelete: Cascade)
+  User_ParentCheer_parentIdToUser User      @relation("ParentCheer_parentIdToUser", fields: [parentId], references: [id], onDelete: Cascade)
+
+  @@index([childId, readAt])
+  @@index([parentId])
+}
+
+model UserAchievement {
+  id            String      @id
+  userId        String
+  achievementId String
+  unlockedAt    DateTime    @default(now())
+  Achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  User          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+model UserProfile {
+  id              String   @id
+  userId          String   @unique
+  avatarTheme     String   @default("violet")
+  dailyGoal       Int      @default(3)
+  weeklyGoalHours Float    @default(6.0)
+  soundEffects    Boolean  @default(true)
+  reducedMotion   Boolean  @default(false)
+  fontSize        String   @default("md")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  User            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 enum Role {
   PARENT
   CHILD
 }
 
-model User {
-  id         String    @id @default(uuid())
-  email      String    @unique
-  name       String?
-  password   String
-  role       Role      @default(PARENT)
-  parentCode String?   @unique
-  parentId   String?
-  parent     User?     @relation("ParentChildren", fields: [parentId], references: [id], onDelete: Cascade)
-  children   User[]    @relation("ParentChildren")
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+enum ProgressStatus {
+  LOCKED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model Track {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  title       String
+  description String?
+  icon        String?
+  themeColor  String?
+  order       Int      @default(0)
+  levels      Level[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Level {
+  id               String       @id @default(uuid())
+  slug             String       @unique
+  title            String
+  subtitle         String?
+  description      String?
+  version          Int          @default(1)
+  status           String       @default("published")
+  accent           String?
+  estimatedMinutes Int          @default(60)
+  order            Int          @default(0)
+  xpReward         Int          @default(100)
+  trackId          String
+  track            Track        @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  lessons          Lesson[]
+  challenges       Challenge[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([trackId])
+}
+
+model Lesson {
+  id               String   @id @default(uuid())
+  slug             String
+  order            Int      @default(0)
+  title            String
+  subtitle         String?
+  description      String?
+  difficulty       String   @default("beginner")
+  xp               Int      @default(50)
+  estimatedMinutes Int      @default(10)
+  status           String   @default("published")
+  blocks           Json     @default("[]")
+  levelId          String
+  level            Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([levelId, slug])
+  @@index([levelId])
+}
+
+model Challenge {
+  id               String   @id @default(uuid())
+  slug             String?
+  order            Int      @default(0)
+  title            String
+  subtitle         String?
+  description      String?
+  difficulty       String   @default("beginner")
+  xp               Int      @default(100)
+  estimatedMinutes Int      @default(15)
+  status           String   @default("published")
+  tasks            Json     @default("[]")
+  starterCode      String?  @db.Text
+  solutionCode     String?  @db.Text
+  hints            Json     @default("[]")
+  levelId          String
+  level            Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([levelId])
 }
 

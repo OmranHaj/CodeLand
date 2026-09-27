@@ -67,6 +67,7 @@ export function getParentInviteCode(user = getUser()) {
     return user.inviteCode;
   }
 
+  /*
   // Only check mock users if in mock mode
   const isMockMode = import.meta.env.VITE_USE_MOCK_API === "true";
   if (isMockMode) {
@@ -79,6 +80,7 @@ export function getParentInviteCode(user = getUser()) {
       return parentInStore.inviteCode;
     }
   }
+  */
 
   // If demo mode
   if (user.isDemo) {

@@ -20,7 +20,7 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { getLevelContent } from "../../services/learningContentService";
+import { getLevelContent, recordLessonCompletion, fetchStudentProgress } from "../../services/learningContentService";
 import {
   completeWebWorldLevel,
   updateWebWorldLevelProgress,
@@ -892,13 +892,36 @@ function ProjectShowcase() {
 
         setError("");
 
-        const data = await getLevelContent(LEVEL_ID);
+        const [data, progressRes] = await Promise.all([
+          getLevelContent(LEVEL_ID),
+          fetchStudentProgress().catch(() => null),
+        ]);
 
         if (cancelled) {
           return;
         }
 
         setContent(data);
+
+        if (progressRes?.progress && Array.isArray(progressRes.progress)) {
+          const dbLevelProg = progressRes.progress.find((p) => p.levelId === LEVEL_ID);
+          if (dbLevelProg) {
+            const completedIds = [
+              ...(Array.isArray(dbLevelProg.completedLessonIds) ? dbLevelProg.completedLessonIds : []),
+              ...(Array.isArray(dbLevelProg.completedChallengeIds) ? dbLevelProg.completedChallengeIds : []),
+            ];
+            setProgress((current) => {
+              const updatedCompleted = { ...current.completed };
+              completedIds.forEach((id) => {
+                updatedCompleted[id] = true;
+              });
+              return {
+                ...current,
+                completed: updatedCompleted,
+              };
+            });
+          }
+        }
 
         const firstProject = data?.lessons?.[0] || data?.challenges?.[0];
 
@@ -1298,6 +1321,8 @@ function ProjectShowcase() {
       title: activeUnit.title,
       key: Date.now(),
     });
+
+    recordLessonCompletion(LEVEL_ID, activeUnit.id, reward, "lesson");
 
     window.setTimeout(() => {
       setXpToast(null);
