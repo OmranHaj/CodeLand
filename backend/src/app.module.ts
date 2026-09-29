@@ -7,9 +7,17 @@ import { AuthModule } from './auth/auth.module.js';
 import { ParentModule } from './parent/parent.module.js';
 import { LearningModule } from './learning/learning.module.js';
 import { ProfileModule } from './profile/profile.module.js';
+import { AchievementsModule } from './achievements/achievements.module.js';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ParentModule, LearningModule, ProfileModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    ParentModule,
+    LearningModule,
+    ProfileModule,
+    AchievementsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

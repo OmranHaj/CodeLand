@@ -268,6 +268,33 @@ export class LearningService {
           },
         });
       }
+
+      // 7. If this unit was a project showcase, record ProjectSubmission
+      if (
+        normalizedLevelSlug === 'project-showcase' ||
+        normalizedUnitSlug.includes('project') ||
+        normalizedUnitSlug.includes('showcase')
+      ) {
+        const priorProject = await this.prisma.projectSubmission.findFirst({
+          where: { userId, levelId: normalizedLevelSlug },
+        });
+
+        if (!priorProject) {
+          await this.prisma.projectSubmission.create({
+            data: {
+              userId,
+              levelId: normalizedLevelSlug,
+              sourceCode: `Project completed: ${normalizedUnitSlug}`,
+              reviewChecks: { unitSlug: normalizedUnitSlug, status: 'passed' },
+              score: 100,
+              passed: true,
+            },
+          });
+        }
+      }
+
+      // 8. Trigger achievement milestone checks hook
+      await this.checkAndAwardMilestones(userId);
     }
 
     return {
@@ -382,6 +409,9 @@ export class LearningService {
           durationMinutes: 10,
         },
       });
+
+      // Trigger achievement milestone checks hook
+      await this.checkAndAwardMilestones(userId);
     }
 
     return {
@@ -413,5 +443,166 @@ export class LearningService {
       passedChallengeIds,
       submissions,
     };
+  }
+
+  /**
+   * Records a project submission, saves checks and score,
+   * and triggers the milestone evaluation hook.
+   */
+  async submitProject(
+    userId: string,
+    levelId: string,
+    sourceCode: string = '',
+    reviewChecks: any = {},
+    score: number = 100,
+    passed: boolean = true,
+  ) {
+    const normalizedLevelId = String(levelId || 'project-showcase').trim().toLowerCase();
+
+    const submission = await this.prisma.projectSubmission.create({
+      data: {
+        userId,
+        levelId: normalizedLevelId,
+        sourceCode: sourceCode || '',
+        reviewChecks: reviewChecks || {},
+        score: score ?? 100,
+        passed: passed ?? true,
+      },
+    });
+
+    // Milestone checks hook
+    await this.checkAndAwardMilestones(userId);
+
+    return {
+      success: true,
+      submission,
+    };
+  }
+
+  /**
+   * Automatically grants an achievement by inserting into UserAchievement.
+   * Safe against duplicates due to unique [userId, achievementId] constraint.
+   */
+  async grantAchievement(userId: string, achievementId: string): Promise<boolean> {
+    const achievement = await this.prisma.achievement.findUnique({
+      where: { id: achievementId },
+    });
+
+    if (!achievement) {
+      return false;
+    }
+
+    const existing = await this.prisma.userAchievement.findUnique({
+      where: {
+        userId_achievementId: {
+          userId,
+          achievementId,
+        },
+      },
+    });
+
+    if (existing) {
+      return false;
+    }
+
+    await this.prisma.userAchievement.create({
+      data: {
+        userId,
+        achievementId,
+        unlockedAt: new Date(),
+      },
+    });
+
+    return true;
+  }
+
+  /**
+   * Utility / Hook that evaluates user achievements and automatically awards
+   * badges when a student reaches specific milestones:
+   * - Completing first lesson ('first-step')
+   * - Completing 5 lessons ('curious-mind')
+   * - Passing arena challenge ('challenge-gladiator')
+   * - Reaching 250 XP ('xp-explorer')
+   * - Reaching 1,000 XP ('xp-1000')
+   * - Submitting first project ('first-project')
+   * - Streak milestones ('streak-3', 'streak-7')
+   * - Track completions ('web-creator-apprentice', etc.)
+   */
+  async checkAndAwardMilestones(userId: string): Promise<string[]> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        submissions: true,
+        ChallengeSubmission: true,
+        LearningProgress: true,
+      },
+    });
+
+    if (!user) {
+      return [];
+    }
+
+    const newlyAwarded: string[] = [];
+
+    const awardIfEligible = async (achievementId: string, condition: boolean) => {
+      if (condition) {
+        const granted = await this.grantAchievement(userId, achievementId);
+        if (granted) {
+          newlyAwarded.push(achievementId);
+        }
+      }
+    };
+
+    // 1. Lesson count across all progress tracks
+    const completedLessonSet = new Set<string>();
+    for (const prog of user.LearningProgress) {
+      if (Array.isArray(prog.completedLessonIds)) {
+        for (const lId of prog.completedLessonIds as string[]) {
+          completedLessonSet.add(String(lId));
+        }
+      }
+    }
+    const totalLessons = completedLessonSet.size;
+
+    await awardIfEligible('first-step', totalLessons >= 1);
+    await awardIfEligible('curious-mind', totalLessons >= 5);
+
+    // 2. Practice arena challenges passed
+    const passedChallenges = user.ChallengeSubmission.filter((c) => c.passed);
+    await awardIfEligible('challenge-gladiator', passedChallenges.length >= 1);
+
+    // 3. Project milestone: Submitting first project
+    const hasProjectSubmission =
+      user.submissions.length > 0 ||
+      user.LearningProgress.some(
+        (p) =>
+          p.levelId === 'project-showcase' &&
+          (p.status === 'COMPLETED' ||
+            (Array.isArray(p.completedLessonIds) &&
+              (p.completedLessonIds as string[]).length > 0)),
+      );
+    await awardIfEligible('first-project', hasProjectSubmission);
+
+    // 4. XP Milestones (e.g. reaching 1,000 XP)
+    await awardIfEligible('xp-explorer', user.totalXp >= 250);
+    await awardIfEligible('xp-1000', user.totalXp >= 1000);
+
+    // 5. Streak Milestones
+    await awardIfEligible('streak-3', user.streakDays >= 3);
+    await awardIfEligible('streak-7', user.streakDays >= 7);
+
+    // 6. Track level completions
+    const completedLevels = new Set(
+      user.LearningProgress.filter(
+        (p) => p.status === 'COMPLETED' || p.progressPercent >= 100,
+      ).map((p) => p.levelId),
+    );
+
+    const completedWebCore =
+      completedLevels.has('html-foundations') &&
+      completedLevels.has('css-styling');
+    await awardIfEligible('web-creator-apprentice', completedWebCore);
+
+    return newlyAwarded;
   }
 }

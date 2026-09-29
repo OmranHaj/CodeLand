@@ -14,6 +14,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 
 import { CompleteLessonDto } from './dto/complete-lesson.dto.js';
 import { SubmitChallengeDto } from './dto/submit-challenge.dto.js';
+import { SubmitProjectDto } from './dto/submit-project.dto.js';
 
 interface RequestWithUser {
   user: {
@@ -107,5 +108,41 @@ export class LearningController {
   @HttpCode(HttpStatus.OK)
   async getMySubmissions(@Request() req: RequestWithUser) {
     return this.learningService.getMyChallengeSubmissions(req.user.id);
+  }
+
+  /**
+   * Endpoint: POST /learning/projects/submit
+   * Records a student project submission and awards relevant milestone achievements.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('projects/submit')
+  @HttpCode(HttpStatus.OK)
+  async submitProject(
+    @Request() req: RequestWithUser,
+    @Body() dto: SubmitProjectDto,
+  ) {
+    return this.learningService.submitProject(
+      req.user.id,
+      dto.levelId,
+      dto.sourceCode,
+      dto.reviewChecks,
+      dto.score,
+      dto.passed,
+    );
+  }
+
+  /**
+   * Endpoint: POST /learning/milestones/evaluate
+   * Manually triggers milestone evaluation for current student.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('milestones/evaluate')
+  @HttpCode(HttpStatus.OK)
+  async evaluateMilestones(@Request() req: RequestWithUser) {
+    const newlyAwarded = await this.learningService.checkAndAwardMilestones(req.user.id);
+    return {
+      success: true,
+      newlyAwarded,
+    };
   }
 }
