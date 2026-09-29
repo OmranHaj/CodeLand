@@ -29,7 +29,11 @@ import {
   buildParentChildrenList,
   generate30DayActivity
 } from "../../data/parentMockData";
-import { getParentChildren } from "../../services/parentService";
+import {
+  getParentChildren,
+  sendParentCheer,
+  updateChildWeeklyGoal,
+} from "../../services/parentService";
 import styles from "./ParentDashboard.module.css";
 
 export default function ParentDashboard() {
@@ -37,9 +41,10 @@ export default function ParentDashboard() {
   const [copyStatus, setCopyStatus] = useState("");
   const [cheerInput, setCheerInput] = useState("");
   const [cheerSent, setCheerSent] = useState(false);
-  const [showLinkModal, setShowLinkModal] = useState(false);
-  const [linkInputCode, setLinkInputCode] = useState("");
-  const [linkSuccessMessage, setLinkSuccessMessage] = useState("");
+  const [cheerSending, setCheerSending] = useState(false);
+  const [cheerError, setCheerError] = useState("");
+  const [goalSaving, setGoalSaving] = useState(false);
+  const [goalFeedback, setGoalFeedback] = useState("");
 
   useEffect(() => {
     async function syncUser() {
@@ -121,7 +126,46 @@ export default function ParentDashboard() {
   }, [selectedChild]);
 
   // Weekly study goal state
-  const [weeklyGoal, setWeeklyGoal] = useState(selectedChild?.weeklyGoalHours || 6);
+  const [weeklyGoal, setWeeklyGoal] = useState(
+    selectedChild?.weeklyGoalHours || 6,
+  );
+
+  useEffect(() => {
+    if (selectedChild?.weeklyGoalHours) {
+      setWeeklyGoal(selectedChild.weeklyGoalHours);
+    }
+  }, [selectedChild?.id, selectedChild?.weeklyGoalHours]);
+
+  // Handle updating child weekly study goal in backend database
+  const handleUpdateGoal = async (newGoal) => {
+    if (!selectedChild?.id || goalSaving) return;
+    const clampedGoal = Math.min(25, Math.max(1, newGoal));
+    setWeeklyGoal(clampedGoal);
+    setGoalSaving(true);
+    setGoalFeedback("");
+
+    try {
+      await updateChildWeeklyGoal(selectedChild.id, clampedGoal);
+      setGoalFeedback("Saved!");
+      setTimeout(() => setGoalFeedback(""), 2500);
+
+      // Keep realChildren state updated in memory
+      setRealChildren((prev) =>
+        prev.map((c) =>
+          c.id === selectedChild.id
+            ? { ...c, weeklyGoalHours: clampedGoal }
+            : c,
+        ),
+      );
+    } catch (err) {
+      console.error("[ParentDashboard] Error updating goal:", err);
+      setWeeklyGoal(selectedChild.weeklyGoalHours || 6);
+      setGoalFeedback("Failed to save");
+      setTimeout(() => setGoalFeedback(""), 3000);
+    } finally {
+      setGoalSaving(false);
+    }
+  };
 
   // Copy invitation code
   const handleCopyCode = async () => {
@@ -134,25 +178,28 @@ export default function ParentDashboard() {
     }
   };
 
-  // Send Cheer to Child
-  const handleSendCheer = (e) => {
+  // Send Cheer to Child via backend API
+  const handleSendCheer = async (e) => {
     e.preventDefault();
-    if (!cheerInput.trim()) return;
-    setCheerSent(true);
-    setCheerInput("");
-    setTimeout(() => setCheerSent(false), 4000);
-  };
+    if (!cheerInput.trim() || !selectedChild?.id) return;
 
-  // Handle Link Child
-  const handleLinkChild = (e) => {
-    e.preventDefault();
-    if (!linkInputCode.trim()) return;
-    setLinkSuccessMessage(`Successfully connected student account (${linkInputCode})!`);
-    setTimeout(() => {
-      setLinkSuccessMessage("");
-      setShowLinkModal(false);
-      setLinkInputCode("");
-    }, 2000);
+    setCheerSending(true);
+    setCheerError("");
+    setCheerSent(false);
+
+    try {
+      await sendParentCheer(selectedChild.id, cheerInput.trim());
+      setCheerSent(true);
+      setCheerInput("");
+      setTimeout(() => setCheerSent(false), 4500);
+    } catch (err) {
+      console.error("[ParentDashboard] Error sending cheer:", err);
+      setCheerError(
+        err?.message || "Failed to deliver cheer note. Please try again.",
+      );
+    } finally {
+      setCheerSending(false);
+    }
   };
 
   // Print Monthly Report
@@ -317,13 +364,6 @@ export default function ParentDashboard() {
               );
             })}
           </div>
-
-          <button
-            className={styles.linkChildBtn}
-            onClick={() => setShowLinkModal(true)}
-          >
-            <Plus size={14} /> Link Child Account
-          </button>
         </div>
 
         {/* Hero Grid: 3D Mastery Beacon + 4 Quick Stat Cards */}
@@ -673,6 +713,7 @@ export default function ParentDashboard() {
                     type="submit"
                     className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
                     style={{ padding: "0 16px" }}
+                    disabled={cheerSending}
                   >
                     <Send size={15} />
                   </button>
@@ -683,6 +724,12 @@ export default function ParentDashboard() {
                     <Check size={14} /> Cheer note delivered to {selectedChild.fullName}'s dashboard!
                   </div>
                 )}
+
+                {cheerError && (
+                  <div style={{ fontSize: "11px", color: "#f87171", display: "flex", alignItems: "center", gap: "6px" }}>
+                    {cheerError}
+                  </div>
+                )}
               </form>
 
               {/* Weekly Goal Adjuster */}
@@ -690,18 +737,41 @@ export default function ParentDashboard() {
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Target size={16} color="#818cf8" />
                   <span style={{ fontSize: "11px", color: "#cbd5e1" }}>Weekly Target Goal:</span>
+                  {goalFeedback && (
+                    <span
+                      style={{
+                        fontSize: "11px",
+                        color: goalFeedback === "Saved!" ? "#34d399" : "#f87171",
+                        fontWeight: "700",
+                        padding: "1px 6px",
+                        borderRadius: "4px",
+                        background:
+                          goalFeedback === "Saved!"
+                            ? "rgba(52, 211, 153, 0.15)"
+                            : "rgba(248, 113, 113, 0.15)",
+                      }}
+                    >
+                      {goalFeedback}
+                    </span>
+                  )}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <button
                     className="hub-btn small"
-                    onClick={() => setWeeklyGoal((g) => Math.max(2, g - 1))}
+                    disabled={goalSaving || weeklyGoal <= 1}
+                    onClick={() => handleUpdateGoal(weeklyGoal - 1)}
+                    title="Decrease weekly goal"
                   >
                     -
                   </button>
-                  <strong style={{ fontSize: "12px", color: "#f8fafc" }}>{weeklyGoal} hrs / wk</strong>
+                  <strong style={{ fontSize: "12px", color: "#f8fafc" }}>
+                    {weeklyGoal} hrs / wk
+                  </strong>
                   <button
                     className="hub-btn small"
-                    onClick={() => setWeeklyGoal((g) => Math.min(15, g + 1))}
+                    disabled={goalSaving || weeklyGoal >= 25}
+                    onClick={() => handleUpdateGoal(weeklyGoal + 1)}
+                    title="Increase weekly goal"
                   >
                     +
                   </button>
@@ -710,67 +780,6 @@ export default function ParentDashboard() {
             </div>
           </div>
         </div>
-
-        {/* Link Child Modal */}
-        {showLinkModal && (
-          <div className={styles.modalOverlay} onClick={() => setShowLinkModal(false)}>
-            <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-              <button
-                className={styles.modalClose}
-                onClick={() => setShowLinkModal(false)}
-                aria-label="Close"
-              >
-                <X size={18} />
-              </button>
-
-              <h2 style={{ fontSize: "18px", margin: "0 0 8px 0", color: "#f8fafc" }}>
-                Link Student Account
-              </h2>
-              <p style={{ fontSize: "12px", color: "#94a3b8", marginBottom: "18px" }}>
-                Enter your child's student username, email, or student invitation code to connect
-                their learning records to your family dashboard.
-              </p>
-
-              <form onSubmit={handleLinkChild} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "11px", color: "#cbd5e1", marginBottom: "6px" }}>
-                    Student Code or Email
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className={styles.cheerInput}
-                    placeholder="e.g. STU-8921 or child@codeland.com"
-                    value={linkInputCode}
-                    onChange={(e) => setLinkInputCode(e.target.value)}
-                  />
-                </div>
-
-                {linkSuccessMessage && (
-                  <div style={{ fontSize: "12px", color: "#34d399", display: "flex", alignItems: "center", gap: "6px" }}>
-                    <Check size={14} /> {linkSuccessMessage}
-                  </div>
-                )}
-
-                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
-                  <button
-                    type="button"
-                    className="hub-btn"
-                    onClick={() => setShowLinkModal(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
-                  >
-                    Connect Account
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
     </HubLayout>
   );

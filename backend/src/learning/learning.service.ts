@@ -292,9 +292,17 @@ export class LearningService {
       where: { id: userId },
       select: {
         id: true,
+        name: true,
+        email: true,
         totalXp: true,
         streakDays: true,
         lastActiveAt: true,
+        UserProfile: {
+          select: {
+            dailyGoal: true,
+            avatarTheme: true,
+          },
+        },
       },
     });
 

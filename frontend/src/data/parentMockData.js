@@ -7,7 +7,7 @@
 export function generate30DayActivity(activityLevel = "high") {
   const days = [];
   const now = new Date();
-  
+
   // Deterministic pattern based on activityLevel
   const intensityMap = {
     high: [45, 60, 30, 0, 75, 50, 40, 60, 0, 45, 90, 30, 40, 0, 60, 75, 45, 0, 30, 80, 60, 45, 0, 50, 65, 40, 90, 0, 60, 45],
@@ -22,7 +22,7 @@ export function generate30DayActivity(activityLevel = "high") {
     d.setDate(now.getDate() - i);
     const minutes = pattern[29 - i];
     const lessons = minutes > 50 ? 3 : minutes > 25 ? 2 : minutes > 0 ? 1 : 0;
-    
+
     days.push({
       date: d.toISOString().split("T")[0],
       dayName: d.toLocaleDateString("en-US", { weekday: "short" }),
@@ -212,7 +212,7 @@ export const SAMPLE_CHILDREN = [
  */
 export function buildParentChildrenList(storedUsers = [], parentId = null) {
   const realStudents = storedUsers.filter(u => u.role === "student" && (!parentId || u.parentId === parentId));
-  
+
   if (!realStudents.length) {
     return SAMPLE_CHILDREN;
   }

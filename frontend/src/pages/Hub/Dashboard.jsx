@@ -1,43 +1,295 @@
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
+  AlertCircle,
   ArrowRight,
   ArrowUpRight,
   BookOpen,
   Code2,
   Compass,
   Flame,
+  Loader2,
+  RefreshCw,
   Sparkles,
   Target,
   Trophy,
   Zap,
 } from "lucide-react";
 import HubLayout from "../../components/Hub/HubLayout";
-import {
-  getProfile,
-  getSummary,
-  getUser,
-  pathRoute,
-  userKey,
-} from "../../services/learningHub";
+import StudentCheerNotification from "../../components/Hub/StudentCheerNotification";
+import { fetchStudentProgress } from "../../services/learningContentService";
 
 export default function Dashboard() {
-  const user = getUser();
-  const profile = getProfile(user);
-  const summary = getSummary(user);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  let activePath;
-  try {
-    activePath = localStorage.getItem(`codeland_active_path_${userKey(user)}`);
-  } catch {
-    /* default to web */
+  const loadProgress = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetchStudentProgress();
+      if (!res) {
+        throw new Error("Unable to retrieve student progress from database.");
+      }
+      setData(res);
+    } catch (err) {
+      console.error("[Dashboard] Error fetching progress:", err);
+      setError(
+        err?.message || "Failed to load progress. Please verify server connection."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadProgress();
+  }, [loadProgress]);
+
+  // Derived telemetry calculations from live database records
+  const {
+    studentName,
+    dailyGoal,
+    totalXp,
+    lessonsCount,
+    challengesCount,
+    worldsCompleted,
+    webPercent,
+    cppPercent,
+    algoPercent,
+    activePathInfo,
+    goalProgress,
+  } = useMemo(() => {
+    const user = data?.user || {};
+    const progressList = Array.isArray(data?.progress) ? data.progress : [];
+
+    const name = user.name || user.email?.split("@")[0] || "Explorer";
+    const goal = user.UserProfile?.dailyGoal || 3;
+    const xp = Number.isFinite(user.totalXp) ? user.totalXp : 0;
+
+    let lessons = 0;
+    let challenges = 0;
+    let completedWorlds = 0;
+
+    for (const record of progressList) {
+      if (Array.isArray(record.completedLessonIds)) {
+        lessons += new Set(record.completedLessonIds).size;
+      }
+      if (Array.isArray(record.completedChallengeIds)) {
+        challenges += new Set(record.completedChallengeIds).size;
+      }
+      if (
+        record.status === "COMPLETED" ||
+        (Number(record.progressPercent) || 0) >= 100
+      ) {
+        completedWorlds += 1;
+      }
+    }
+
+    // Web Track Progress (5 levels in curriculum)
+    const webLevelIds = [
+      "html-foundations",
+      "css-styling",
+      "javascript-core",
+      "react-nexus",
+      "project-showcase",
+    ];
+    const webRecords = progressList.filter(
+      (p) =>
+        p.trackId === "web-creator" ||
+        p.trackId === "web" ||
+        webLevelIds.includes(p.levelId)
+    );
+    const webSum = webRecords.reduce(
+      (sum, r) => sum + (Number(r.progressPercent) || 0),
+      0
+    );
+    const calculatedWebPercent = Math.min(
+      100,
+      Math.round(webSum / webLevelIds.length)
+    );
+
+    // C++ Track Progress (9 levels in curriculum)
+    const cppLevelIds = [
+      "cpp-syntax-core",
+      "cpp-data-circuits",
+      "cpp-logic-gates",
+      "cpp-function-engine",
+      "cpp-array-matrix",
+      "cpp-memory-vault",
+      "cpp-object-forge",
+      "cpp-stl-command",
+      "cpp-final-system",
+    ];
+    const cppRecords = progressList.filter(
+      (p) =>
+        p.trackId === "cpp-developer" ||
+        p.trackId === "cpp" ||
+        cppLevelIds.includes(p.levelId)
+    );
+    const cppSum = cppRecords.reduce(
+      (sum, r) => sum + (Number(r.progressPercent) || 0),
+      0
+    );
+    const calculatedCppPercent = Math.min(
+      100,
+      Math.round(cppSum / cppLevelIds.length)
+    );
+
+    // Algorithm & Data Structures (5 sectors/levels in curriculum)
+    const algoRecords = progressList.filter(
+      (p) =>
+        p.trackId === "algorithm-master" ||
+        p.trackId === "algo" ||
+        p.trackId === "python" ||
+        p.levelId?.includes("algo") ||
+        p.levelId?.includes("python")
+    );
+    const algoSum = algoRecords.reduce(
+      (sum, r) => sum + (Number(r.progressPercent) || 0),
+      0
+    );
+    const calculatedAlgoPercent = Math.min(100, Math.round(algoSum / 5));
+
+    // Determine active path from most recently accessed level in DB
+    const sortedByAccess = [...progressList].sort(
+      (a, b) =>
+        new Date(b.lastAccessedAt || 0).getTime() -
+        new Date(a.lastAccessedAt || 0).getTime()
+    );
+    const lastActive = sortedByAccess[0];
+
+    let pathName = "Web Creator";
+    let pathRoute = "/student/world";
+
+    if (lastActive) {
+      if (
+        lastActive.trackId === "cpp-developer" ||
+        lastActive.trackId === "cpp" ||
+        cppLevelIds.includes(lastActive.levelId)
+      ) {
+        pathName = "C++ Developer";
+        pathRoute = "/student/cpp-world";
+      } else if (
+        lastActive.trackId === "algorithm-master" ||
+        lastActive.trackId === "algo" ||
+        lastActive.levelId?.includes("algo")
+      ) {
+        pathName = "Algorithm & Data Structures";
+        pathRoute = "/student/python-world";
+      }
+    }
+
+    return {
+      studentName: name,
+      dailyGoal: goal,
+      totalXp: xp,
+      lessonsCount: lessons,
+      challengesCount: challenges,
+      worldsCompleted: completedWorlds,
+      webPercent: calculatedWebPercent,
+      cppPercent: calculatedCppPercent,
+      algoPercent: calculatedAlgoPercent,
+      activePathInfo: { name: pathName, route: pathRoute },
+      goalProgress: Math.min(challenges, goal),
+    };
+  }, [data]);
+
+  // Loading State with Sci-Fi Spinner
+  if (loading) {
+    return (
+      <HubLayout title="Overview">
+        <div
+          style={{
+            minHeight: "450px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "16px",
+            color: "#94a3b8",
+          }}
+        >
+          <Loader2
+            size={36}
+            color="#818cf8"
+            style={{ animation: "spin 1s linear infinite" }}
+          />
+          <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+          <p
+            style={{
+              fontSize: "14px",
+              fontWeight: "600",
+              letterSpacing: "0.5px",
+            }}
+          >
+            Connecting to CodeLand Neural Network & Loading Live Progress...
+          </p>
+        </div>
+      </HubLayout>
+    );
   }
 
-  const pathName =
-    activePath === "cpp-developer"
-      ? "C++ Developer"
-      : activePath === "python-explorer"
-      ? "Algorithm & Data Structures"
-      : "Web Creator";
+  // Error State with Retry Button
+  if (error) {
+    return (
+      <HubLayout title="Overview">
+        <div
+          className="hub-panel hub-card-3d"
+          style={{
+            maxWidth: "600px",
+            margin: "50px auto",
+            textAlign: "center",
+            padding: "36px 24px",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            background: "rgba(239, 68, 68, 0.05)",
+          }}
+        >
+          <div
+            style={{
+              width: "50px",
+              height: "50px",
+              borderRadius: "50%",
+              background: "rgba(239, 68, 68, 0.15)",
+              color: "#f87171",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 16px",
+            }}
+          >
+            <AlertCircle size={28} />
+          </div>
+          <h2
+            style={{ fontSize: "18px", color: "#f8fafc", marginBottom: "8px" }}
+          >
+            Unable to Synchronize Student Progress
+          </h2>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#94a3b8",
+              marginBottom: "22px",
+              lineHeight: "1.6",
+            }}
+          >
+            {error}
+          </p>
+          <div
+            style={{ display: "flex", justifyContent: "center", gap: "12px" }}
+          >
+            <button className="hub-btn primary" onClick={loadProgress}>
+              <RefreshCw size={15} /> Retry Connection
+            </button>
+            <Link className="hub-btn ghost" to="/login">
+              Sign In Again
+            </Link>
+          </div>
+        </div>
+      </HubLayout>
+    );
+  }
 
   const paths = [
     {
@@ -45,7 +297,7 @@ export default function Dashboard() {
       subtitle: "HTML, CSS, JavaScript & React",
       symbol: "</>",
       accent: "#a78bfa",
-      progress: summary.webPercent,
+      progress: webPercent,
       to: "/student/world",
     },
     {
@@ -53,7 +305,7 @@ export default function Dashboard() {
       subtitle: "Logic, memory & powerful systems",
       symbol: "C++",
       accent: "#38bdf8",
-      progress: summary.cppPercent,
+      progress: cppPercent,
       to: "/student/cpp-world",
     },
     {
@@ -61,22 +313,23 @@ export default function Dashboard() {
       subtitle: "Algorithms, Trees, Graphs & Dynamic Programming",
       symbol: "Algo",
       accent: "#34d399",
-      progress: summary.pythonPercent,
+      progress: algoPercent,
       to: "/student/python-world",
     },
   ];
 
   const stats = [
-    [Zap, summary.xp, "Total XP earned", "#a78bfa"],
-    [BookOpen, summary.lessons, "Lessons completed", "#38bdf8"],
-    [Code2, summary.challenges, "Challenges solved", "#34d399"],
-    [Trophy, summary.completed, "Worlds completed", "#fbbf24"],
+    [Zap, totalXp, "Total XP earned", "#a78bfa"],
+    [BookOpen, lessonsCount, "Lessons completed", "#38bdf8"],
+    [Code2, challengesCount, "Challenges solved", "#34d399"],
+    [Trophy, worldsCompleted, "Path completed", "#fbbf24"],
   ];
-
-  const goalProgress = Math.min(summary.practiceIds.length, profile.goal);
 
   return (
     <HubLayout title="Overview">
+      {/* REAL-TIME PARENT CHEER NOTIFICATION */}
+      <StudentCheerNotification />
+
       {/* ================================================= */}
       {/* PAGE HEADER */}
       {/* ================================================= */}
@@ -85,7 +338,7 @@ export default function Dashboard() {
           <span className="hub-eyebrow">
             <Sparkles size={13} /> YOUR NEXT CHAPTER
           </span>
-          <h1>Ready to build, {profile.name.split(" ")[0]}?</h1>
+          <h1>Ready to build, {studentName.split(" ")[0]}?</h1>
           <p>
             Big ideas start with a little curiosity. Let's make something great
             today.
@@ -101,7 +354,10 @@ export default function Dashboard() {
       {/* ================================================= */}
       {/* 3D HERO COMPANION & FEATURE */}
       {/* ================================================= */}
-      <section className="hub-feature hub-card-3d" aria-label="Continue learning">
+      <section
+        className="hub-feature hub-card-3d"
+        aria-label="Continue learning"
+      >
         <div className="hub-feature-copy hub-3d-layer-front">
           <span className="hub-tag">
             <span>✦</span> YOUR ADVENTURE AWAITS
@@ -116,14 +372,11 @@ export default function Dashboard() {
             “I made this.”
           </p>
           <div className="hub-feature-links">
-            <Link
-              className="hub-btn primary"
-              to={user ? pathRoute(activePath) : "/student/choose-path"}
-            >
-              {summary.lessons ? "Continue learning" : "Start your journey"}
+            <Link className="hub-btn primary" to={activePathInfo.route}>
+              {lessonsCount > 0 ? "Continue learning" : "Start your journey"}
               <ArrowRight size={15} />
             </Link>
-            <span>{pathName} path</span>
+            <span>{activePathInfo.name} path</span>
           </div>
         </div>
 
@@ -150,7 +403,10 @@ export default function Dashboard() {
       {/* ================================================= */}
       {/* 3D HOLOGRAPHIC STATS */}
       {/* ================================================= */}
-      <section className="hub-stats hub-scene-3d" aria-label="Learning statistics">
+      <section
+        className="hub-stats hub-scene-3d"
+        aria-label="Learning statistics"
+      >
         {stats.map(([Icon, value, label, accent]) => (
           <div
             className="hub-stat hub-card-3d"
@@ -231,28 +487,28 @@ export default function Dashboard() {
               <div
                 className="hub-goal-ring"
                 style={{
-                  "--progress": `${(goalProgress / profile.goal) * 100}%`,
+                  "--progress": `${(goalProgress / dailyGoal) * 100}%`,
                 }}
               >
                 <strong>
                   {goalProgress}
-                  <small>/{profile.goal}</small>
+                  <small>/{dailyGoal}</small>
                 </strong>
               </div>
 
               <div className="hub-goal-copy">
                 <strong>
-                  {goalProgress >= profile.goal
+                  {goalProgress >= dailyGoal
                     ? "Goal achieved! 🎉"
                     : "Keep your curiosity going"}
                 </strong>
-                <p>{profile.goal} arena challenges</p>
+                <p>{dailyGoal} arena challenges</p>
                 <Link
                   className="hub-inline-link"
                   style={{ fontSize: 11 }}
                   to="/challenges"
                 >
-                  {goalProgress >= profile.goal
+                  {goalProgress >= dailyGoal
                     ? "Try another challenge"
                     : "Jump into practice"}
                 </Link>

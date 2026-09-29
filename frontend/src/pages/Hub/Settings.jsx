@@ -18,19 +18,20 @@ import {
   Users,
   Volume2,
   Zap,
+  Loader2,
 } from "lucide-react";
 import gsap from "gsap";
 import HubLayout from "../../components/Hub/HubLayout";
 import {
   getParentInviteCode,
-  getProfile,
   getSummary,
   getUser,
-  userKey,
-  writeStored,
 } from "../../services/learningHub";
 import soundEngine from "../../services/soundEngine";
-import { apiRequest } from "../../services/api";
+import {
+  getProfile as fetchBackendProfile,
+  updateProfile as saveBackendProfile,
+} from "../../services/profileService";
 
 const AVATAR_THEMES = [
   { id: "violet", name: "Void Violet", color: "#8b5cf6", glow: "rgba(139, 92, 246, 0.45)" },
@@ -160,52 +161,60 @@ export default function Settings() {
   const summary = useMemo(() => getSummary(user), [user]);
   const containerRef = useRef(null);
 
-  const [form, setForm] = useState(() => {
-    const p = getProfile(getUser());
-    return {
-      name: p.name || "",
-      goal: p.goal || 3,
-      reducedMotion: p.reducedMotion === true,
-      avatarTheme: p.avatarTheme || "violet",
-      fontSize: p.fontSize || "standard",
-      soundEffects: p.soundEffects !== false,
-    };
+  const [form, setForm] = useState({
+    name: user?.name || user?.fullName || "",
+    goal: 3,
+    reducedMotion: false,
+    avatarTheme: "violet",
+    fontSize: "md",
+    soundEffects: true,
   });
 
+  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [failed, setFailed] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
 
-  // Sync user profile from auth if token exists
+  // Fetch initial profile from GET /profile on mount
   useEffect(() => {
-    async function syncUser() {
+    let isMounted = true;
+    async function syncProfile() {
       const token = localStorage.getItem("codeland_token");
-      if (token) {
-        try {
-          const profile = await apiRequest("/auth/me");
-          if (profile) {
-            const rawRole = (profile.role || "").toLowerCase();
-            const updated = {
-              ...getUser(),
-              ...profile,
-              role: rawRole === "child" ? "student" : rawRole,
-              parentCode: profile.parentCode,
-              inviteCode: profile.parentCode || profile.inviteCode,
-              fullName: profile.name || profile.fullName,
-            };
-            writeStored("codeland_current_user", updated);
-            setUser(updated);
-          }
-        } catch {
-          // Keep offline state
+      if (!token) return;
+
+      try {
+        const profile = await fetchBackendProfile();
+        if (profile && isMounted) {
+          setForm({
+            name: profile.name || "",
+            goal: profile.dailyGoal || 3,
+            reducedMotion: profile.reducedMotion === true,
+            avatarTheme: profile.avatarTheme || "violet",
+            fontSize: profile.fontSize || "md",
+            soundEffects: profile.soundEffects !== false,
+          });
+
+          setUser((prev) => ({
+            ...prev,
+            ...profile,
+            fullName: profile.name,
+            inviteCode: profile.parentCode,
+          }));
+
+          soundEngine.setSfxEnabled(profile.soundEffects !== false);
+          document.documentElement.dataset.reducedMotion = String(
+            profile.reducedMotion === true
+          );
         }
+      } catch (err) {
+        console.warn("[Settings] Error fetching profile from backend:", err);
       }
     }
-    syncUser();
+    syncProfile();
 
-    const handleUpdate = () => setUser(getUser());
-    window.addEventListener("codeland:update", handleUpdate);
-    return () => window.removeEventListener("codeland:update", handleUpdate);
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // GSAP 3D entrance animation
@@ -290,7 +299,7 @@ export default function Settings() {
     soundEngine.playClick("tab");
   };
 
-  const save = (event) => {
+  const save = async (event) => {
     event.preventDefault();
     if (!form.name.trim()) {
       setFailed(true);
@@ -299,30 +308,40 @@ export default function Settings() {
       return;
     }
 
-    try {
-      const updatedProfile = {
-        ...form,
-        name: form.name.trim(),
-      };
-      writeStored(`codeland_profile_${userKey(user)}`, updatedProfile);
+    setSaving(true);
+    setFailed(false);
+    setMessage("");
 
-      const currentUser = getUser();
-      if (currentUser) {
-        currentUser.fullName = form.name.trim();
-        writeStored("codeland_current_user", currentUser);
+    try {
+      const updated = await saveBackendProfile({
+        name: form.name.trim(),
+        avatarTheme: form.avatarTheme,
+        dailyGoal: Number(form.goal) || 3,
+        soundEffects: Boolean(form.soundEffects),
+        reducedMotion: Boolean(form.reducedMotion),
+        fontSize: form.fontSize || "md",
+      });
+
+      if (updated) {
+        setUser((prev) => ({
+          ...prev,
+          ...updated,
+          fullName: updated.name,
+          inviteCode: updated.parentCode,
+        }));
       }
 
-      document.documentElement.dataset.reducedMotion = String(
-        form.reducedMotion
-      );
-
+      document.documentElement.dataset.reducedMotion = String(form.reducedMotion);
       setFailed(false);
-      setMessage("Preferences saved and synchronized across your neural core.");
+      setMessage("Preferences saved and synchronized to your account!");
       soundEngine.playLevelComplete();
-    } catch {
+    } catch (err) {
+      console.error("[Settings] Error updating profile:", err);
       setFailed(true);
-      setMessage("Unable to save preferences. Please enable browser storage.");
+      setMessage(err?.message || "Unable to save preferences. Please check your connection.");
       soundEngine.playError();
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -621,8 +640,16 @@ export default function Settings() {
 
           {/* SAVE BUTTON BAR */}
           <div className="hub-save-bar">
-            <button className="hub-save-btn" type="submit">
-              <Check size={16} /> Save Preferences
+            <button className="hub-save-btn" type="submit" disabled={saving}>
+              {saving ? (
+                <Loader2
+                  size={16}
+                  style={{ animation: "spin 1s linear infinite" }}
+                />
+              ) : (
+                <Check size={16} />
+              )}
+              {saving ? "Saving..." : "Save Preferences"}
             </button>
             {message && (
               <span

@@ -392,18 +392,17 @@ export async function recordLessonCompletion(levelId, lessonId, xp = 25, unitTyp
 }
 
 export async function fetchStudentProgress() {
-  try {
-    const token = localStorage.getItem("codeland_token");
-    if (!token) return null;
-
-    return await apiRequest("/learning/progress/me", {
-      method: "GET",
-    });
-  } catch (err) {
-    console.warn("[CodeLand] Fetch progress warning:", err);
-    return null;
+  const token = localStorage.getItem("codeland_token");
+  if (!token) {
+    throw new Error("No authorization token found. Please sign in.");
   }
+
+  return await apiRequest("/learning/progress/me", {
+    method: "GET",
+  });
 }
+
+export const getStudentProgress = fetchStudentProgress;
 
 export async function submitChallengeProgress(
   challengeId,
