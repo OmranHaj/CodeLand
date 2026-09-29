@@ -116,13 +116,30 @@ export default function ParentDashboard() {
     return children.find((c) => c.id === selectedChildId) || children[0];
   }, [children, selectedChildId]);
 
-  // 30-day activity telemetry from real database records (or fallback if empty)
+  // 30-day activity telemetry from real database records (or real clean days if none yet)
   const activityDays = useMemo(() => {
     if (Array.isArray(selectedChild?.dailyActivities) && selectedChild.dailyActivities.length > 0) {
       return selectedChild.dailyActivities;
     }
-    // Fallback if no database activity logged yet:
+    /*
+    // ORIGINAL MOCK FALLBACK (Preserved for reference):
     return generate30DayActivity(selectedChild?.activityLevel || "high");
+    */
+
+    // Generate real 30-day timeline with 0 minutes for new students without past sessions
+    const days = [];
+    const today = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      days.push({
+        date: d.toISOString().split("T")[0],
+        minutes: 0,
+        lessonsCount: 0,
+        quizzesCount: 0,
+      });
+    }
+    return days;
   }, [selectedChild]);
 
   // Weekly study goal state
@@ -340,32 +357,56 @@ export default function ParentDashboard() {
             <span style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px" }}>
               Enrolled Children:
             </span>
-            {children.map((child) => {
-              const isSelected = child.id === selectedChild.id;
-              return (
-                <button
-                  key={child.id}
-                  className={`${styles.childTab} ${isSelected ? styles.childTabActive : ""}`}
-                  onClick={() => {
-                    setSelectedChildId(child.id);
-                    setWeeklyGoal(child.weeklyGoalHours || 6);
-                  }}
-                >
-                  <div className={styles.childAvatar} style={{ background: child.themeColor }}>
-                    {child.avatar}
-                  </div>
-                  <div className={styles.childTabInfo}>
-                    <span className={styles.childTabName}>{child.fullName}</span>
-                    <span className={styles.childTabMeta}>
-                      {child.grade} · {child.streakDays}d Streak 🔥
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
+            {children.length > 0 ? (
+              children.map((child) => {
+                const isSelected = child.id === selectedChild?.id;
+                return (
+                  <button
+                    key={child.id}
+                    className={`${styles.childTab} ${isSelected ? styles.childTabActive : ""}`}
+                    onClick={() => {
+                      setSelectedChildId(child.id);
+                      setWeeklyGoal(child.weeklyGoalHours || 6);
+                    }}
+                  >
+                    <div className={styles.childAvatar} style={{ background: child.themeColor }}>
+                      {child.avatar}
+                    </div>
+                    <div className={styles.childTabInfo}>
+                      <span className={styles.childTabName}>{child.fullName}</span>
+                      <span className={styles.childTabMeta}>
+                        {child.grade} · {child.streakDays}d Streak 🔥
+                      </span>
+                    </div>
+                  </button>
+                );
+              })
+            ) : (
+              <span style={{ fontSize: "12px", color: "#94a3b8", padding: "4px 8px" }}>
+                No children linked yet. Share your invitation code above to link your child's account.
+              </span>
+            )}
           </div>
         </div>
 
+        {!selectedChild ? (
+          <div style={{
+            textAlign: "center",
+            padding: "80px 20px",
+            background: "rgba(15, 23, 42, 0.6)",
+            borderRadius: "20px",
+            border: "1px dashed rgba(99, 102, 241, 0.3)",
+            marginTop: "24px"
+          }}>
+            <h3 style={{ color: "#f8fafc", fontSize: "18px", marginBottom: "8px" }}>
+              No Student Account Connected Yet
+            </h3>
+            <p style={{ color: "#94a3b8", fontSize: "13px", maxWidth: "480px", margin: "0 auto 20px auto" }}>
+              Have your child enter your Invitation Code <code style={{ color: "#c4b5fd", fontWeight: 700 }}>{inviteCode}</code> when creating their account to link directly to your dashboard.
+            </p>
+          </div>
+        ) : (
+          <>
         {/* Hero Grid: 3D Mastery Beacon + 4 Quick Stat Cards */}
         <div className={styles.heroGrid}>
           {/* 3D Mastery Beacon Card */}
@@ -580,7 +621,7 @@ export default function ParentDashboard() {
               </div>
 
               <div className={styles.subjectList}>
-                {selectedChild.subjectMastery.map((subj) => (
+                {(selectedChild?.subjectMastery || []).map((subj) => (
                   <div key={subj.id} className={styles.subjectCard}>
                     <div className={styles.subjectHeader}>
                       <span className={styles.subjectTitle}>{subj.title}</span>
@@ -597,7 +638,7 @@ export default function ParentDashboard() {
                     </div>
 
                     <div className={styles.skillChips}>
-                      {subj.keySkills.map((skill, sIdx) => (
+                      {(subj.keySkills || []).map((skill, sIdx) => (
                         <span key={sIdx} className={styles.skillChip}>
                           ✓ {skill}
                         </span>
@@ -622,22 +663,22 @@ export default function ParentDashboard() {
                     Parent AI Guidance & Insight
                   </h3>
                   <span style={{ fontSize: "10px", color: "#c4b5fd" }}>
-                    Personalized based on {selectedChild.fullName}'s recent work
+                    Personalized based on {selectedChild?.fullName}'s recent work
                   </span>
                 </div>
               </div>
 
               <div className={styles.insightPromptBox}>
                 <strong>Ask About the Discovery:</strong>
-                "{selectedChild.aiInsights.conversationStarter}"
+                "{selectedChild?.aiInsights?.conversationStarter || "Ask what new coding concept they are excited to explore today!"}"
               </div>
 
               <div style={{ fontSize: "11px", color: "#cbd5e1", lineHeight: "1.6" }}>
                 <p style={{ margin: "0 0 8px 0" }}>
-                  <strong>Key Strength:</strong> {selectedChild.aiInsights.strength}
+                  <strong>Key Strength:</strong> {selectedChild?.aiInsights?.strength || "Ready to Learn"}
                 </p>
                 <p style={{ margin: 0 }}>
-                  <strong>Growth Tip:</strong> {selectedChild.aiInsights.growthTip}
+                  <strong>Growth Tip:</strong> {selectedChild?.aiInsights?.growthTip || "Encourage regular short learning sessions."}
                 </p>
               </div>
             </div>
@@ -656,16 +697,22 @@ export default function ParentDashboard() {
               </div>
 
               <div className={styles.badgeList}>
-                {selectedChild.recentBadges.map((b) => (
-                  <div key={b.id} className={styles.badgeRow}>
-                    <div className={styles.badgeIcon}>{b.icon}</div>
-                    <div className={styles.badgeContent}>
-                      <div className={styles.badgeTitle}>{b.title}</div>
-                      <div className={styles.badgeDesc}>{b.desc}</div>
+                {(selectedChild?.recentBadges || []).length > 0 ? (
+                  selectedChild.recentBadges.map((b) => (
+                    <div key={b.id} className={styles.badgeRow}>
+                      <div className={styles.badgeIcon}>{b.icon}</div>
+                      <div className={styles.badgeContent}>
+                        <div className={styles.badgeTitle}>{b.title}</div>
+                        <div className={styles.badgeDesc}>{b.desc}</div>
+                      </div>
+                      <span className={styles.badgeDate}>{b.date}</span>
                     </div>
-                    <span className={styles.badgeDate}>{b.date}</span>
+                  ))
+                ) : (
+                  <div style={{ textAlign: "center", padding: "18px 12px", color: "#64748b", fontSize: "12px" }}>
+                    No milestones unlocked yet. They will appear here once earned!
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -780,6 +827,8 @@ export default function ParentDashboard() {
             </div>
           </div>
         </div>
+        </>
+        )}
       </div>
     </HubLayout>
   );

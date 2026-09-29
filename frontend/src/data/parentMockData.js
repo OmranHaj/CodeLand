@@ -213,12 +213,20 @@ export const SAMPLE_CHILDREN = [
 export function buildParentChildrenList(storedUsers = [], parentId = null) {
   const realStudents = storedUsers.filter(u => u.role === "student" && (!parentId || u.parentId === parentId));
 
+  /*
+  // ORIGINAL MOCK FALLBACK (Preserved for reference):
   if (!realStudents.length) {
     return SAMPLE_CHILDREN;
   }
+  */
+  if (!realStudents.length) {
+    return [];
+  }
 
-  // Transform real student accounts and supplement with rich telemetry if needed
+  // Transform real student accounts using real database telemetry
   return realStudents.map((student, idx) => {
+    /*
+    // ORIGINAL MOCK MERGE (Preserved for reference):
     const sample = SAMPLE_CHILDREN[idx % SAMPLE_CHILDREN.length];
     return {
       ...sample,
@@ -235,5 +243,95 @@ export function buildParentChildrenList(storedUsers = [], parentId = null) {
       monthlyHours: student.monthlyHours !== undefined ? student.monthlyHours : sample.monthlyHours,
       dailyActivities: student.dailyActivities || sample.dailyActivities,
     };
+    */
+
+    const completedLessons = Array.isArray(student.learningProgress)
+      ? student.learningProgress.filter(p => p.completed).length
+      : 0;
+
+    const webPercent = Math.min(100, Math.round((completedLessons / 20) * 100));
+
+    const subjectMastery = [
+      {
+        id: "web",
+        title: "Web Development",
+        completedSectors: `${completedLessons}/20`,
+        percent: webPercent,
+        color: "#10b981",
+        keySkills: ["HTML Structure", "CSS Styling", "Interactive JS"]
+      },
+      {
+        id: "algo",
+        title: "Algorithms & Logic",
+        completedSectors: "0/16",
+        percent: 0,
+        color: "#6366f1",
+        keySkills: ["Sequencing", "Variables", "Conditionals"]
+      },
+      {
+        id: "python",
+        title: "Python & Data",
+        completedSectors: "0/12",
+        percent: 0,
+        color: "#f59e0b",
+        keySkills: ["Syntax", "Loops", "Functions"]
+      }
+    ];
+
+    const quizMetrics = {
+      accuracy: 0,
+      totalQuizzesTaken: 0,
+      challengesSolved: 0,
+      playgroundRuns: 0,
+      persistenceRating: "New Learner",
+    };
+
+    const weeklyGoal = student.weeklyGoalHours ?? 6;
+    const weeklyBreakdown = [
+      { week: "Week 1", hours: 0, target: weeklyGoal, lessons: 0 },
+      { week: "Week 2", hours: 0, target: weeklyGoal, lessons: 0 },
+      { week: "Week 3", hours: 0, target: weeklyGoal, lessons: 0 },
+      { week: "Week 4 (Current)", hours: 0, target: weeklyGoal, lessons: 0 }
+    ];
+
+    const aiInsights = {
+      conversationStarter: (student.totalXp || 0) > 0
+        ? `Ask about what was learned in today's coding session!`
+        : `Ready to begin their coding journey! Ask which track they would like to explore first.`,
+      strength: (student.totalXp || 0) > 0 ? "Active Learner" : "Ready to Start",
+      growthTip: "Consistent 15-minute daily practice builds lasting mastery.",
+    };
+
+    const parentReport = {
+      overallAttendance: "100%",
+      pace: (student.totalXp || 0) > 0 ? "Active" : "New Explorer",
+      weeklyTargetMet: false,
+      lastActive: student.lastActive || "Not yet active"
+    };
+
+    return {
+      id: student.id,
+      fullName: student.fullName || student.name || student.email?.split("@")[0] || "Student",
+      email: student.email,
+      avatar: student.avatar || (student.fullName || student.name || student.email || "S")[0].toUpperCase(),
+      grade: student.grade || "Grade 4-6",
+      themeColor: student.themeColor || "#6366f1",
+      activePath: student.activePath || "Web Foundations",
+      totalXp: student.totalXp ?? 0,
+      streakDays: student.streakDays ?? 0,
+      level: student.level || (student.totalXp ? Math.floor(student.totalXp / 100) + 1 : 1),
+      rankTitle: student.rankTitle || "Novice Explorer",
+      weeklyGoalHours: student.weeklyGoalHours ?? 6,
+      monthlyHours: student.monthlyHours ?? 0,
+      dailyActivities: student.dailyActivities || [],
+      weeklyBreakdown,
+      subjectMastery,
+      quizMetrics,
+      recentBadges: student.badges || [],
+      aiInsights,
+      parentReport,
+      recentActivity: student.recentActivity || [],
+    };
   });
 }
+
