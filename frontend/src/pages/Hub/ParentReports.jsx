@@ -12,18 +12,48 @@ import {
   ArrowRight,
   ShieldCheck,
   Zap,
-  Sparkles
+  Sparkles,
+  Users,
+  Copy,
+  Check
 } from "lucide-react";
 import HubLayout from "../../components/Hub/HubLayout";
-import { getUser, readStored } from "../../services/learningHub";
+import { getUser, readStored, writeStored } from "../../services/learningHub";
 import { buildParentChildrenList } from "../../data/parentMockData";
 import { getParentChildren } from "../../services/parentService";
+import { apiRequest } from "../../services/api";
 
 export default function ParentReports() {
-  const user = getUser();
+  const [user, setUser] = useState(getUser);
   const [realChildren, setRealChildren] = useState([]);
+  const [copyStatus, setCopyStatus] = useState("");
 
   useEffect(() => {
+    async function syncUser() {
+      const token = localStorage.getItem("codeland_token");
+      if (token) {
+        try {
+          const profile = await apiRequest("/auth/me");
+          if (profile) {
+            const rawRole = (profile.role || "").toLowerCase();
+            const updated = {
+              ...getUser(),
+              ...profile,
+              role: rawRole === "child" ? "student" : rawRole,
+              parentCode: profile.parentCode,
+              inviteCode: profile.parentCode || profile.inviteCode,
+              fullName: profile.name || profile.fullName,
+            };
+            writeStored("codeland_current_user", updated);
+            setUser(updated);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+    syncUser();
+
     async function loadChildren() {
       const data = await getParentChildren();
       if (Array.isArray(data) && data.length > 0) {
@@ -33,15 +63,23 @@ export default function ParentReports() {
     loadChildren();
   }, []);
 
-  // const mockMode = import.meta.env.VITE_USE_MOCK_API === "true";
-  // const storedUsers = mockMode ? readStored("codeland_mock_users", []) : [];
+  const inviteCode = user?.parentCode || user?.inviteCode || "";
+
+  const handleCopyCode = async () => {
+    if (!inviteCode) return;
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      setCopyStatus("copied");
+      setTimeout(() => setCopyStatus(""), 2000);
+    } catch {
+      // ignore
+    }
+  };
 
   const children = useMemo(() => {
     if (realChildren.length > 0) {
       return buildParentChildrenList(realChildren, user?.id);
     }
-    // Mock data fallback commented out:
-    // return buildParentChildrenList(storedUsers, user?.id);
     return buildParentChildrenList([]);
   }, [realChildren, user?.id]);
 
@@ -54,7 +92,7 @@ export default function ParentReports() {
   }, [children, selectedChildId]);
 
   const selectedChild = useMemo(() => {
-    return children.find((c) => c.id === selectedChildId) || children[0];
+    return children.find((c) => c.id === selectedChildId) || children[0] || null;
   }, [children, selectedChildId]);
 
   const handlePrint = () => {
@@ -75,70 +113,159 @@ export default function ParentReports() {
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button className="hub-btn primary" onClick={handlePrint}>
-            <Printer size={15} /> Print / Export Official Report
-          </button>
-        </div>
+        {selectedChild && (
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button className="hub-btn primary" onClick={handlePrint}>
+              <Printer size={15} /> Print / Export Official Report
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Child Selector Tabs */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          padding: "12px 18px",
-          background: "#0f1527",
-          border: "1px solid #202b44",
-          borderRadius: "14px",
-          marginBottom: "28px",
-          flexWrap: "wrap"
-        }}
-      >
-        <span style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px" }}>
-          Select Student:
-        </span>
-        {children.map((child) => {
-          const isSelected = child.id === selectedChild.id;
-          return (
-            <button
-              key={child.id}
-              onClick={() => setSelectedChildId(child.id)}
+      {!selectedChild ? (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "80px 24px",
+            background: "rgba(15, 23, 42, 0.6)",
+            borderRadius: "20px",
+            border: "1px dashed rgba(99, 102, 241, 0.3)",
+            marginTop: "16px"
+          }}
+        >
+          <div
+            style={{
+              width: "56px",
+              height: "56px",
+              borderRadius: "16px",
+              background: "rgba(99, 102, 241, 0.15)",
+              color: "#a5b4fc",
+              display: "grid",
+              placeItems: "center",
+              margin: "0 auto 16px auto"
+            }}
+          >
+            <Users size={28} />
+          </div>
+          <h3 style={{ color: "#f8fafc", fontSize: "20px", marginBottom: "8px", fontWeight: "700" }}>
+            No Student Account Connected Yet
+          </h3>
+          <p style={{ color: "#94a3b8", fontSize: "14px", maxWidth: "520px", margin: "0 auto 24px auto", lineHeight: "1.6" }}>
+            Monthly evaluation audits, attendance records, and certificates are generated once a student account is linked to your family profile.
+          </p>
+
+          {inviteCode && (
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "10px 18px",
+                background: "#0d1222",
+                border: "1px solid #6366f1",
+                borderRadius: "12px",
+                marginBottom: "24px",
+                flexWrap: "wrap",
+                justifyContent: "center"
+              }}
+            >
+              <span style={{ fontSize: "12px", color: "#94a3b8" }}>Your Family Invitation Code:</span>
+              <code style={{ fontSize: "16px", fontWeight: "700", color: "#c4b5fd", letterSpacing: "2px" }}>
+                {inviteCode}
+              </code>
+              <button
+                onClick={handleCopyCode}
+                style={{
+                  background: copyStatus ? "#10b981" : "#6366f1",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px"
+                }}
+              >
+                {copyStatus ? <Check size={13} /> : <Copy size={13} />}
+                {copyStatus ? "Copied" : "Copy Code"}
+              </button>
+            </div>
+          )}
+
+          <div>
+            <Link
+              to="/parent/dashboard"
+              className="hub-btn primary"
+              style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}
+            >
+              Go to Parent Dashboard <ArrowRight size={15} />
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Child Selector Tabs */}
+          {children.length > 1 && (
+            <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "8px",
-                padding: "7px 14px",
-                borderRadius: "10px",
-                fontSize: "12px",
-                fontWeight: "600",
-                cursor: "pointer",
-                background: isSelected ? "linear-gradient(135deg, rgba(99, 102, 241, 0.2), #1e1b4b)" : "#131a2e",
-                border: isSelected ? "1px solid #6366f1" : "1px solid #263352",
-                color: isSelected ? "#ffffff" : "#94a3b8"
+                gap: "10px",
+                padding: "12px 18px",
+                background: "#0f1527",
+                border: "1px solid #202b44",
+                borderRadius: "14px",
+                marginBottom: "28px",
+                flexWrap: "wrap"
               }}
             >
-              <span
-                style={{
-                  width: "20px",
-                  height: "20px",
-                  borderRadius: "6px",
-                  background: child.themeColor,
-                  color: "white",
-                  display: "grid",
-                  placeItems: "center",
-                  fontSize: "10px",
-                  fontWeight: "700"
-                }}
-              >
-                {child.avatar}
+              <span style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px" }}>
+                Select Student:
               </span>
-              <span>{child.fullName}</span>
-            </button>
-          );
-        })}
-      </div>
+              {children.map((child) => {
+                const isSelected = child.id === selectedChild?.id;
+                return (
+                  <button
+                    key={child.id}
+                    onClick={() => setSelectedChildId(child.id)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "7px 14px",
+                      borderRadius: "10px",
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      background: isSelected ? "linear-gradient(135deg, rgba(99, 102, 241, 0.2), #1e1b4b)" : "#131a2e",
+                      border: isSelected ? "1px solid #6366f1" : "1px solid #263352",
+                      color: isSelected ? "#ffffff" : "#94a3b8"
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "6px",
+                        background: child.themeColor || "#6366f1",
+                        color: "white",
+                        display: "grid",
+                        placeItems: "center",
+                        fontSize: "10px",
+                        fontWeight: "700"
+                      }}
+                    >
+                      {child.avatar || "S"}
+                    </span>
+                    <span>{child.fullName}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
       {/* Official Monthly Report Card Container */}
       <div
@@ -171,10 +298,10 @@ export default function ParentReports() {
               </span>
             </div>
             <h2 style={{ fontSize: "24px", color: "#f8fafc", margin: "6px 0 4px 0" }}>
-              Monthly Evaluation for {selectedChild.fullName}
+              Monthly Evaluation for {selectedChild.fullName || "Student"}
             </h2>
             <p style={{ margin: 0, fontSize: "12px", color: "#94a3b8" }}>
-              Period: Past 30 Days · Grade: {selectedChild.grade} · Standing:{" "}
+              Period: Past 30 Days · Grade: {selectedChild.grade || "Primary"} · Standing:{" "}
               <strong style={{ color: "#34d399" }}>Excellent (Top 5% Habit Consistency)</strong>
             </p>
           </div>
@@ -192,7 +319,7 @@ export default function ParentReports() {
               Overall Accuracy
             </span>
             <strong style={{ fontSize: "22px", color: "#34d399" }}>
-              {selectedChild.quizMetrics.accuracy}%
+              {selectedChild.quizMetrics?.accuracy ?? 0}%
             </strong>
           </div>
         </div>
@@ -211,10 +338,10 @@ export default function ParentReports() {
               Total Study Time
             </span>
             <strong style={{ fontSize: "22px", color: "#38bdf8" }}>
-              {selectedChild.monthlyHours} Hours
+              {selectedChild.monthlyHours ?? 0} Hours
             </strong>
             <span style={{ fontSize: "10px", color: "#64748b", display: "block", marginTop: "4px" }}>
-              Target: {selectedChild.weeklyGoalHours * 4} hrs/month
+              Target: {(selectedChild.weeklyGoalHours ?? 6) * 4} hrs/month
             </span>
           </div>
 
@@ -223,7 +350,7 @@ export default function ParentReports() {
               Active Streak
             </span>
             <strong style={{ fontSize: "22px", color: "#f59e0b" }}>
-              {selectedChild.streakDays} Days 🔥
+              {selectedChild.streakDays ?? 0} Days 🔥
             </strong>
             <span style={{ fontSize: "10px", color: "#64748b", display: "block", marginTop: "4px" }}>
               Continuous daily sessions
@@ -235,10 +362,10 @@ export default function ParentReports() {
               Challenges Solved
             </span>
             <strong style={{ fontSize: "22px", color: "#34d399" }}>
-              {selectedChild.quizMetrics.challengesSolved} Passed
+              {selectedChild.quizMetrics?.challengesSolved ?? 0} Passed
             </strong>
             <span style={{ fontSize: "10px", color: "#64748b", display: "block", marginTop: "4px" }}>
-              {selectedChild.quizMetrics.totalQuizzesTaken} quizzes evaluated
+              {selectedChild.quizMetrics?.totalQuizzesTaken ?? 0} quizzes evaluated
             </span>
           </div>
 
@@ -247,10 +374,10 @@ export default function ParentReports() {
               Experience Earned
             </span>
             <strong style={{ fontSize: "22px", color: "#c084fc" }}>
-              {selectedChild.totalXp.toLocaleString()} XP
+              {(selectedChild.totalXp ?? 0).toLocaleString()} XP
             </strong>
             <span style={{ fontSize: "10px", color: "#64748b", display: "block", marginTop: "4px" }}>
-              Level {selectedChild.level} · {selectedChild.rankTitle}
+              Level {selectedChild.level ?? 1} · {selectedChild.rankTitle || "Novice Explorer"}
             </span>
           </div>
         </div>
@@ -278,7 +405,7 @@ export default function ParentReports() {
           </div>
 
           <p style={{ margin: "0 0 14px 0", fontSize: "12px", color: "#94a3b8", lineHeight: "1.6" }}>
-            {selectedChild.fullName} spends an average of <strong>~50 minutes per active session</strong>,
+            {selectedChild.fullName || "Your student"} spends an average of <strong>~50 minutes per active session</strong>,
             which fits perfectly within pediatrician recommendations for productive, screen-positive cognitive exercise.
           </p>
 
@@ -300,7 +427,7 @@ export default function ParentReports() {
           Subject Competency Breakdown
         </h3>
         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          {selectedChild.subjectMastery.map((subj) => (
+          {(selectedChild.subjectMastery || []).map((subj) => (
             <div
               key={subj.id}
               style={{
@@ -323,6 +450,8 @@ export default function ParentReports() {
           ))}
         </div>
       </div>
-    </HubLayout>
-  );
+      </>
+    )}
+  </HubLayout>
+);
 }

@@ -150,6 +150,7 @@ model UserProfile {
 enum Role {
   PARENT
   CHILD
+  ADMIN
 }
 
 enum ProgressStatus {
