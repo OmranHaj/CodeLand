@@ -261,13 +261,23 @@ export function buildParentChildrenList(storedUsers = [], parentId = null) {
         keySkills: ["HTML Structure", "CSS Styling", "Interactive JS"]
       },
       {
+        id: "cpp",
+        title: "C++ Systems Architect",
+        completedSectors: "0/9",
+        percent: 0,
+        color: "#38bdf8",
+        keySkills: ["Memory & Pointers", "OOP & Classes", "STL Containers"]
+      },
+      {
         id: "algo",
-        title: "Algorithms & Logic",
-        completedSectors: "0/16",
+        title: "Algorithm & Data Structures",
+        completedSectors: "0/8",
         percent: 0,
         color: "#6366f1",
-        keySkills: ["Sequencing", "Variables", "Conditionals"]
+        keySkills: ["Arrays & Lists", "Trees & Graphs", "Dynamic Programming"]
       },
+      /*
+      // MOCK DATA: Commented out Python track because Python is not in PostgreSQL database
       {
         id: "python",
         title: "Python & Data",
@@ -276,6 +286,7 @@ export function buildParentChildrenList(storedUsers = [], parentId = null) {
         color: "#f59e0b",
         keySkills: ["Syntax", "Loops", "Functions"]
       }
+      */
     ];
 
     const quizMetrics = {

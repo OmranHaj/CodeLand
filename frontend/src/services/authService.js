@@ -36,6 +36,62 @@ export async function loginUser(credentials) {
 }
 
 /* ====================================================== */
+/* GOOGLE LOGIN */
+/* ====================================================== */
+
+export async function loginWithGoogle(credential, role) {
+  const data = await apiRequest("/auth/google", {
+    method: "POST",
+    body: JSON.stringify({ credential, role }),
+  });
+
+  if (data?.accessToken) {
+    localStorage.setItem("codeland_token", data.accessToken);
+  }
+
+  if (data?.user) {
+    const rawRole = (data.user.role || "").toLowerCase();
+    const normalizedUser = {
+      ...data.user,
+      role: rawRole === "child" ? "student" : rawRole,
+      inviteCode: data.user.parentCode || data.user.inviteCode,
+      fullName: data.user.name || data.user.fullName,
+    };
+    return { ...data, user: normalizedUser };
+  }
+
+  return data;
+}
+
+/* ====================================================== */
+/* GITHUB LOGIN */
+/* ====================================================== */
+
+export async function loginWithGithub(code, role) {
+  const data = await apiRequest("/auth/github", {
+    method: "POST",
+    body: JSON.stringify({ code, role }),
+  });
+
+  if (data?.accessToken) {
+    localStorage.setItem("codeland_token", data.accessToken);
+  }
+
+  if (data?.user) {
+    const rawRole = (data.user.role || "").toLowerCase();
+    const normalizedUser = {
+      ...data.user,
+      role: rawRole === "child" ? "student" : rawRole,
+      inviteCode: data.user.parentCode || data.user.inviteCode,
+      fullName: data.user.name || data.user.fullName,
+    };
+    return { ...data, user: normalizedUser };
+  }
+
+  return data;
+}
+
+/* ====================================================== */
 /* REGISTER PARENT */
 /* ====================================================== */
 

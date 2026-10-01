@@ -12,18 +12,28 @@ function LearningPaths() {
       level: "Beginner",
     },
     {
+      icon: <Cpu size={30} />,
+      title: "C++ Development",
+      description:
+        "Build powerful programs through logic, memory, and object-oriented design.",
+      level: "Beginner",
+    },
+    /*
+    // MOCK DATA: Commented out because Python is not in the database
+    {
       icon: <Terminal size={30} />,
       title: "Python Programming",
       description:
         "Start with programming logic, problem solving, and fun Python projects.",
       level: "Beginner",
     },
+    */
     {
-      icon: <Cpu size={30} />,
-      title: "C++ Development",
+      icon: <Terminal size={30} />,
+      title: "Algorithm & Data Structures",
       description:
-        "Build powerful programs through logic, memory, and object-oriented design.",
-      level: "Beginner",
+        "Master data structures, algorithms, search trees, and visual algorithmic problem solving.",
+      level: "Intermediate",
     },
   ];
 
@@ -57,7 +67,16 @@ function LearningPaths() {
 
               <p>{path.description}</p>
 
-              <Link to={path.title === "Python Programming" ? "/courses?path=Python" : path.title === "C++ Development" ? "/courses?path=C%2B%2B" : "/courses?path=Web"} className={styles.pathButton}>
+              <Link
+                to={
+                  path.title === "Algorithm & Data Structures"
+                    ? "/courses?path=Algorithms"
+                    : path.title === "C++ Development"
+                    ? "/courses?path=C%2B%2B"
+                    : "/courses?path=Web"
+                }
+                className={styles.pathButton}
+              >
                 Explore Path
                 <ArrowRight size={17} />
               </Link>

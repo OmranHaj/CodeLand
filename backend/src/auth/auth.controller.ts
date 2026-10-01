@@ -13,6 +13,8 @@ import { RegisterParentDto } from './dto/register-parent.dto.js';
 import { RegisterChildDto } from './dto/register-child.dto.js';
 import { VerifyParentCodeDto } from './dto/verify-parent-code.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { GoogleLoginDto } from './dto/google-login.dto.js';
+import { GithubLoginDto } from './dto/github-login.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 
 @Controller('auth')
@@ -67,6 +69,26 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  /**
+   * Endpoint: POST /auth/google
+   * Verifies Google token and logs in or creates user account.
+   */
+  @Post('google')
+  @HttpCode(HttpStatus.OK)
+  async googleLogin(@Body() dto: GoogleLoginDto) {
+    return this.authService.googleLogin(dto.credential, dto.role);
+  }
+
+  /**
+   * Endpoint: POST /auth/github
+   * Verifies GitHub OAuth code and logs in or creates user account.
+   */
+  @Post('github')
+  @HttpCode(HttpStatus.OK)
+  async githubLogin(@Body() dto: GithubLoginDto) {
+    return this.authService.githubLogin(dto.code, dto.role);
   }
 
   /**

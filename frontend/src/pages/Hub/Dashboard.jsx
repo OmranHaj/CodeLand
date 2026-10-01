@@ -137,14 +137,14 @@ export default function Dashboard() {
       Math.round(cppSum / cppLevelIds.length)
     );
 
-    // Algorithm & Data Structures (5 sectors/levels in curriculum)
+    // Algorithm & Data Structures (8 sectors in database curriculum)
     const algoRecords = progressList.filter(
       (p) =>
         p.trackId === "algorithm-master" ||
         p.trackId === "algo" ||
-        p.trackId === "python" ||
-        p.levelId?.includes("algo") ||
-        p.levelId?.includes("python")
+        // p.trackId === "python" || // MOCK DATA: Commented out because Python is not in the database
+        p.levelId?.includes("algo")
+        // || p.levelId?.includes("python") // MOCK DATA: Commented out
     );
     const algoSum = algoRecords.reduce(
       (sum, r) => sum + (Number(r.progressPercent) || 0),

@@ -17,15 +17,26 @@ export default function ProtectedRoute({ children, allowedRoles }) {
 
   if (allowedRoles && allowedRoles.length > 0) {
     const rawRole = (user.role || "").toLowerCase();
-    const role = rawRole === "child" ? "student" : rawRole;
+    const role =
+      rawRole === "child"
+        ? "student"
+        : rawRole === "superadmin" || rawRole === "super_admin"
+        ? "admin"
+        : rawRole;
 
-    if (!allowedRoles.includes(role)) {
-      return (
-        <Navigate
-          to={role === "parent" ? "/parent/dashboard" : "/student/dashboard"}
-          replace
-        />
-      );
+    const normalizedAllowed = allowedRoles.map((r) =>
+      r === "superadmin" || r === "super_admin" ? "admin" : r.toLowerCase()
+    );
+
+    if (!normalizedAllowed.includes(role)) {
+      const fallbackTarget =
+        role === "admin"
+          ? "/admin"
+          : role === "parent"
+          ? "/parent/dashboard"
+          : "/student/dashboard";
+
+      return <Navigate to={fallbackTarget} replace />;
     }
   }
 

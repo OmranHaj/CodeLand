@@ -141,7 +141,8 @@ export default function AlgorithmLab() {
         saveAlgoWorldProgress(userId, nextProgress);
         recordLessonCompletion(currentSector.id, currentLesson.id, 75, "lesson");
 
-        // Sync legacy python keys
+        /*
+        // MOCK DATA: Commented out legacy python storage sync
         try {
           const oldPython = readStored(`codeland_python_${userId}`, []);
           const sIdx = ALGO_SECTORS.findIndex((s) => s.id === currentSector.id);
@@ -151,6 +152,7 @@ export default function AlgorithmLab() {
         } catch {
           // ignore
         }
+        */
       }
     } else {
       // Robot Sad Reaction

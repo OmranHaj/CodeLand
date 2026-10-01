@@ -49,6 +49,8 @@ const CATEGORY_THEMES = {
     file: "script.js",
     matrix: "RUNTIME",
   },
+  /*
+  // MOCK DATA: Commented out Python theme because Python is not in the database
   Python: {
     accent: "#38bdf8",
     secondary: "#10b981",
@@ -57,6 +59,7 @@ const CATEGORY_THEMES = {
     file: "main.py",
     matrix: "LOGIC",
   },
+  */
   "C++": {
     accent: "#818cf8",
     secondary: "#3b82f6",

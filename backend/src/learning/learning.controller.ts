@@ -1,11 +1,14 @@
 import {
   Body,
   Controller,
+  Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   Post,
+  Put,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -144,5 +147,76 @@ export class LearningController {
       success: true,
       newlyAwarded,
     };
+  }
+
+  /**
+   * Endpoint: GET /learning/admin/curriculum
+   * Retrieves all curriculum tracks, levels, and lessons for the admin portal.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('admin/curriculum')
+  @HttpCode(HttpStatus.OK)
+  async getAdminCurriculum(@Request() req: RequestWithUser) {
+    const role = (req.user?.role || '').toUpperCase();
+    if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
+      throw new ForbiddenException('Admin access required');
+    }
+    return this.learningService.getAdminCurriculum();
+  }
+
+  /**
+   * Endpoint: PUT /learning/admin/lessons/:lessonId
+   * Updates lesson details and blocks in the database.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Put('admin/lessons/:lessonId')
+  @HttpCode(HttpStatus.OK)
+  async updateLesson(
+    @Request() req: RequestWithUser,
+    @Param('lessonId') lessonId: string,
+    @Body() body: any,
+  ) {
+    const role = (req.user?.role || '').toUpperCase();
+    if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
+      throw new ForbiddenException('Admin access required');
+    }
+    return this.learningService.updateLesson(lessonId, body);
+  }
+
+  /**
+   * Endpoint: POST /learning/admin/levels/:levelId/lessons
+   * Creates a new lesson in the database under the given level.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('admin/levels/:levelId/lessons')
+  @HttpCode(HttpStatus.CREATED)
+  async createLesson(
+    @Request() req: RequestWithUser,
+    @Param('levelId') levelId: string,
+    @Body() body: any,
+  ) {
+    const role = (req.user?.role || '').toUpperCase();
+    if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
+      throw new ForbiddenException('Admin access required');
+    }
+    return this.learningService.createLesson(levelId, body);
+  }
+
+  /**
+   * Endpoint: DELETE /learning/admin/lessons/:lessonId
+   * Deletes a lesson from the database.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Delete('admin/lessons/:lessonId')
+  @HttpCode(HttpStatus.OK)
+  async deleteLesson(
+    @Request() req: RequestWithUser,
+    @Param('lessonId') lessonId: string,
+  ) {
+    const role = (req.user?.role || '').toUpperCase();
+    if (role !== 'ADMIN' && role !== 'SUPERADMIN') {
+      throw new ForbiddenException('Admin access required');
+    }
+    return this.learningService.deleteLesson(lessonId);
   }
 }

@@ -8,7 +8,9 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test:hub": "node --test tests/learningHub.test.mjs"
+    "test:hub": "node --test tests/learningHub.test.mjs",
+    "test:admin": "node --test tests/adminLessonService.test.mjs",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@babel/standalone": "^8.0.5",

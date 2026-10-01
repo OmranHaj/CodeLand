@@ -48,7 +48,9 @@ export const learningPaths = [
   },
 
   {
-    id: "python-explorer",
+    // MOCK DATA: Commented out mock id python-explorer to match PostgreSQL database track
+    // id: "python-explorer",
+    id: "algorithm-master",
 
     title: "Algorithm & Data Structures",
 
@@ -85,5 +87,9 @@ export const learningPaths = [
 ];
 
 export function getLearningPathById(pathId) {
-  return learningPaths.find((path) => path.id === pathId);
+  return learningPaths.find(
+    (path) =>
+      path.id === pathId ||
+      (pathId === "python-explorer" && path.id === "algorithm-master")
+  );
 }

@@ -14,6 +14,9 @@ export function getHomeRoute(user = getUser()) {
     return "/";
   }
   const role = (user.role || "").toLowerCase();
+  if (role === "admin" || role === "superadmin" || role === "super_admin") {
+    return "/admin";
+  }
   if (role === "parent") {
     return "/parent/dashboard";
   }

@@ -10,7 +10,10 @@ model User {
   id                                     String                @id @default(uuid())
   email                                  String                @unique
   name                                   String?
-  password                               String
+  password                               String?
+  googleId                               String?               @unique
+  githubId                               String?               @unique
+  avatar                                 String?
   role                                   Role                  @default(PARENT)
   parentCode                             String?               @unique
   parentId                               String?

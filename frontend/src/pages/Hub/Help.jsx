@@ -3,13 +3,13 @@ import { ArrowRight, CircleHelp, Mail, ShieldCheck } from "lucide-react";
 import HubLayout from "../../components/Hub/HubLayout";
 
 const questions = [
-  ["Where should I start?", "Start with Web Creator if you want to build websites, C++ Developer if you enjoy logic and systems, or Python Explorer for a friendly introduction to programming. Choose a path, open the first world, and follow the lessons in order."],
+  ["Where should I start?", "Start with Web Creator if you want to build websites, C++ Developer if you enjoy logic and systems, or Algorithm & Data Structures for visual problem solving. Choose a path, open the first world, and follow the lessons in order."],
   ["How does progress work?", "Lessons and challenges save progress in this browser. Complete each world's required work to unlock the next one. Your overview and achievements use those saved results. Clearing your browser data or using another device will not carry over this local progress."],
-  ["Do I need to install anything?", "You can read lessons, explore worlds and solve the practice arena challenges right in your browser. Python Explorer uses guided code walkthroughs and output questions. It does not run a Python interpreter."],
+  ["Do I need to install anything?", "You can read lessons, explore worlds and solve the practice arena challenges right in your browser. All interactive 3D visualizations run seamlessly in modern web browsers."],
   ["How do parent and student accounts connect?", "Create a parent account to receive an invitation code. Use that code when registering the student account. During local development, linked accounts and learning progress are available in the same browser. Cross-device family reporting requires the backend service."],
   ["Why is a world locked?", "Worlds build on one another. Finish the previous world's lessons and challenges to unlock the next. You can always return to completed lessons to practice."],
   ["Can I explore before creating an account?", "Yes. Use the student preview from the login page or the learning workspace. Preview progress stays in a separate demo profile on this browser and is not transferred into a registered account."],
-  ["How are points and achievements awarded?", "Complete lesson activities to earn their listed XP. Each practice arena challenge earns 25 XP once, and each Python Explorer lesson earns 50 XP once. Repeating the same activity is great practice, but doesn't add duplicate points."],
+  ["How are points and achievements awarded?", "Complete lesson activities to earn their listed XP. Each practice arena challenge earns 25 XP once, and each curriculum lesson earns listed XP once. Repeating the same activity is great practice, but doesn't add duplicate points."],
 ];
 export default function Help() {
   const recovery = useLocation().pathname === "/forgot-password";

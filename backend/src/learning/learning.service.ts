@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -604,5 +604,165 @@ export class LearningService {
     await awardIfEligible('web-creator-apprentice', completedWebCore);
 
     return newlyAwarded;
+  }
+
+  /**
+   * Admin: Get all curriculum tracks and levels with all lessons from DB
+   */
+  async getAdminCurriculum() {
+    const tracks = await this.prisma.track.findMany({
+      include: {
+        levels: {
+          include: {
+            lessons: {
+              orderBy: { order: 'asc' },
+            },
+            challenges: {
+              orderBy: { order: 'asc' },
+            },
+          },
+          orderBy: { order: 'asc' },
+        },
+      },
+      orderBy: { order: 'asc' },
+    });
+
+    return tracks;
+  }
+
+  /**
+   * Admin: Update lesson in DB
+   */
+  async updateLesson(lessonId: string, updates: any) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lessonId);
+    let lesson = isUuid
+      ? await this.prisma.lesson.findUnique({ where: { id: lessonId } })
+      : await this.prisma.lesson.findFirst({ where: { slug: lessonId } });
+
+    if (!lesson && !isUuid) {
+      lesson = await this.prisma.lesson.findFirst({ where: { slug: lessonId } });
+    }
+
+    if (!lesson) {
+      throw new NotFoundException(`Lesson "${lessonId}" not found in database.`);
+    }
+
+    const dataToUpdate: any = {};
+    if (typeof updates.title === 'string') dataToUpdate.title = updates.title.trim();
+    if (typeof updates.subtitle === 'string') dataToUpdate.subtitle = updates.subtitle.trim();
+    if (typeof updates.description === 'string') dataToUpdate.description = updates.description.trim();
+    if (typeof updates.slug === 'string') dataToUpdate.slug = updates.slug.trim();
+    if (typeof updates.difficulty === 'string') dataToUpdate.difficulty = updates.difficulty.trim().toLowerCase();
+    if (typeof updates.status === 'string') dataToUpdate.status = updates.status.trim().toLowerCase();
+    if (Number.isFinite(Number(updates.order))) dataToUpdate.order = Number(updates.order);
+    if (Number.isFinite(Number(updates.xp))) dataToUpdate.xp = Math.max(0, Number(updates.xp));
+    if (Number.isFinite(Number(updates.estimatedMinutes)))
+      dataToUpdate.estimatedMinutes = Math.max(1, Number(updates.estimatedMinutes));
+    if (updates.blocks) dataToUpdate.blocks = updates.blocks;
+
+    if (typeof updates.code === 'string') {
+      const currentBlocks = Array.isArray(lesson.blocks) ? [...(lesson.blocks as any[])] : [];
+      const codeBlockIdx = currentBlocks.findIndex((b: any) => b && (b.type === 'code' || b.code !== undefined));
+      if (codeBlockIdx >= 0) {
+        currentBlocks[codeBlockIdx] = { ...currentBlocks[codeBlockIdx], code: updates.code };
+      } else {
+        currentBlocks.push({ id: `block-code-${Date.now()}`, type: 'code', code: updates.code });
+      }
+      dataToUpdate.blocks = currentBlocks;
+    }
+
+    const updated = await this.prisma.lesson.update({
+      where: { id: lesson.id },
+      data: dataToUpdate,
+    });
+
+    return updated;
+  }
+
+  /**
+   * Admin: Create a new lesson in DB
+   */
+  async createLesson(levelSlugOrId: string, lessonData: any) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(levelSlugOrId);
+    let level = isUuid
+      ? await this.prisma.level.findUnique({ where: { id: levelSlugOrId } })
+      : await this.prisma.level.findFirst({ where: { slug: levelSlugOrId } });
+
+    if (!level) {
+      throw new NotFoundException(`Level "${levelSlugOrId}" not found in database.`);
+    }
+
+    const title = (lessonData.title || '').trim();
+    if (!title) throw new BadRequestException('Lesson title is required.');
+
+    const slug = (
+      lessonData.slug ||
+      title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') ||
+      `lesson-${Date.now()}`
+    ).trim();
+
+    const currentCount = await this.prisma.lesson.count({
+      where: { levelId: level.id },
+    });
+
+    const order =
+      Number.isFinite(Number(lessonData.order)) && Number(lessonData.order) > 0
+        ? Number(lessonData.order)
+        : currentCount + 1;
+
+    const blocks =
+      Array.isArray(lessonData.blocks) && lessonData.blocks.length > 0
+        ? lessonData.blocks
+        : [
+            {
+              id: `text-${Date.now()}`,
+              type: 'text',
+              title,
+              content: lessonData.description || 'Welcome to this lesson.',
+            },
+            ...(lessonData.code
+              ? [{ id: `code-${Date.now()}`, type: 'code', code: lessonData.code }]
+              : []),
+          ];
+
+    const created = await this.prisma.lesson.create({
+      data: {
+        levelId: level.id,
+        title,
+        subtitle: lessonData.subtitle || '',
+        description: lessonData.description || '',
+        slug,
+        order,
+        xp: Number.isFinite(Number(lessonData.xp)) ? Math.max(0, Number(lessonData.xp)) : 50,
+        estimatedMinutes: Number.isFinite(Number(lessonData.estimatedMinutes))
+          ? Math.max(1, Number(lessonData.estimatedMinutes))
+          : 8,
+        difficulty: (lessonData.difficulty || 'beginner').toLowerCase(),
+        status: (lessonData.status || 'published').toLowerCase(),
+        blocks,
+      },
+    });
+
+    return created;
+  }
+
+  /**
+   * Admin: Delete a lesson from DB
+   */
+  async deleteLesson(lessonId: string) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lessonId);
+    let lesson = isUuid
+      ? await this.prisma.lesson.findUnique({ where: { id: lessonId } })
+      : await this.prisma.lesson.findFirst({ where: { slug: lessonId } });
+
+    if (!lesson) {
+      throw new NotFoundException(`Lesson "${lessonId}" not found in database.`);
+    }
+
+    await this.prisma.lesson.delete({
+      where: { id: lesson.id },
+    });
+
+    return { success: true, deletedLesson: lesson };
   }
 }

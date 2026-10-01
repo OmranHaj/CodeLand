@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import loginVisual from "../../assets/images/login-visual.png";
@@ -16,7 +16,7 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub, FaDiscord } from "react-icons/fa";
 
-import { loginUser } from "../../services/authService";
+import { loginUser, loginWithGoogle, loginWithGithub } from "../../services/authService";
 
 import styles from "./Login.module.css";
 import { getHomeRoute, startPreview } from "../../services/learningHub";
@@ -62,6 +62,75 @@ function Login() {
   const [isSwapped, setIsSwapped] = useState(false);
 
   /* ====================================================== */
+  /* ====================================================== */
+  /* REDIRECT HANDLER */
+  /* ====================================================== */
+
+  const handleAuthSuccess = (data) => {
+    const rawRole = (data?.user?.role || "").toLowerCase();
+    const role = rawRole === "child" ? "student" : rawRole;
+    localStorage.setItem("codeland_current_user", JSON.stringify(data.user));
+    const fromPath = location.state?.from?.pathname;
+
+    /*
+      Super Admin account
+    */
+    if (role === "admin" || role === "superadmin" || role === "super_admin") {
+      navigate(fromPath || "/admin", {
+        replace: true,
+      });
+      return;
+    }
+
+    /*
+      Parent account
+    */
+    if (role === "parent") {
+      const target =
+        fromPath && !fromPath.startsWith("/student") && !fromPath.startsWith("/admin")
+          ? fromPath
+          : "/parent/dashboard";
+
+      navigate(target, {
+        replace: true,
+      });
+      return;
+    }
+
+    /*
+      Student account
+    */
+    if (role === "student") {
+      if (fromPath && !fromPath.startsWith("/parent") && !fromPath.startsWith("/admin")) {
+        navigate(fromPath, {
+          replace: true,
+        });
+        return;
+      }
+
+      const activePath = localStorage.getItem(
+        `codeland_active_path_${data.user.id}`,
+      );
+
+      if (activePath) {
+        navigate("/student/dashboard", {
+          replace: true,
+        });
+        return;
+      }
+
+      navigate("/student/choose-path", {
+        replace: true,
+      });
+      return;
+    }
+
+    navigate(fromPath || "/student/dashboard", {
+      replace: true,
+    });
+  };
+
+  /* ====================================================== */
   /* LOGIN */
   /* ====================================================== */
 
@@ -75,7 +144,6 @@ function Login() {
 
     if (!normalizedEmail || !password) {
       setError("Please enter your email and password.");
-
       return;
     }
 
@@ -87,69 +155,111 @@ function Login() {
         password,
       });
 
-      const role = data?.user?.role;
-      localStorage.setItem("codeland_current_user", JSON.stringify(data.user));
-      const fromPath = location.state?.from?.pathname;
-
-      /*
-        Parent account
-      */
-
-      if (role === "parent") {
-        const target =
-          fromPath && !fromPath.startsWith("/student")
-            ? fromPath
-            : "/parent/dashboard";
-
-        navigate(target, {
-          replace: true,
-        });
-
-        return;
-      }
-
-      /*
-        Student account
-      */
-
-      if (role === "student") {
-        if (fromPath && !fromPath.startsWith("/parent")) {
-          navigate(fromPath, {
-            replace: true,
-          });
-
-          return;
-        }
-
-        const activePath = localStorage.getItem(
-          `codeland_active_path_${data.user.id}`,
-        );
-
-        if (activePath) {
-          navigate("/student/dashboard", {
-            replace: true,
-          });
-
-          return;
-        }
-
-        navigate("/student/choose-path", {
-          replace: true,
-        });
-
-        return;
-      }
-
-      /*
-        Unknown role
-      */
-
-      throw new Error("Unable to determine your account type.");
+      handleAuthSuccess(data);
     } catch (err) {
       setError(err.message || "Unable to log in. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  /* ====================================================== */
+  /* GOOGLE SIGN-IN */
+  /* ====================================================== */
+
+  const handleGoogleLogin = () => {
+    setError("");
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+    if (!clientId) {
+      setError(
+        "Google Sign-In is ready! To connect real Google accounts, please add your Google Client ID into frontend/.env (VITE_GOOGLE_CLIENT_ID=your-id.apps.googleusercontent.com)."
+      );
+      return;
+    }
+
+    if (typeof window === "undefined" || !window.google?.accounts?.id) {
+      setError("Google Sign-In is still loading. Please try again in a moment.");
+      return;
+    }
+
+    try {
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response) => {
+          if (!response.credential) {
+            setError("Google did not return credentials.");
+            return;
+          }
+          setLoading(true);
+          try {
+            const data = await loginWithGoogle(response.credential);
+            handleAuthSuccess(data);
+          } catch (err) {
+            setError(err.message || "Failed to log in with Google.");
+          } finally {
+            setLoading(false);
+          }
+        },
+      });
+
+      window.google.accounts.id.prompt();
+    } catch (err) {
+      setError(err.message || "Failed to initiate Google sign-in.");
+    }
+  };
+
+  /* ====================================================== */
+  /* GITHUB OAUTH CALLBACK HANDLER */
+  /* ====================================================== */
+
+  const processedGithubCodeRef = useRef(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const githubCode = params.get("code");
+    if (!githubCode) return;
+
+    // Prevent duplicate execution caused by React 18 StrictMode in development
+    if (processedGithubCodeRef.current === githubCode) return;
+    processedGithubCodeRef.current = githubCode;
+
+    // Clear code from URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    setLoading(true);
+    setError("");
+
+    loginWithGithub(githubCode)
+      .then((data) => {
+        handleAuthSuccess(data);
+      })
+      .catch((err) => {
+        setError(err?.message || "Failed to log in with GitHub.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [location.search]);
+
+  /* ====================================================== */
+  /* GITHUB SIGN-IN */
+  /* ====================================================== */
+
+  const handleGithubLogin = () => {
+    setError("");
+    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+
+    if (!clientId) {
+      setError(
+        "GitHub Sign-In is ready! To connect real GitHub accounts, please add your GitHub Client ID into frontend/.env (VITE_GITHUB_CLIENT_ID=your-client-id)."
+      );
+      return;
+    }
+
+    const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
+    const githubUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=read:user%20user:email&redirect_uri=${redirectUri}`;
+    window.location.href = githubUrl;
   };
 
   /* ====================================================== */
@@ -329,7 +439,7 @@ function Login() {
           <div className={styles.divider}>
             <span />
 
-            <p>social sign-in · coming soon</p>
+            <p>or continue with</p>
 
             <span />
           </div>
@@ -343,7 +453,9 @@ function Login() {
             <button
               type="button"
               className={styles.socialButton}
-              aria-label="Google sign-in is not connected yet" disabled title="Social sign-in is not connected yet"
+              onClick={handleGoogleLogin}
+              title="Sign in with Google"
+              id="google-signin-btn"
             >
               <FcGoogle size={24} />
 
@@ -353,7 +465,9 @@ function Login() {
             <button
               type="button"
               className={styles.socialButton}
-              aria-label="GitHub sign-in is not connected yet" disabled title="Social sign-in is not connected yet"
+              onClick={handleGithubLogin}
+              title="Sign in with GitHub"
+              id="github-signin-btn"
             >
               <FaGithub size={23} />
 

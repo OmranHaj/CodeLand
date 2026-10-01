@@ -27,7 +27,8 @@ import styles from "./ChoosePath.module.css";
 const pathIcons = {
   "web-creator": Code2,
   "cpp-developer": Cpu,
-  "python-explorer": Terminal,
+  // "python-explorer": Terminal, // MOCK DATA: Commented out because Python is not in PostgreSQL database
+  "algorithm-master": Terminal,
 };
 
 /* ====================================================== */
@@ -70,7 +71,10 @@ const displayPaths = learningPaths.map((path, index) =>
 );
 
 function getPathRoute(pathId) {
-  if (pathId === "python-explorer") return "/student/python-world";
+  // if (pathId === "python-explorer") return "/student/python-world"; // MOCK DATA: Commented out
+  if (pathId === "algorithm-master" || pathId === "python-explorer") {
+    return "/student/python-world";
+  }
   if (pathId === "cpp-developer") {
     return "/student/cpp-world";
   }

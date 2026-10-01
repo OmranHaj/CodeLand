@@ -477,8 +477,17 @@ function HTMLFoundations() {
 
     loadContent();
 
+    const handleAdminUpdate = () => {
+      loadContent();
+    };
+
+    window.addEventListener("codeland:admin-update", handleAdminUpdate);
+    window.addEventListener("codeland:update", handleAdminUpdate);
+
     return () => {
       cancelled = true;
+      window.removeEventListener("codeland:admin-update", handleAdminUpdate);
+      window.removeEventListener("codeland:update", handleAdminUpdate);
     };
   }, []);
 
@@ -523,7 +532,7 @@ function HTMLFoundations() {
   };
 
   const activeUnit = useMemo(
-    () => units.find((unit) => unit.id === activeUnitId) || null,
+    () => units.find((unit) => unit.id === activeUnitId) || units[0] || null,
     [units, activeUnitId],
   );
 

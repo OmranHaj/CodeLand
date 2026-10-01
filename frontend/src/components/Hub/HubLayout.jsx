@@ -34,7 +34,6 @@ export default function HubLayout({ children, title = "Learning space" }) {
   const [, refresh] = useState(0);
   const user = getUser();
   const profile = getProfile(user);
-  const parent = user?.role === "parent";
 
   useEffect(() => {
     const sync = () => refresh((n) => n + 1);
@@ -50,6 +49,11 @@ export default function HubLayout({ children, title = "Learning space" }) {
     return () => window.removeEventListener("keydown", close);
   }, []);
 
+  const rawRole = (user?.role || "").toLowerCase();
+  const isAdmin =
+    rawRole === "admin" || rawRole === "superadmin" || rawRole === "super_admin";
+  const parent = rawRole === "parent";
+
   const studentLinks = [
     ["/student/dashboard", "Overview", LayoutDashboard],
     ["/courses", "Explore courses", Compass],
@@ -64,7 +68,15 @@ export default function HubLayout({ children, title = "Learning space" }) {
     ["/parent/guide", "Parent Guide & Safety", ShieldCheck],
   ];
 
-  const links = parent ? parentLinks : studentLinks;
+  const adminLinks = [
+    ["/admin", "Curriculum Studio", ShieldCheck],
+    ["/courses", "Explore Courses", Compass],
+    ["/challenges", "Practice Arena", Code2],
+    ["/student/dashboard", "Student View", LayoutDashboard],
+    ["/parent/dashboard", "Parent View", Users],
+  ];
+
+  const links = isAdmin ? adminLinks : parent ? parentLinks : studentLinks;
 
   return (
     <div className="hub">
@@ -96,7 +108,11 @@ export default function HubLayout({ children, title = "Learning space" }) {
         </Link>
 
         <span className="hub-nav-label">
-          {parent ? "PARENT OBSERVATORY" : "YOUR LEARNING SPACE"}
+          {isAdmin
+            ? "SUPER ADMIN COMMAND"
+            : parent
+            ? "PARENT OBSERVATORY"
+            : "YOUR LEARNING SPACE"}
         </span>
 
         <nav aria-label="Learning navigation">
@@ -109,12 +125,37 @@ export default function HubLayout({ children, title = "Learning space" }) {
             >
               <Icon size={19} />
               <span>{label}</span>
+              {to === "/admin" && (
+                <span
+                  style={{
+                    fontSize: "9px",
+                    fontWeight: 800,
+                    color: "#06b6d4",
+                    background: "rgba(6, 182, 212, 0.15)",
+                    border: "1px solid rgba(6, 182, 212, 0.35)",
+                    padding: "2px 6px",
+                    borderRadius: "4px",
+                    marginLeft: "auto",
+                  }}
+                >
+                  PREVIEW
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
 
         <div className="hub-side-bottom">
-          {parent ? (
+          {isAdmin ? (
+            <div className="hub-side-card hub-card-3d">
+              <ShieldCheck size={21} color="#06b6d4" />
+              <strong>Super Admin Portal</strong>
+              <p>Curate lessons, inspect course tracks, and manage curriculum.</p>
+              <Link to="/admin">
+                Open Studio <ArrowUpRight size={16} />
+              </Link>
+            </div>
+          ) : parent ? (
             <div className="hub-side-card hub-card-3d">
               <Heart size={21} color="#f43f5e" />
               <strong>Every Step Needs Encouragement</strong>
@@ -188,6 +229,20 @@ export default function HubLayout({ children, title = "Learning space" }) {
           </div>
 
           <div className="hub-top-actions">
+            {isAdmin && (
+              <span
+                className="hub-status"
+                style={{
+                  borderColor: "rgba(6, 182, 212, 0.4)",
+                  color: "#22d3ee",
+                  gap: "6px",
+                }}
+              >
+                <ShieldCheck size={13} color="#06b6d4" />
+                <span>Super Admin</span>
+              </span>
+            )}
+
             <span className="hub-status">
               <i />
               {user?.isDemo ? "Preview mode" : "Keep exploring"}

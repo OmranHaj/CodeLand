@@ -14,6 +14,7 @@ import cppObjectForgeContent from "../data/cppObjectForgeContent";
 import cppStlCommandContent from "../data/cppStlCommandContent";
 import cppFinalSystemContent from "../data/cppFinalSystemContent";
 import { apiRequest } from "./api";
+import { getCourseLessons } from "./adminLessonService.js";
 
 /* ====================================================== */
 /* CONFIG */
@@ -88,15 +89,26 @@ function normalizeLevelContent(content) {
     return null;
   }
 
-  const lessons = getPublishedItems(sortByOrder(content.lessons || []));
+  const levelId = content.id || content.slug;
+  let rawLessons = content.lessons || [];
 
+  if (levelId) {
+    try {
+      const overlaid = getCourseLessons(levelId);
+      if (Array.isArray(overlaid) && overlaid.length > 0) {
+        rawLessons = overlaid;
+      }
+    } catch (err) {
+      console.warn("[CodeLand Admin] Error applying lesson overlay:", err);
+    }
+  }
+
+  const lessons = getPublishedItems(sortByOrder(rawLessons));
   const challenges = getPublishedItems(sortByOrder(content.challenges || []));
 
   return {
     ...content,
-
     lessons,
-
     challenges,
   };
 }
@@ -146,12 +158,15 @@ async function requestLevelContent(levelId) {
     );
 
     if (!response.ok) {
+      /*
+      // MOCK DATA: Commented out to serve only from PostgreSQL database
       if (MOCK_LEVEL_CONTENT[normalizedLevelId]) {
         console.warn(
           `[CodeLand] Backend learning endpoint not found for "${normalizedLevelId}". Falling back to local content.`,
         );
         return getMockLevelContent(normalizedLevelId);
       }
+      */
 
       let message = "Unable to load learning content.";
 
@@ -172,6 +187,8 @@ async function requestLevelContent(levelId) {
 
     return normalizeLevelContent(content);
   } catch (error) {
+    /*
+    // MOCK DATA: Commented out to serve only from PostgreSQL database
     if (MOCK_LEVEL_CONTENT[normalizedLevelId]) {
       console.warn(
         `[CodeLand] Failed to connect to backend for "${normalizedLevelId}". Falling back to local content.`,
@@ -179,6 +196,7 @@ async function requestLevelContent(levelId) {
       );
       return getMockLevelContent(normalizedLevelId);
     }
+    */
 
     throw error;
   }
@@ -211,12 +229,12 @@ export async function getLevelContent(levelId) {
   }
 
   /*
+    // MOCK DATA: Commented out to serve only from PostgreSQL database
     Global mock mode.
+    if (USE_MOCK_API || getUser()?.isDemo) {
+      return getMockLevelContent(normalizedLevelId);
+    }
   */
-
-  if (USE_MOCK_API || getUser()?.isDemo) {
-    return getMockLevelContent(normalizedLevelId);
-  }
 
   /*
     Otherwise use the real backend API.

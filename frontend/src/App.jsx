@@ -41,6 +41,7 @@ const ParentReports = lazy(() => import("./pages/Hub/ParentReports"));
 const ParentGuide = lazy(() => import("./pages/Hub/ParentGuide"));
 const Help = lazy(() => import("./pages/Hub/Help"));
 const NotFound = lazy(() => import("./pages/Hub/NotFound"));
+const AdminStudio = lazy(() => import("./pages/Admin/AdminStudio"));
 
 function subscribeSession(callback) {
   window.addEventListener("codeland:update", callback);
@@ -84,6 +85,34 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/help" element={<Help />} />
             <Route path="/forgot-password" element={<Help />} />
+
+            {/* ================================================= */}
+            {/* SUPER ADMIN DEDICATED ROUTES */}
+            {/* ================================================= */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+                  <AdminStudio />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/courses"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+                  <AdminStudio />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/courses/:courseId"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+                  <AdminStudio />
+                </ProtectedRoute>
+              }
+            />
 
             {/* ================================================= */}
             {/* AUTHENTICATED ROUTES (STUDENT & PARENT) */}
