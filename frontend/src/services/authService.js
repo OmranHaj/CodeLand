@@ -92,6 +92,34 @@ export async function loginWithGithub(code, role) {
 }
 
 /* ====================================================== */
+/* DISCORD LOGIN */
+/* ====================================================== */
+
+export async function loginWithDiscord(code, role, redirectUri) {
+  const data = await apiRequest("/auth/discord", {
+    method: "POST",
+    body: JSON.stringify({ code, role, redirectUri }),
+  });
+
+  if (data?.accessToken) {
+    localStorage.setItem("codeland_token", data.accessToken);
+  }
+
+  if (data?.user) {
+    const rawRole = (data.user.role || "").toLowerCase();
+    const normalizedUser = {
+      ...data.user,
+      role: rawRole === "child" ? "student" : rawRole,
+      inviteCode: data.user.parentCode || data.user.inviteCode,
+      fullName: data.user.name || data.user.fullName,
+    };
+    return { ...data, user: normalizedUser };
+  }
+
+  return data;
+}
+
+/* ====================================================== */
 /* REGISTER PARENT */
 /* ====================================================== */
 

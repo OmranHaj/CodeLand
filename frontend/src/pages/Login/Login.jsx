@@ -16,7 +16,7 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub, FaDiscord } from "react-icons/fa";
 
-import { loginUser, loginWithGoogle, loginWithGithub } from "../../services/authService";
+import { loginUser, loginWithGoogle, loginWithGithub, loginWithDiscord } from "../../services/authService";
 
 import styles from "./Login.module.css";
 import { getHomeRoute, startPreview } from "../../services/learningHub";
@@ -210,19 +210,20 @@ function Login() {
   };
 
   /* ====================================================== */
-  /* GITHUB OAUTH CALLBACK HANDLER */
+  /* OAUTH CALLBACK HANDLER (GITHUB & DISCORD) */
   /* ====================================================== */
 
-  const processedGithubCodeRef = useRef(null);
+  const processedOAuthCodeRef = useRef(null);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const githubCode = params.get("code");
-    if (!githubCode) return;
+    const code = params.get("code");
+    const state = params.get("state");
+    if (!code) return;
 
     // Prevent duplicate execution caused by React 18 StrictMode in development
-    if (processedGithubCodeRef.current === githubCode) return;
-    processedGithubCodeRef.current = githubCode;
+    if (processedOAuthCodeRef.current === code) return;
+    processedOAuthCodeRef.current = code;
 
     // Clear code from URL
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -230,12 +231,17 @@ function Login() {
     setLoading(true);
     setError("");
 
-    loginWithGithub(githubCode)
+    const isDiscord = state === "discord";
+    const authPromise = isDiscord
+      ? loginWithDiscord(code, undefined, `${window.location.origin}/login`)
+      : loginWithGithub(code);
+
+    authPromise
       .then((data) => {
         handleAuthSuccess(data);
       })
       .catch((err) => {
-        setError(err?.message || "Failed to log in with GitHub.");
+        setError(err?.message || `Failed to log in with ${isDiscord ? "Discord" : "GitHub"}.`);
       })
       .finally(() => {
         setLoading(false);
@@ -258,8 +264,28 @@ function Login() {
     }
 
     const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
-    const githubUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=read:user%20user:email&redirect_uri=${redirectUri}`;
+    const githubUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=read:user%20user:email&redirect_uri=${redirectUri}&state=github`;
     window.location.href = githubUrl;
+  };
+
+  /* ====================================================== */
+  /* DISCORD SIGN-IN */
+  /* ====================================================== */
+
+  const handleDiscordLogin = () => {
+    setError("");
+    const clientId = import.meta.env.VITE_DISCORD_CLIENT_ID;
+
+    if (!clientId) {
+      setError(
+        "Discord Sign-In is ready! To connect real Discord accounts, please add your Discord Client ID into frontend/.env (VITE_DISCORD_CLIENT_ID=your-discord-client-id)."
+      );
+      return;
+    }
+
+    const redirectUri = encodeURIComponent(`${window.location.origin}/login`);
+    const discordUrl = `https://discord.com/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}&scope=identify%20email&state=discord`;
+    window.location.href = discordUrl;
   };
 
   /* ====================================================== */
@@ -477,7 +503,9 @@ function Login() {
             <button
               type="button"
               className={styles.socialButton}
-              aria-label="Discord sign-in is not connected yet" disabled title="Social sign-in is not connected yet"
+              onClick={handleDiscordLogin}
+              title="Sign in with Discord"
+              id="discord-signin-btn"
             >
               <FaDiscord size={24} />
 

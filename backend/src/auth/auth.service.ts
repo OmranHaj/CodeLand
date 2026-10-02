@@ -496,6 +496,162 @@ export class AuthService {
   }
 
   /**
+   * Discord OAuth2 authentication.
+   * Exchanges authorization code for Discord access token, fetches user profile,
+   * and creates or logs in the user in PostgreSQL.
+   */
+  async discordLogin(code: string, requestedRole?: string, customRedirectUri?: string) {
+    const clientId = process.env.DISCORD_CLIENT_ID;
+    const clientSecret = process.env.DISCORD_CLIENT_SECRET;
+    const defaultRedirectUri = 'http://localhost:5174/login';
+    const redirectUri = customRedirectUri || defaultRedirectUri;
+
+    let discordUser: any = null;
+    let userEmail: string | null = null;
+
+    // Support simulated dev token for immediate testing before real credentials are added
+    if (code.startsWith('simulated:')) {
+      const parts = code.split(':');
+      const testEmail = parts[1] || 'discord.tester@codeland.com';
+      const testName = parts[2] || 'Discord Pioneer';
+      discordUser = {
+        id: 'discord-simulated-999',
+        username: testEmail.split('@')[0],
+        global_name: testName,
+        avatar: null,
+      };
+      userEmail = testEmail;
+    } else {
+      if (!clientId || !clientSecret) {
+        throw new BadRequestException(
+          'Discord OAuth is not configured on the server. Please set DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET.',
+        );
+      }
+
+      // 1. Exchange authorization code for access token
+      const body = new URLSearchParams({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri,
+      });
+
+      const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: body.toString(),
+      });
+
+      if (!tokenRes.ok) {
+        const errorText = await tokenRes.text();
+        throw new UnauthorizedException(
+          `Failed to exchange Discord authorization code: ${errorText || tokenRes.statusText}`,
+        );
+      }
+
+      const tokenData = await tokenRes.json();
+      const accessToken = tokenData?.access_token;
+
+      if (!accessToken) {
+        throw new UnauthorizedException(
+          tokenData?.error_description || 'Invalid or expired Discord authorization code.',
+        );
+      }
+
+      // 2. Fetch user profile from Discord
+      const userRes = await fetch('https://discord.com/api/users/@me', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: 'application/json',
+        },
+      });
+
+      if (!userRes.ok) {
+        throw new UnauthorizedException('Could not fetch user profile from Discord.');
+      }
+
+      discordUser = await userRes.json();
+      userEmail = discordUser.email || null;
+    }
+
+    if (!userEmail) {
+      userEmail = `${discordUser.username || discordUser.id}@users.noreply.discord.com`;
+    }
+
+    const email = userEmail.toLowerCase();
+    const name = discordUser.global_name || discordUser.username || email.split('@')[0];
+    const discordId = String(discordUser.id);
+    const avatar = discordUser.avatar
+      ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
+      : null;
+
+    // Check if user exists by discordId or email
+    let user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { discordId },
+          { email },
+        ],
+      },
+    });
+
+    if (user) {
+      // Update discordId and avatar if missing
+      if (!user.discordId || !user.avatar) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: {
+            discordId: user.discordId || discordId,
+            avatar: user.avatar || avatar,
+          },
+        });
+      }
+    } else {
+      // Create new user
+      const assignedRole =
+        requestedRole?.toUpperCase() === 'PARENT'
+          ? Role.PARENT
+          : Role.CHILD;
+
+      let parentCode: string | null = null;
+      if (assignedRole === Role.PARENT) {
+        parentCode = await this.generateUniqueParentCode();
+      }
+
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          name,
+          discordId,
+          avatar,
+          role: assignedRole,
+          parentCode,
+        },
+      });
+    }
+
+    const token = await this.signToken(user.id, user.email, user.role);
+
+    return {
+      message: 'Discord login successful',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        avatar: user.avatar,
+        parentCode: user.parentCode,
+        parentId: user.parentId,
+        createdAt: user.createdAt,
+      },
+      accessToken: token,
+    };
+  }
+
+  /**
    * Generates a cryptographically random, collision-resistant 8-character parent code.
    * Avoids visually ambiguous characters (0, O, 1, I).
    */

@@ -13,6 +13,7 @@ model User {
   password                               String?
   googleId                               String?               @unique
   githubId                               String?               @unique
+  discordId                              String?               @unique
   avatar                                 String?
   role                                   Role                  @default(PARENT)
   parentCode                             String?               @unique

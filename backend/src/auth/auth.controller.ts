@@ -15,6 +15,7 @@ import { VerifyParentCodeDto } from './dto/verify-parent-code.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { GoogleLoginDto } from './dto/google-login.dto.js';
 import { GithubLoginDto } from './dto/github-login.dto.js';
+import { DiscordLoginDto } from './dto/discord-login.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 
 @Controller('auth')
@@ -89,6 +90,16 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async githubLogin(@Body() dto: GithubLoginDto) {
     return this.authService.githubLogin(dto.code, dto.role);
+  }
+
+  /**
+   * Endpoint: POST /auth/discord
+   * Verifies Discord OAuth code and logs in or creates user account.
+   */
+  @Post('discord')
+  @HttpCode(HttpStatus.OK)
+  async discordLogin(@Body() dto: DiscordLoginDto) {
+    return this.authService.discordLogin(dto.code, dto.role, dto.redirectUri);
   }
 
   /**
