@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
@@ -14,15 +16,20 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { RegisterParentDto } from './dto/register-parent.dto.js';
 import { RegisterChildDto } from './dto/register-child.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
+import { ResetPasswordDto } from './dto/reset-password.dto.js';
+import { EmailService } from './email.service.js';
 
 @Injectable()
 export class AuthService {
   // Salt rounds for bcrypt password hashing
   private readonly saltRounds = 10;
+  private readonly forgotPasswordRateLimits = new Map<string, { count: number; expiresAt: number }>();
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
   ) {}
 
   /**
@@ -60,12 +67,13 @@ export class AuthService {
         name: true,
         role: true,
         parentCode: true,
+        tokenVersion: true,
         createdAt: true,
       },
     });
 
     // Generate JWT token
-    const token = await this.signToken(user.id, user.email, user.role);
+    const token = await this.signToken(user.id, user.email, user.role, user.tokenVersion);
 
     return {
       message: 'Parent registered successfully',
@@ -167,12 +175,13 @@ export class AuthService {
         name: true,
         role: true,
         parentId: true,
+        tokenVersion: true,
         createdAt: true,
       },
     });
 
     // Generate JWT token
-    const token = await this.signToken(user.id, user.email, user.role);
+    const token = await this.signToken(user.id, user.email, user.role, user.tokenVersion);
 
     return {
       message: 'Child registered successfully and linked to parent',
@@ -194,13 +203,17 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password.');
     }
 
+    if (user.status === 'SUSPENDED') {
+      throw new UnauthorizedException('This account has been suspended. Please contact support.');
+    }
+
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password.');
     }
 
-    const token = await this.signToken(user.id, user.email, user.role);
+    const token = await this.signToken(user.id, user.email, user.role, user.tokenVersion);
 
     return {
       message: 'Login successful',
@@ -274,6 +287,9 @@ export class AuthService {
     });
 
     if (user) {
+      if (user.status === 'SUSPENDED') {
+        throw new UnauthorizedException('This account has been suspended. Please contact support.');
+      }
       // Update googleId and avatar if missing
       if (!user.googleId || !user.avatar) {
         user = await this.prisma.user.update({
@@ -308,7 +324,7 @@ export class AuthService {
       });
     }
 
-    const token = await this.signToken(user.id, user.email, user.role);
+    const token = await this.signToken(user.id, user.email, user.role, user.tokenVersion);
 
     return {
       message: 'Google login successful',
@@ -443,6 +459,9 @@ export class AuthService {
     });
 
     if (user) {
+      if (user.status === 'SUSPENDED') {
+        throw new UnauthorizedException('This account has been suspended. Please contact support.');
+      }
       // Update githubId and avatar if missing
       if (!user.githubId || !user.avatar) {
         user = await this.prisma.user.update({
@@ -477,7 +496,7 @@ export class AuthService {
       });
     }
 
-    const token = await this.signToken(user.id, user.email, user.role);
+    const token = await this.signToken(user.id, user.email, user.role, user.tokenVersion);
 
     return {
       message: 'GitHub login successful',
@@ -599,6 +618,9 @@ export class AuthService {
     });
 
     if (user) {
+      if (user.status === 'SUSPENDED') {
+        throw new UnauthorizedException('This account has been suspended. Please contact support.');
+      }
       // Update discordId and avatar if missing
       if (!user.discordId || !user.avatar) {
         user = await this.prisma.user.update({
@@ -633,7 +655,7 @@ export class AuthService {
       });
     }
 
-    const token = await this.signToken(user.id, user.email, user.role);
+    const token = await this.signToken(user.id, user.email, user.role, user.tokenVersion);
 
     return {
       message: 'Discord login successful',
@@ -682,13 +704,237 @@ export class AuthService {
   }
 
   /**
-   * Signs a JWT access token with user claims.
+   * Rate limits sensitive operations per key (IP or email).
+   * Default: maximum 5 requests per 15-minute rolling window.
    */
-  private async signToken(userId: string, email: string, role: Role): Promise<string> {
+  private checkRateLimit(key: string, maxAttempts = 5, windowMs = 15 * 60 * 1000): boolean {
+    const now = Date.now();
+    const record = this.forgotPasswordRateLimits.get(key);
+
+    if (!record || now > record.expiresAt) {
+      this.forgotPasswordRateLimits.set(key, { count: 1, expiresAt: now + windowMs });
+      return true;
+    }
+
+    if (record.count >= maxAttempts) {
+      return false;
+    }
+
+    record.count += 1;
+    return true;
+  }
+
+  /**
+   * Generates a password reset token and sends an email for local accounts.
+   * ALWAYS returns a generic success response to prevent email enumeration.
+   */
+  async forgotPassword(dto: ForgotPasswordDto, clientIp = '127.0.0.1') {
+    const email = dto.email.trim().toLowerCase();
+
+    // 1. Rate limiting by IP and by email
+    const ipAllowed = this.checkRateLimit(`ip:${clientIp}`, 5, 15 * 60 * 1000);
+    const emailAllowed = this.checkRateLimit(`email:${email}`, 5, 15 * 60 * 1000);
+
+    if (!ipAllowed || !emailAllowed) {
+      throw new HttpException(
+        'Too many password reset requests. Please wait a few minutes before trying again.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
+    const genericSuccess = {
+      success: true,
+      message: 'If an account exists for this email, a reset link has been sent.',
+    };
+
+    // 2. Find user by email
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      // Do not reveal that email does not exist
+      return genericSuccess;
+    }
+
+    // 3. Handle OAuth-only accounts (user has no local password)
+    if (!user.password) {
+      let provider = 'Google';
+      if (user.githubId) provider = 'GitHub';
+      else if (user.discordId) provider = 'Discord';
+
+      // Send informational reminder without revealing account type to the browser
+      this.emailService.sendOAuthLoginReminderEmail(user.email, provider).catch(() => {});
+      return genericSuccess;
+    }
+
+    // 4. Invalidate all previous active reset tokens for this user
+    await this.prisma.passwordResetToken.updateMany({
+      where: {
+        userId: user.id,
+        usedAt: null,
+      },
+      data: {
+        usedAt: new Date(),
+      },
+    });
+
+    // 5. Generate a cryptographically secure random token (32 bytes = 64 hex characters)
+    const rawToken = crypto.randomBytes(32).toString('hex');
+
+    // 6. Compute SHA-256 hash of the token to store in database
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    // 7. Token expires in 15 minutes
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    // 8. Save tokenHash in database
+    await this.prisma.passwordResetToken.create({
+      data: {
+        id: crypto.randomUUID(),
+        userId: user.id,
+        tokenHash,
+        expiresAt,
+      },
+    });
+
+    // 9. Build reset URL and dispatch email
+    const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5174').replace(/\/+$/, '');
+    const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
+
+    await this.emailService.sendPasswordResetEmail(user.email, resetUrl);
+
+    return genericSuccess;
+  }
+
+  /**
+   * Validates if a raw reset token is present, unexpired, and unused.
+   * Returns only a boolean valid indicator and message (no user details leaked).
+   */
+  async validateResetToken(rawToken: string) {
+    if (!rawToken || typeof rawToken !== 'string' || rawToken.trim() === '') {
+      return {
+        valid: false,
+        message: 'This reset link is invalid or has expired.',
+      };
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(rawToken.trim()).digest('hex');
+
+    const tokenRecord = await this.prisma.passwordResetToken.findUnique({
+      where: { tokenHash },
+    });
+
+    if (!tokenRecord || tokenRecord.usedAt !== null || tokenRecord.expiresAt < new Date()) {
+      return {
+        valid: false,
+        message: 'This reset link is invalid or has expired.',
+      };
+    }
+
+    return {
+      valid: true,
+    };
+  }
+
+  /**
+   * Resets the user's password using the verified reset token.
+   * Re-hashes password with bcrypt, marks token as used, and invalidates all other tokens.
+   */
+  async resetPassword(dto: ResetPasswordDto) {
+    const rawToken = dto.token?.trim();
+    if (!rawToken) {
+      throw new BadRequestException('Reset token is required.');
+    }
+
+    if (dto.password !== dto.confirmPassword) {
+      throw new BadRequestException('Passwords do not match.');
+    }
+
+    if (dto.password.length < 8) {
+      throw new BadRequestException('Password must be at least 8 characters long.');
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    const tokenRecord = await this.prisma.passwordResetToken.findUnique({
+      where: { tokenHash },
+      include: { user: true },
+    });
+
+    if (!tokenRecord || tokenRecord.usedAt !== null || tokenRecord.expiresAt < new Date()) {
+      throw new BadRequestException('This reset link is invalid or has expired. Please request a new one.');
+    }
+
+    // Hash the new password with bcrypt
+    const hashedPassword = await bcrypt.hash(dto.password, this.saltRounds);
+
+    const now = new Date();
+
+    // Atomically consume token, update user password, increment tokenVersion, and invalidate remaining tokens in a transaction
+    await this.prisma.$transaction(async (tx) => {
+      // 1. Atomic consumption with row-level lock and expiry check to prevent race conditions
+      const consumed = await tx.passwordResetToken.updateMany({
+        where: {
+          id: tokenRecord.id,
+          usedAt: null,
+          expiresAt: {
+            gt: now,
+          },
+        },
+        data: {
+          usedAt: now,
+        },
+      });
+
+      if (consumed.count !== 1) {
+        throw new BadRequestException('This reset link has already been used or expired.');
+      }
+
+      // 2. Update user's password and increment tokenVersion atomically to revoke all legacy JWTs
+      await tx.user.update({
+        where: { id: tokenRecord.userId },
+        data: {
+          password: hashedPassword,
+          tokenVersion: {
+            increment: 1,
+          },
+        },
+      });
+
+      // 3. Invalidate all other active reset tokens for this user
+      await tx.passwordResetToken.updateMany({
+        where: {
+          userId: tokenRecord.userId,
+          id: { not: tokenRecord.id },
+          usedAt: null,
+        },
+        data: {
+          usedAt: now,
+        },
+      });
+    });
+
+    // Send confirmation email that password was changed
+    if (tokenRecord.user?.email) {
+      this.emailService.sendPasswordChangedEmail(tokenRecord.user.email).catch(() => {});
+    }
+
+    return {
+      success: true,
+      message: 'Password updated successfully.',
+    };
+  }
+
+  /**
+   * Signs a JWT access token with user claims and tokenVersion.
+   */
+  private async signToken(userId: string, email: string, role: Role, tokenVersion = 0): Promise<string> {
     const payload = {
       sub: userId,
       email,
       role,
+      tokenVersion,
     };
 
     return this.jwtService.signAsync(payload);

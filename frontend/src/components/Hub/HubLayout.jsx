@@ -70,6 +70,7 @@ export default function HubLayout({ children, title = "Learning space" }) {
 
   const adminLinks = [
     ["/admin", "Curriculum Studio", ShieldCheck],
+    ["/admin/users", "User Management", Users],
     ["/courses", "Explore Courses", Compass],
     ["/challenges", "Practice Arena", Code2],
     ["/student/dashboard", "Student View", LayoutDashboard],

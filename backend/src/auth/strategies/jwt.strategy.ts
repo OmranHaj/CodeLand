@@ -7,6 +7,7 @@ export interface JwtPayload {
   sub: string;
   email: string;
   role: string;
+  tokenVersion?: number;
 }
 
 @Injectable()
@@ -29,6 +30,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         role: true,
         parentCode: true,
         parentId: true,
+        tokenVersion: true,
+        status: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -36,6 +39,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     if (!user) {
       throw new UnauthorizedException('User no longer exists or session is invalid');
+    }
+
+    // Check account status: reject suspended users immediately
+    if (user.status === 'SUSPENDED') {
+      throw new UnauthorizedException('This account has been suspended.');
+    }
+
+    // Strict security: Reject legacy tokens without tokenVersion or tokens whose version is outdated
+    if (payload.tokenVersion === undefined || user.tokenVersion !== payload.tokenVersion) {
+      throw new UnauthorizedException('Session expired or invalid. Please log in again.');
     }
 
     return user;

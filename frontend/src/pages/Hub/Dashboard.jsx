@@ -52,6 +52,7 @@ export default function Dashboard() {
     studentName,
     dailyGoal,
     totalXp,
+    streakDays,
     lessonsCount,
     challengesCount,
     worldsCompleted,
@@ -185,6 +186,7 @@ export default function Dashboard() {
       studentName: name,
       dailyGoal: goal,
       totalXp: xp,
+      streakDays: Number.isFinite(user.streakDays) ? user.streakDays : 0,
       lessonsCount: lessons,
       challengesCount: challenges,
       worldsCompleted: completedWorlds,
@@ -320,9 +322,9 @@ export default function Dashboard() {
 
   const stats = [
     [Zap, totalXp, "Total XP earned", "#a78bfa"],
+    [Flame, streakDays, "Day streak 🔥", "#f97316"],
     [BookOpen, lessonsCount, "Lessons completed", "#38bdf8"],
     [Code2, challengesCount, "Challenges solved", "#34d399"],
-    [Trophy, worldsCompleted, "Path completed", "#fbbf24"],
   ];
 
   return (
@@ -476,7 +478,12 @@ export default function Dashboard() {
         <section>
           <div className="hub-section-heading">
             <h2>A little momentum</h2>
-            <Flame size={17} color="#f59e0b" />
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <Flame size={17} color="#f97316" />
+              <span style={{ fontSize: "13px", fontWeight: "700", color: "#f97316" }}>
+                {streakDays > 0 ? `${streakDays}d Streak 🔥` : "0d Streak"}
+              </span>
+            </div>
           </div>
 
           <div className="hub-panel hub-card-3d">
@@ -515,7 +522,43 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="hub-tip">
+            {/* STREAK STATUS INDICATOR */}
+            <div
+              style={{
+                marginTop: "14px",
+                padding: "10px 14px",
+                borderRadius: "12px",
+                background:
+                  streakDays > 0
+                    ? "rgba(249, 115, 22, 0.08)"
+                    : "rgba(148, 163, 184, 0.06)",
+                border:
+                  streakDays > 0
+                    ? "1px solid rgba(249, 115, 22, 0.25)"
+                    : "1px solid rgba(255, 255, 255, 0.08)",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                fontSize: "12px",
+                color: streakDays > 0 ? "#fdba74" : "#94a3b8",
+              }}
+            >
+              <Flame size={16} color={streakDays > 0 ? "#f97316" : "#64748b"} />
+              <span>
+                {streakDays > 0 ? (
+                  <>
+                    <strong>{streakDays}-day streak active!</strong> Solve any lesson
+                    or challenge today to keep your streak burning! 🔥
+                  </>
+                ) : (
+                  <>
+                    Solve any lesson or challenge today to ignite your streak! 🔥
+                  </>
+                )}
+              </span>
+            </div>
+
+            <div className="hub-tip" style={{ marginTop: "12px" }}>
               <Target size={18} />
               <span>
                 Understanding one new idea is progress. Your pace is the right

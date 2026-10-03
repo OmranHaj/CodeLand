@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
+import { computeEffectiveStreak } from '../learning/streak.util.js';
 
 @Injectable()
 export class ProfileService {
@@ -21,6 +22,7 @@ export class ProfileService {
         parentCode: true,
         parentId: true,
         streakDays: true,
+        lastStreakAt: true,
         totalXp: true,
         lastActiveAt: true,
         createdAt: true,
@@ -39,6 +41,20 @@ export class ProfileService {
 
     if (!user) {
       throw new NotFoundException('User profile not found.');
+    }
+
+    const { effectiveStreak, isBroken } = computeEffectiveStreak(
+      user.streakDays,
+      user.lastStreakAt || user.lastActiveAt,
+    );
+    if (isBroken && user.streakDays > 0) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { streakDays: 0 },
+      });
+      user.streakDays = 0;
+    } else {
+      user.streakDays = effectiveStreak;
     }
 
     const profile = user.UserProfile;

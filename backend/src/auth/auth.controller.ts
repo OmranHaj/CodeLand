@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -16,6 +17,8 @@ import { LoginDto } from './dto/login.dto.js';
 import { GoogleLoginDto } from './dto/google-login.dto.js';
 import { GithubLoginDto } from './dto/github-login.dto.js';
 import { DiscordLoginDto } from './dto/discord-login.dto.js';
+import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
+import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 
 @Controller('auth')
@@ -100,6 +103,37 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async discordLogin(@Body() dto: DiscordLoginDto) {
     return this.authService.discordLogin(dto.code, dto.role, dto.redirectUri);
+  }
+
+  /**
+   * Endpoint: POST /auth/forgot-password
+   * Initiates secure password reset flow. Responds generically to prevent user enumeration.
+   */
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() dto: ForgotPasswordDto, @Request() req: any) {
+    const clientIp = req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1';
+    return this.authService.forgotPassword(dto, Array.isArray(clientIp) ? clientIp[0] : String(clientIp));
+  }
+
+  /**
+   * Endpoint: GET /auth/reset-password/validate
+   * Validates if a password reset token is active, unused, and unexpired.
+   */
+  @Get('reset-password/validate')
+  @HttpCode(HttpStatus.OK)
+  async validateResetToken(@Query('token') token: string) {
+    return this.authService.validateResetToken(token);
+  }
+
+  /**
+   * Endpoint: POST /auth/reset-password
+   * Resets the user's password using the verified token.
+   */
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 
   /**

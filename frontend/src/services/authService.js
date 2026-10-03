@@ -120,6 +120,30 @@ export async function loginWithDiscord(code, role, redirectUri) {
 }
 
 /* ====================================================== */
+/* PASSWORD RESET */
+/* ====================================================== */
+
+export async function requestPasswordReset(email) {
+  return apiRequest("/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function validatePasswordResetToken(token) {
+  return apiRequest(`/auth/reset-password/validate?token=${encodeURIComponent(token)}`, {
+    method: "GET",
+  });
+}
+
+export async function resetPassword({ token, password, confirmPassword }) {
+  return apiRequest("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ token, password, confirmPassword }),
+  });
+}
+
+/* ====================================================== */
 /* REGISTER PARENT */
 /* ====================================================== */
 

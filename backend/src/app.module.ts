@@ -8,6 +8,7 @@ import { ParentModule } from './parent/parent.module.js';
 import { LearningModule } from './learning/learning.module.js';
 import { ProfileModule } from './profile/profile.module.js';
 import { AchievementsModule } from './achievements/achievements.module.js';
+import { AdminModule } from './admin/admin.module.js';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AchievementsModule } from './achievements/achievements.module.js';
     LearningModule,
     ProfileModule,
     AchievementsModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -6,6 +6,8 @@ import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 const Home = lazy(() => import("./pages/Home/Home"));
 const Login = lazy(() => import("./pages/Login/Login"));
 const Register = lazy(() => import("./pages/Register/Register"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword/ResetPassword"));
 
 const ChoosePath = lazy(() => import("./pages/ChoosePath/ChoosePath"));
 
@@ -42,6 +44,7 @@ const ParentGuide = lazy(() => import("./pages/Hub/ParentGuide"));
 const Help = lazy(() => import("./pages/Hub/Help"));
 const NotFound = lazy(() => import("./pages/Hub/NotFound"));
 const AdminStudio = lazy(() => import("./pages/Admin/AdminStudio"));
+const AdminUsers = lazy(() => import("./pages/Admin/AdminUsers"));
 
 function subscribeSession(callback) {
   window.addEventListener("codeland:update", callback);
@@ -83,8 +86,9 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/help" element={<Help />} />
-            <Route path="/forgot-password" element={<Help />} />
 
             {/* ================================================= */}
             {/* SUPER ADMIN DEDICATED ROUTES */}
@@ -94,6 +98,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
                   <AdminStudio />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+                  <AdminUsers />
                 </ProtectedRoute>
               }
             />

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "public"."User" ADD COLUMN IF NOT EXISTS "tokenVersion" INTEGER NOT NULL DEFAULT 0;

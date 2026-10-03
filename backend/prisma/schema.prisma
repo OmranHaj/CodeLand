@@ -14,11 +14,13 @@ model User {
   googleId                               String?               @unique
   githubId                               String?               @unique
   discordId                              String?               @unique
+  tokenVersion                           Int                   @default(0)
   avatar                                 String?
   role                                   Role                  @default(PARENT)
   parentCode                             String?               @unique
   parentId                               String?
   streakDays                             Int                   @default(0)
+  lastStreakAt                           DateTime?
   totalXp                                Int                   @default(0)
   lastActiveAt                           DateTime              @default(now())
   createdAt                              DateTime              @default(now())
@@ -33,8 +35,31 @@ model User {
   children                               User[]                @relation("ParentChildren")
   UserAchievement                        UserAchievement[]
   UserProfile                            UserProfile?
+  passwordResetTokens                    PasswordResetToken[]
+
+  status                                 UserStatus            @default(ACTIVE)
+  suspendedAt                            DateTime?
+  suspendReason                          String?
+  adminAuditLogs                         AdminAuditLog[]       @relation("AdminAuditActor")
+  targetAuditLogs                        AdminAuditLog[]       @relation("AdminAuditTarget")
 
   @@index([parentId])
+  @@index([role, status])
+  @@index([createdAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model DailyActivity {
@@ -157,10 +182,31 @@ enum Role {
   ADMIN
 }
 
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
 enum ProgressStatus {
   LOCKED
   IN_PROGRESS
   COMPLETED
+}
+
+model AdminAuditLog {
+  id           String   @id @default(uuid())
+  adminId      String
+  targetUserId String?
+  action       String
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  admin      User  @relation("AdminAuditActor", fields: [adminId], references: [id], onDelete: Cascade)
+  targetUser User? @relation("AdminAuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+
+  @@index([adminId])
+  @@index([targetUserId])
+  @@index([createdAt])
 }
 
 model Track {

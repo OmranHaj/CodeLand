@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { computeEffectiveStreak } from '../learning/streak.util.js';
 
 @Injectable()
 export class ParentService {
@@ -28,6 +29,7 @@ export class ParentService {
         parentId: true,
         totalXp: true,
         streakDays: true,
+        lastStreakAt: true,
         lastActiveAt: true,
         createdAt: true,
         UserProfile: {
@@ -64,6 +66,18 @@ export class ParentService {
 
     // Map each child to a clean, frontend-compatible structure using pure database values
     return children.map((child) => {
+      const { effectiveStreak, isBroken } = computeEffectiveStreak(
+        child.streakDays,
+        child.lastStreakAt || child.lastActiveAt,
+      );
+      if (isBroken && child.streakDays > 0) {
+        this.prisma.user.update({
+          where: { id: child.id },
+          data: { streakDays: 0 },
+        }).catch(() => {});
+      }
+      const actualStreak = isBroken ? 0 : effectiveStreak;
+
       const totalMinutes = child.dailyActivities.reduce(
         (sum, a) => sum + (a.durationMinutes || 0),
         0,
@@ -91,7 +105,7 @@ export class ParentService {
         parentCode: child.parentCode,
         inviteCode: child.parentCode,
         totalXp: child.totalXp,
-        streakDays: child.streakDays,
+        streakDays: actualStreak,
         monthlyHours,
         level: Math.max(1, Math.floor(child.totalXp / 100) + 1),
         rankTitle: this.calculateRankTitle(child.totalXp),

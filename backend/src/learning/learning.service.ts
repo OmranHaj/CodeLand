@@ -1,6 +1,10 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
+import {
+  computeEffectiveStreak,
+  computeStreakOnActivity,
+} from './streak.util.js';
 
 @Injectable()
 export class LearningService {
@@ -219,82 +223,48 @@ export class LearningService {
       },
     });
 
-    // 4. Update user total XP and last active timestamp if new completion
-    if (actualXpToAdd > 0) {
-      await this.prisma.user.update({
-        where: { id: userId },
+    // 4. Record student activity and update daily streak
+    const streakInfo = await this.recordActivityAndStreak(userId, {
+      isLesson: !isChallenge,
+      isChallenge: isChallenge,
+      xpEarned: actualXpToAdd,
+    });
+
+    // 5. If this unit was a challenge, record it in ChallengeSubmission table
+    if (isChallenge) {
+      await this.prisma.challengeSubmission.create({
         data: {
-          totalXp: { increment: actualXpToAdd },
-          lastActiveAt: new Date(),
-        },
-      });
-
-      // 5. Update or create DailyActivity for today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      await this.prisma.dailyActivity.upsert({
-        where: {
-          userId_date: {
-            userId,
-            date: today,
-          },
-        },
-        update: {
-          lessonsCompleted: isChallenge ? undefined : { increment: 1 },
-          challengesCompleted: isChallenge ? { increment: 1 } : undefined,
-          xpEarned: { increment: actualXpToAdd },
-          durationMinutes: { increment: 10 },
-        },
-        create: {
           userId,
-          date: today,
-          lessonsCompleted: isChallenge ? 0 : 1,
-          challengesCompleted: isChallenge ? 1 : 0,
+          challengeId: normalizedUnitSlug,
+          submittedCode: 'Completed in curriculum track',
+          passed: true,
           xpEarned: actualXpToAdd,
-          durationMinutes: 10,
         },
       });
+    }
 
-      // 6. If this unit was a challenge, record it in ChallengeSubmission table
-      if (isChallenge) {
-        await this.prisma.challengeSubmission.create({
+    // 6. If this unit was a project showcase, record ProjectSubmission
+    if (
+      normalizedLevelSlug === 'project-showcase' ||
+      normalizedUnitSlug.includes('project') ||
+      normalizedUnitSlug.includes('showcase')
+    ) {
+      const priorProject = await this.prisma.projectSubmission.findFirst({
+        where: { userId, levelId: normalizedLevelSlug },
+      });
+
+      if (!priorProject) {
+        await this.prisma.projectSubmission.create({
           data: {
             userId,
-            challengeId: normalizedUnitSlug,
-            submittedCode: 'Completed in curriculum track',
+            levelId: normalizedLevelSlug,
+            sourceCode: `Project completed: ${normalizedUnitSlug}`,
+            reviewChecks: { unitSlug: normalizedUnitSlug, status: 'passed' },
+            score: 100,
             passed: true,
-            xpEarned: actualXpToAdd,
           },
         });
       }
-
-      // 7. If this unit was a project showcase, record ProjectSubmission
-      if (
-        normalizedLevelSlug === 'project-showcase' ||
-        normalizedUnitSlug.includes('project') ||
-        normalizedUnitSlug.includes('showcase')
-      ) {
-        const priorProject = await this.prisma.projectSubmission.findFirst({
-          where: { userId, levelId: normalizedLevelSlug },
-        });
-
-        if (!priorProject) {
-          await this.prisma.projectSubmission.create({
-            data: {
-              userId,
-              levelId: normalizedLevelSlug,
-              sourceCode: `Project completed: ${normalizedUnitSlug}`,
-              reviewChecks: { unitSlug: normalizedUnitSlug, status: 'passed' },
-              score: 100,
-              passed: true,
-            },
-          });
-        }
-      }
-
-      // 8. Trigger achievement milestone checks hook
-      await this.checkAndAwardMilestones(userId);
     }
 
     return {
@@ -303,11 +273,93 @@ export class LearningService {
       isChallenge,
       xpEarned: actualXpToAdd,
       progress: updatedProgress,
+      streakDays: streakInfo.streakDays,
+    };
+  }
+
+  /**
+   * Helper method to record student activity and compute/persist streak updates.
+   * Increments if yesterday was active, preserves if already solved today, resets to 1 if broken.
+   * Also updates or creates DailyActivity for today and triggers milestone evaluation.
+   */
+  async recordActivityAndStreak(
+    userId: string,
+    options: {
+      isLesson?: boolean;
+      isChallenge?: boolean;
+      isProject?: boolean;
+      xpEarned?: number;
+    } = {},
+  ): Promise<{ streakDays: number; incremented: boolean; isRestart: boolean }> {
+    const now = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        streakDays: true,
+        lastStreakAt: true,
+        lastActiveAt: true,
+      },
+    });
+
+    if (!user) {
+      return { streakDays: 0, incremented: false, isRestart: false };
+    }
+
+    const lastDate = user.lastStreakAt || user.lastActiveAt;
+    const streakResult = computeStreakOnActivity(user.streakDays, lastDate, now);
+
+    const xpToAdd = options.xpEarned || 0;
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        streakDays: streakResult.newStreak,
+        lastStreakAt: now,
+        lastActiveAt: now,
+        ...(xpToAdd > 0 ? { totalXp: { increment: xpToAdd } } : {}),
+      },
+    });
+
+    await this.prisma.dailyActivity.upsert({
+      where: {
+        userId_date: {
+          userId,
+          date: today,
+        },
+      },
+      update: {
+        ...(options.isChallenge ? { challengesCompleted: { increment: 1 } } : {}),
+        ...(options.isLesson ? { lessonsCompleted: { increment: 1 } } : {}),
+        ...(xpToAdd > 0 ? { xpEarned: { increment: xpToAdd } } : {}),
+        durationMinutes: { increment: 10 },
+      },
+      create: {
+        userId,
+        date: today,
+        lessonsCompleted: options.isLesson ? 1 : 0,
+        challengesCompleted: options.isChallenge ? 1 : 0,
+        xpEarned: xpToAdd,
+        durationMinutes: 10,
+      },
+    });
+
+    // Milestone evaluation hook (awards streak-3, streak-7, etc.)
+    await this.checkAndAwardMilestones(userId);
+
+    return {
+      streakDays: streakResult.newStreak,
+      incremented: streakResult.incremented,
+      isRestart: streakResult.isRestart,
     };
   }
 
   /**
    * Returns all learning progress records for the authenticated student.
+   * Also verifies whether the student's streak has broken (skipped a day),
+   * resetting to 0 if 2 or more days have elapsed since last activity.
    */
   async getStudentProgress(userId: string) {
     const progressRecords = await this.prisma.learningProgress.findMany({
@@ -323,6 +375,7 @@ export class LearningService {
         email: true,
         totalXp: true,
         streakDays: true,
+        lastStreakAt: true,
         lastActiveAt: true,
         UserProfile: {
           select: {
@@ -333,6 +386,22 @@ export class LearningService {
       },
     });
 
+    if (user) {
+      const { effectiveStreak, isBroken } = computeEffectiveStreak(
+        user.streakDays,
+        user.lastStreakAt || user.lastActiveAt,
+      );
+      if (isBroken && user.streakDays > 0) {
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: { streakDays: 0 },
+        });
+        user.streakDays = 0;
+      } else {
+        user.streakDays = effectiveStreak;
+      }
+    }
+
     return {
       user,
       progress: progressRecords,
@@ -341,7 +410,7 @@ export class LearningService {
 
   /**
    * Records a challenge submission, saves code and test result,
-   * and awards XP if this is the first successful completion.
+   * updates daily streak if passed, and awards XP on first successful completion.
    */
   async submitChallenge(
     userId: string,
@@ -375,43 +444,13 @@ export class LearningService {
       },
     });
 
-    // If passed for the first time, increment user total XP and log daily activity
-    if (actualXpToAdd > 0) {
-      await this.prisma.user.update({
-        where: { id: userId },
-        data: {
-          totalXp: { increment: actualXpToAdd },
-          lastActiveAt: new Date(),
-        },
+    let streakInfo = null;
+    if (passed) {
+      // Record activity and update streak + daily activity + XP + milestones
+      streakInfo = await this.recordActivityAndStreak(userId, {
+        isChallenge: true,
+        xpEarned: actualXpToAdd,
       });
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      await this.prisma.dailyActivity.upsert({
-        where: {
-          userId_date: {
-            userId,
-            date: today,
-          },
-        },
-        update: {
-          challengesCompleted: { increment: 1 },
-          xpEarned: { increment: actualXpToAdd },
-          durationMinutes: { increment: 10 },
-        },
-        create: {
-          userId,
-          date: today,
-          lessonsCompleted: 0,
-          challengesCompleted: 1,
-          xpEarned: actualXpToAdd,
-          durationMinutes: 10,
-        },
-      });
-
-      // Trigger achievement milestone checks hook
-      await this.checkAndAwardMilestones(userId);
     }
 
     return {
@@ -419,6 +458,7 @@ export class LearningService {
       submission,
       isNewPass,
       xpEarned: actualXpToAdd,
+      streakDays: streakInfo?.streakDays,
     };
   }
 
@@ -447,7 +487,7 @@ export class LearningService {
 
   /**
    * Records a project submission, saves checks and score,
-   * and triggers the milestone evaluation hook.
+   * updates daily streak if passed, and triggers milestone evaluation.
    */
   async submitProject(
     userId: string,
@@ -470,12 +510,18 @@ export class LearningService {
       },
     });
 
-    // Milestone checks hook
-    await this.checkAndAwardMilestones(userId);
+    let streakInfo = null;
+    if (passed) {
+      streakInfo = await this.recordActivityAndStreak(userId, {
+        isProject: true,
+        xpEarned: 0,
+      });
+    }
 
     return {
       success: true,
       submission,
+      streakDays: streakInfo?.streakDays,
     };
   }
 
