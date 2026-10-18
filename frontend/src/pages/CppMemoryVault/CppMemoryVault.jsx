@@ -24,6 +24,7 @@ import {
 import LessonRobot from "../../components/Learning/LessonRobot";
 import CppLessonAnimation from "../../components/Learning/CppLessonAnimation";
 import LessonExplanationPanel from "../../components/Learning/LessonExplanationPanel";
+import AiVerdictCard from "../../components/Learning/AiVerdictCard";
 
 import cppMemoryVaultContent from "../../data/cppMemoryVaultContent";
 
@@ -123,7 +124,8 @@ function saveProgress(userId, progress) {
 /* C++ REMOTE COMPILER RUNNER                            */
 /* ====================================================== */
 
-import { runCppExecution, detectCodeNeedsInput } from "../../services/judgeService";
+import { runCppExecution, detectCodeNeedsInput, submitWithAiJudge } from "../../services/judgeService";
+import { buildLessonProblemText } from "../../services/aiJudgeHelper";
 
 async function runCppCode({ code, customInput = "" }) {
   return await runCppExecution({ code, customInput });
@@ -159,6 +161,8 @@ function CppMemoryVault() {
   const [hintIndex, setHintIndex] = useState(-1);
 
   const [running, setRunning] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [aiVerdict, setAiVerdict] = useState(null);
 
   const [waitingForInput, setWaitingForInput] = useState(false);
 
@@ -304,8 +308,11 @@ function CppMemoryVault() {
     return learningProgress.completedChallengeIds.includes(unit.id);
   };
 
-  const isUnlocked = () => {
-    return true;
+  const isUnlocked = (index) => {
+    if (index === 0) {
+      return true;
+    }
+    return units.slice(0, index).every((unit) => isCompleted(unit));
   };
 
   /* ==================================================== */
@@ -374,6 +381,7 @@ function CppMemoryVault() {
     setLabTab("code");
     setConsoleLines([]);
     setResult(null);
+    setAiVerdict(null);
     setHintIndex(-1);
     setCustomInput("");
 
@@ -661,6 +669,56 @@ function CppMemoryVault() {
       triggerRobotReaction("sad");
     } finally {
       setRunning(false);
+    }
+  };
+
+  /* ==================================================== */
+  /* AI SUBMIT                                            */
+  /* ==================================================== */
+
+  const handleSubmitCode = async () => {
+    if (!activeUnit || submitting || running) {
+      return;
+    }
+
+    setSubmitting(true);
+    setAiVerdict(null);
+
+    const problemText = buildLessonProblemText(activeUnit, "C++ Memory Vault");
+
+    try {
+      const response = await submitWithAiJudge({
+        problemText,
+        studentCode: editorCode,
+        lessonId: activeUnit.id,
+        levelId: LEVEL_ID,
+      });
+
+      setAiVerdict(response);
+
+      if (response.verdict === "Accepted") {
+        triggerRobotReaction("happy");
+        setFeedbackEffect((current) => ({
+          type: "success",
+          key: (current?.key || 0) + 1,
+        }));
+        completeUnit(activeUnit);
+      } else {
+        triggerRobotReaction("sad");
+        setFeedbackEffect((current) => ({
+          type: "error",
+          key: (current?.key || 0) + 1,
+        }));
+      }
+    } catch (error) {
+      setAiVerdict({
+        verdict: "Run Time Error",
+        failed_scenario: error?.message || "Failed to reach AI Judge service",
+        feedback_ar: "تعذر الاتصال بخدمة التحقق الذكية (AI Judge). تأكد من تشغيل الخادم ثم أعد المحاولة.",
+      });
+      triggerRobotReaction("sad");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -1330,6 +1388,8 @@ function CppMemoryVault() {
             </div>
           )}
 
+          <AiVerdictCard verdict={aiVerdict} onClose={() => setAiVerdict(null)} />
+
           <div className={styles.chamberFooter}>
             <div>
               <span>SIGNAL REWARD</span>
@@ -1357,7 +1417,7 @@ function CppMemoryVault() {
               <button
                 type="button"
                 className={styles.runButton}
-                disabled={running}
+                disabled={running || submitting}
                 onClick={() => handleRunCode()}
               >
                 {running ? (
@@ -1373,12 +1433,49 @@ function CppMemoryVault() {
                 )}
               </button>
 
+              <button
+                type="button"
+                className={styles.runButton}
+                style={{
+                  background: "linear-gradient(135deg, #10b981, #059669)",
+                  color: "#ffffff",
+                  border: 0,
+                  fontWeight: 800,
+                  boxShadow: "0 4px 14px rgba(16, 185, 129, 0.35)",
+                }}
+                disabled={running || submitting}
+                onClick={handleSubmitCode}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={14} />
+                    Submit
+                  </>
+                )}
+              </button>
+
               {activeUnitIndex < units.length - 1 && (
                 <button
                   type="button"
                   className={styles.continueButton}
-                  onClick={() => setActiveUnitId(units[activeUnitIndex + 1].id)}
+                  disabled={!isUnlocked(activeUnitIndex + 1)}
+                  style={
+                    !isUnlocked(activeUnitIndex + 1)
+                      ? { opacity: 0.45, cursor: "not-allowed", filter: "grayscale(0.6)" }
+                      : {}
+                  }
+                  onClick={() => {
+                    if (isUnlocked(activeUnitIndex + 1)) {
+                      setActiveUnitId(units[activeUnitIndex + 1].id);
+                    }
+                  }}
                 >
+                  {!isUnlocked(activeUnitIndex + 1) && <LockKeyhole size={13} style={{ marginRight: 4 }} />}
                   Next
                   <ChevronRight size={14} />
                 </button>

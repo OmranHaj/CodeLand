@@ -49,6 +49,23 @@ export async function submitChallengeCode(challengeId, { code, language = "cpp" 
 }
 
 /**
+ * 4. POST /judge/ai-submit
+ * Evaluate student code using AI judge (ai/check_submit.py)
+ * @param {{ problemText: string, studentCode: string, lessonId?: string, levelId?: string }} param0
+ */
+export async function submitWithAiJudge({ problemText, studentCode, lessonId, levelId }) {
+  return await apiRequest("/judge/ai-submit", {
+    method: "POST",
+    body: JSON.stringify({
+      problemText: String(problemText || ""),
+      studentCode: String(studentCode || ""),
+      lessonId: lessonId ? String(lessonId) : undefined,
+      levelId: levelId ? String(levelId) : undefined,
+    }),
+  });
+}
+
+/**
  * GET /judge/challenge/:challengeId
  * Fetch challenge configuration and sample test cases
  * @param {string} challengeId

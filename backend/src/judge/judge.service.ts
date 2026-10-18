@@ -9,7 +9,11 @@ import { RunCustomDto } from './dto/run-custom.dto.js';
 import { RunTestsDto } from './dto/run-tests.dto.js';
 import { SubmitCodeDto } from './dto/submit-code.dto.js';
 import { CreateTestCaseDto } from './dto/create-testcase.dto.js';
+import { AiJudgeDto } from './dto/ai-judge.dto.js';
 import { SubmissionStatus } from '@prisma/client';
+import { spawn } from 'child_process';
+import path from 'path';
+import fs from 'fs';
 
 export type JudgeStatus =
   | 'SUCCESS'
@@ -700,6 +704,105 @@ export class JudgeService {
         isHidden: Boolean(dto.isHidden),
         order,
       },
+    });
+  }
+
+  /**
+   * Run AI Judge evaluation using ai/check_submit.py
+   */
+  async evaluateAiSubmission(dto: AiJudgeDto): Promise<{
+    verdict: 'Accepted' | 'Wrong Answer' | 'Time Limit Exceeded' | 'Memory Limit Exceeded' | 'Run Time Error' | 'Compilation Error';
+    failed_scenario: string;
+    feedback_ar: string;
+  }> {
+    let runnerPath = path.resolve(process.cwd(), 'src', 'judge', 'ai_runner.py');
+    if (!fs.existsSync(runnerPath)) {
+      runnerPath = path.resolve(process.cwd(), 'dist', 'judge', 'ai_runner.py');
+    }
+    if (!fs.existsSync(runnerPath)) {
+      runnerPath = path.resolve(process.cwd(), '..', 'backend', 'src', 'judge', 'ai_runner.py');
+    }
+
+    return new Promise((resolve) => {
+      const pythonProcess = spawn('python', [runnerPath], {
+        env: {
+          ...process.env,
+          PYTHONIOENCODING: 'utf-8',
+        },
+      });
+
+      let stdoutData = '';
+      let stderrData = '';
+
+      pythonProcess.stdout.on('data', (chunk) => {
+        stdoutData += chunk.toString('utf-8');
+      });
+
+      pythonProcess.stderr.on('data', (chunk) => {
+        stderrData += chunk.toString('utf-8');
+      });
+
+      const timer = setTimeout(() => {
+        try {
+          pythonProcess.kill();
+        } catch {}
+        resolve({
+          verdict: 'Time Limit Exceeded',
+          failed_scenario: 'AI Evaluation timed out after 45 seconds',
+          feedback_ar: 'استغرق التحقق وقتاً أطول من المتوقع، يرجى إعادة المحاولة.',
+        });
+      }, 45000);
+
+      pythonProcess.on('close', () => {
+        clearTimeout(timer);
+        try {
+          const prefix = '__AI_JUDGE_RESULT__';
+          const idx = stdoutData.indexOf(prefix);
+          if (idx !== -1) {
+            const jsonStr = stdoutData.slice(idx + prefix.length).trim();
+            const parsed = JSON.parse(jsonStr);
+            return resolve(parsed);
+          }
+          const firstBrace = stdoutData.indexOf('{');
+          const lastBrace = stdoutData.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            const jsonStr = stdoutData.substring(firstBrace, lastBrace + 1);
+            const parsed = JSON.parse(jsonStr);
+            return resolve(parsed);
+          }
+          this.logger.error(`[AI Judge] Failed to parse stdout: ${stdoutData} | stderr: ${stderrData}`);
+          resolve({
+            verdict: 'Run Time Error',
+            failed_scenario: stderrData || 'Unknown Python process error',
+            feedback_ar: 'تعذر على المصحح الذكي تحليل الكود حالياً. يرجى إعادة المحاولة.',
+          });
+        } catch (e: any) {
+          this.logger.error(`[AI Judge] Exception: ${e?.message}`);
+          resolve({
+            verdict: 'Run Time Error',
+            failed_scenario: e?.message,
+            feedback_ar: 'حدث خطأ غير متوقع أثناء معالجة النتيجة.',
+          });
+        }
+      });
+
+      pythonProcess.on('error', (err) => {
+        clearTimeout(timer);
+        this.logger.error(`[AI Judge] Spawn error: ${err?.message}`);
+        resolve({
+          verdict: 'Run Time Error',
+          failed_scenario: err?.message,
+          feedback_ar: 'تعذر تشغيل بيئة بايثون للتحقق الذكي.',
+        });
+      });
+
+      const payload = JSON.stringify({
+        problem_text: dto.problemText,
+        student_code: dto.studentCode,
+      });
+
+      pythonProcess.stdin.write(payload, 'utf-8');
+      pythonProcess.stdin.end();
     });
   }
 }

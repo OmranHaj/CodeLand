@@ -15,6 +15,7 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
+  LockKeyhole,
 } from "lucide-react";
 import Editor from "@monaco-editor/react";
 
@@ -27,8 +28,9 @@ import {
 } from "../../data/algorithmWorldLevels";
 import { userKey, readStored, writeStored } from "../../services/learningHub";
 import { recordLessonCompletion, fetchStudentProgress } from "../../services/learningContentService";
-import { runCustomCode, detectCodeNeedsInput } from "../../services/judgeService";
+import { runCustomCode, detectCodeNeedsInput, submitWithAiJudge } from "../../services/judgeService";
 import LessonExplanationPanel from "../../components/Learning/LessonExplanationPanel";
+import AiVerdictCard from "../../components/Learning/AiVerdictCard";
 import styles from "./AlgorithmLab.module.css";
 
 export default function AlgorithmLab() {
@@ -101,6 +103,8 @@ export default function AlgorithmLab() {
   const [customInput, setCustomInput] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [isRunningCode, setIsRunningCode] = useState(false);
+  const [isSubmittingCode, setIsSubmittingCode] = useState(false);
+  const [aiVerdict, setAiVerdict] = useState(null);
 
   const needsInput = useMemo(
     () => detectCodeNeedsInput(userCode),
@@ -116,6 +120,7 @@ export default function AlgorithmLab() {
     setQuizIsCorrect(false);
     setUserCode(currentLesson.starterCode || "");
     setCodeRunOutput(null);
+    setAiVerdict(null);
     setCustomInput("");
     setShowCustomInput(false);
     setRobotReaction("idle");
@@ -261,6 +266,73 @@ export default function AlgorithmLab() {
     }
   };
 
+  /* AI SUBMISSION */
+  const handleSubmitCode = async () => {
+    if (isSubmittingCode || isRunningCode) return;
+
+    setIsSubmittingCode(true);
+    setAiVerdict(null);
+
+    const problemText = [
+      `Algorithm Sector: ${currentSector.title} (${currentSector.code})`,
+      `Lesson Title: ${currentLesson.title}`,
+      `Concept: ${currentLesson.concept}`,
+      `Analogy: ${currentLesson.analogyTitle} - ${currentLesson.analogyDescription}`,
+      `Time Complexity: ${currentLesson.timeComplexity}, Space Complexity: ${currentLesson.spaceComplexity}`,
+      currentLesson.task ? `Task: ${currentLesson.task}` : "",
+      `Reference Implementation:\n${currentLesson.cppCode || ""}`,
+    ].filter(Boolean).join("\n\n");
+
+    try {
+      const response = await submitWithAiJudge({
+        problemText,
+        studentCode: userCode,
+        lessonId: currentLesson.id,
+        levelId: currentSector.id,
+      });
+
+      setAiVerdict(response);
+
+      if (response.verdict === "Accepted") {
+        setRobotReaction("happy");
+        setRobotKey((prev) => prev + 1);
+        setRobotMessage("Awesome work! The AI Judge evaluated your code and it PASSED! 🎉🤖 Next lesson is now unlocked!");
+
+        if (!completedLessons.includes(currentLesson.id)) {
+          const nextLessons = [...completedLessons, currentLesson.id];
+          let nextSectors = [...(worldProgress.completedSectors || [])];
+          const allDone = currentSector.lessons.every((l) => nextLessons.includes(l.id));
+          if (allDone && !nextSectors.includes(currentSector.id)) {
+            nextSectors.push(currentSector.id);
+          }
+
+          const nextProgress = {
+            ...worldProgress,
+            completedLessons: nextLessons,
+            completedSectors: nextSectors,
+            xp: (worldProgress.xp || 0) + 100,
+          };
+          setWorldProgress(nextProgress);
+          saveAlgoWorldProgress(userId, nextProgress);
+          recordLessonCompletion(currentSector.id, currentLesson.id, 100, "lesson");
+        }
+      } else {
+        setRobotReaction("sad");
+        setRobotKey((prev) => prev + 1);
+        setRobotMessage(response.feedback_ar || "The code did not pass the AI evaluation. Check the diagnosis below!");
+      }
+    } catch (err) {
+      setAiVerdict({
+        verdict: "Run Time Error",
+        failed_scenario: err?.message || "Failed to reach AI Judge service",
+        feedback_ar: "تعذر الاتصال بخدمة التحقق الذكية (AI Judge). تأكد من تشغيل الخادم ثم أعد المحاولة.",
+      });
+      setRobotReaction("sad");
+    } finally {
+      setIsSubmittingCode(false);
+    }
+  };
+
   const handleCopyCode = () => {
     if (navigator.clipboard && currentLesson.cppCode) {
       navigator.clipboard.writeText(currentLesson.cppCode);
@@ -296,14 +368,20 @@ export default function AlgorithmLab() {
           <div className={styles.lessonNavRow}>
             {currentSector.lessons.map((les, idx) => {
               const isDone = completedLessons.includes(les.id);
+              const isUnlocked = idx === 0 || completedLessons.includes(currentSector.lessons[idx - 1].id);
               return (
                 <button
                   key={les.id}
                   type="button"
                   className={`${styles.lessonTab} ${activeLessonIdx === idx ? styles.lessonTabActive : ""
                     }`}
-                  onClick={() => setActiveLessonIdx(idx)}
+                  disabled={!isUnlocked}
+                  style={!isUnlocked ? { opacity: 0.45, cursor: "not-allowed" } : {}}
+                  onClick={() => {
+                    if (isUnlocked) setActiveLessonIdx(idx);
+                  }}
                 >
+                  {!isUnlocked && <LockKeyhole size={11} style={{ display: "inline", marginRight: "4px" }} />}
                   {isDone && <CheckCircle2 size={13} style={{ display: "inline", marginRight: "4px" }} />}
                   <span>{idx + 1}. {les.title}</span>
                 </button>
@@ -505,24 +583,55 @@ export default function AlgorithmLab() {
                 )}
               </div>
 
-              <button
-                type="button"
-                className={styles.runCodeBtn}
-                onClick={handleRunCode}
-                disabled={isRunningCode}
-              >
-                {isRunningCode ? (
-                  <>
-                    <Loader2 size={14} className={styles.spinIcon} />
-                    <span>Running...</span>
-                  </>
-                ) : (
-                  <>
-                    <Play size={14} />
-                    <span>Run</span>
-                  </>
-                )}
-              </button>
+              <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+                <button
+                  type="button"
+                  className={styles.runCodeBtn}
+                  style={{ flex: 1, marginTop: 0 }}
+                  onClick={handleRunCode}
+                  disabled={isRunningCode || isSubmittingCode}
+                >
+                  {isRunningCode ? (
+                    <>
+                      <Loader2 size={14} className={styles.spinIcon} />
+                      <span>Running...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play size={14} />
+                      <span>Run</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.runCodeBtn}
+                  style={{
+                    flex: 1,
+                    marginTop: 0,
+                    background: "linear-gradient(135deg, #10b981, #059669)",
+                    color: "#ffffff",
+                    boxShadow: "0 4px 14px rgba(16, 185, 129, 0.35)",
+                  }}
+                  onClick={handleSubmitCode}
+                  disabled={isRunningCode || isSubmittingCode}
+                >
+                  {isSubmittingCode ? (
+                    <>
+                      <Loader2 size={14} className={styles.spinIcon} />
+                      <span>Evaluating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={14} />
+                      <span>Submit</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <AiVerdictCard verdict={aiVerdict} onClose={() => setAiVerdict(null)} />
 
               {codeRunOutput && (
                 <div

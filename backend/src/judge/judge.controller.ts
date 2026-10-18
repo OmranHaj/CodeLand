@@ -13,6 +13,7 @@ import { RunCustomDto } from './dto/run-custom.dto.js';
 import { RunTestsDto } from './dto/run-tests.dto.js';
 import { SubmitCodeDto } from './dto/submit-code.dto.js';
 import { CreateTestCaseDto } from './dto/create-testcase.dto.js';
+import { AiJudgeDto } from './dto/ai-judge.dto.js';
 import { JwtService } from '@nestjs/jwt';
 
 @Controller('judge')
@@ -114,6 +115,16 @@ export class JudgeController {
     }
     const userId = this.extractUserId(req);
     return this.judgeService.submitChallenge(userId, id, dto);
+  }
+
+  /**
+   * POST /judge/ai-submit
+   * Evaluate student code using AI judge (ai/check_submit.py)
+   */
+  @Post('ai-submit')
+  @HttpCode(HttpStatus.OK)
+  async aiSubmit(@Body() dto: AiJudgeDto) {
+    return this.judgeService.evaluateAiSubmission(dto);
   }
 
   /**
