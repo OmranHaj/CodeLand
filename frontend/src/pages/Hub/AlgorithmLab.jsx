@@ -11,7 +11,12 @@ import {
   Sparkles,
   BookOpen,
   Terminal,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  Clock,
 } from "lucide-react";
+import Editor from "@monaco-editor/react";
 
 import LessonRobot from "../../components/Learning/LessonRobot";
 import AlgoVisualizer from "../../components/AlgorithmWorld/AlgoVisualizer";
@@ -22,6 +27,8 @@ import {
 } from "../../data/algorithmWorldLevels";
 import { userKey, readStored, writeStored } from "../../services/learningHub";
 import { recordLessonCompletion, fetchStudentProgress } from "../../services/learningContentService";
+import { runCustomCode, detectCodeNeedsInput } from "../../services/judgeService";
+import LessonExplanationPanel from "../../components/Learning/LessonExplanationPanel";
 import styles from "./AlgorithmLab.module.css";
 
 export default function AlgorithmLab() {
@@ -68,7 +75,7 @@ export default function AlgorithmLab() {
           }));
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     return () => {
       cancelled = true;
@@ -91,6 +98,14 @@ export default function AlgorithmLab() {
   const [userCode, setUserCode] = useState("");
   const [codeRunOutput, setCodeRunOutput] = useState(null);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [customInput, setCustomInput] = useState("");
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [isRunningCode, setIsRunningCode] = useState(false);
+
+  const needsInput = useMemo(
+    () => detectCodeNeedsInput(userCode),
+    [userCode],
+  );
 
   const currentLesson = currentSector.lessons[activeLessonIdx] || currentSector.lessons[0];
 
@@ -101,6 +116,8 @@ export default function AlgorithmLab() {
     setQuizIsCorrect(false);
     setUserCode(currentLesson.starterCode || "");
     setCodeRunOutput(null);
+    setCustomInput("");
+    setShowCustomInput(false);
     setRobotReaction("idle");
     setRobotMessage(
       `Welcome to the "${currentLesson.title}" lab! Check out the analogy and animation, then test your understanding!`
@@ -162,28 +179,85 @@ export default function AlgorithmLab() {
     }
   };
 
-  // Handle Code Playground Execution
-  const handleRunCode = () => {
-    // Simple heuristic / syntax validation for student code
-    const hasReturn = userCode.includes("return");
-    const isNotEmpty = userCode.trim().length > 25;
+  // Handle Code Playground Execution with real backend Judge API (Run Mode)
+  const handleRunCode = async (overrideInput = null) => {
+    if (isRunningCode) return;
 
-    if (hasReturn && isNotEmpty) {
-      setCodeRunOutput({
-        success: true,
-        message: `✓ Test Passed!\nInput: ${currentLesson.testInput || "Sample Data"}\nOutput: ${currentLesson.expectedResult || "Expected Result"}\nExecution Time: 0.38ms · Memory: O(1)`,
-      });
-      setRobotReaction("happy");
+    const inputToUse = overrideInput !== null ? overrideInput : customInput;
+
+    // If code has cin/scanf/getline and no input was provided yet, wait for input!
+    if (needsInput && !inputToUse.trim() && overrideInput === null) {
+      setShowCustomInput(true);
+      setRobotReaction("idle");
       setRobotKey((prev) => prev + 1);
-      setRobotMessage("Incredible! Your C++ code passed all test cases! 🚀✨");
-    } else {
+      setRobotMessage("Your code contains cin >> input instructions! Please enter the input values below and click Run. ⌨️");
+      return;
+    }
+
+    setIsRunningCode(true);
+    setCodeRunOutput(null);
+
+    // If student code is a standalone function and currentLesson has main(), synthesize complete code
+    let codeToExecute = userCode;
+    if (!codeToExecute.includes("main(") && currentLesson.cppCode && currentLesson.cppCode.includes("int main(")) {
+      const mainIdx = currentLesson.cppCode.indexOf("int main(");
+      if (mainIdx !== -1) {
+        const mainHarness = currentLesson.cppCode.slice(mainIdx);
+        codeToExecute = `${userCode}\n\n${mainHarness}`;
+      }
+    }
+
+    try {
+      const result = await runCustomCode({
+        code: codeToExecute,
+        language: "cpp",
+        customInput: inputToUse || "",
+      });
+
+      const isSuccess = result.status === "SUCCESS";
+      const isCompileError = result.status === "COMPILATION_ERROR";
+      const isTimeLimit = result.status === "TIME_LIMIT_EXCEEDED";
+
+      if (isSuccess) {
+        setRobotReaction("happy");
+        setRobotKey((prev) => prev + 1);
+        setRobotMessage("Code compiled and executed successfully! Output is displayed in the console below. 🚀✨");
+      } else if (isCompileError) {
+        setRobotReaction("sad");
+        setRobotKey((prev) => prev + 1);
+        setRobotMessage("Compiler syntax error detected! Review the compiler errors in the console below to fix line issues. 🛠️");
+      } else if (isTimeLimit) {
+        setRobotReaction("sad");
+        setRobotKey((prev) => prev + 1);
+        setRobotMessage("Time limit exceeded! Please check for infinite loops or deep recursions. ⏱️");
+      } else {
+        setRobotReaction("sad");
+        setRobotKey((prev) => prev + 1);
+        setRobotMessage(result.stderr || "Runtime error occurred during execution. Check your code logic.");
+      }
+
+      setCodeRunOutput({
+        success: isSuccess,
+        status: result.status,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        compileError: result.compileError,
+        executionTime: result.executionTime,
+      });
+    } catch (err) {
       setCodeRunOutput({
         success: false,
-        message: `✕ Test Failed: Output did not match expected result.\nMake sure you return the correct value!`,
+        status: "RUNTIME_ERROR",
+        stderr: err?.message || "Failed to reach compiler service.",
+        compileError: null,
+        stdout: "",
+        executionTime: null,
       });
       setRobotReaction("sad");
       setRobotKey((prev) => prev + 1);
-      setRobotMessage("Hmm, looks like your code is missing a return statement or hasn't finished yet! 🧐 Review the C++ code and try again!");
+      setRobotMessage("Unable to reach the compiler service. Please ensure the backend is active!");
+    } finally {
+      setIsRunningCode(false);
     }
   };
 
@@ -226,9 +300,8 @@ export default function AlgorithmLab() {
                 <button
                   key={les.id}
                   type="button"
-                  className={`${styles.lessonTab} ${
-                    activeLessonIdx === idx ? styles.lessonTabActive : ""
-                  }`}
+                  className={`${styles.lessonTab} ${activeLessonIdx === idx ? styles.lessonTabActive : ""
+                    }`}
                   onClick={() => setActiveLessonIdx(idx)}
                 >
                   {isDone && <CheckCircle2 size={13} style={{ display: "inline", marginRight: "4px" }} />}
@@ -289,6 +362,8 @@ export default function AlgorithmLab() {
               </div>
             </section>
 
+            <LessonExplanationPanel lessonId={currentLesson.id} />
+
             {/* C++ Code Showcase */}
             <section className={styles.codeCard}>
               <div className={styles.codeHeader}>
@@ -331,9 +406,8 @@ export default function AlgorithmLab() {
                   <button
                     key={oIdx}
                     type="button"
-                    className={`${styles.quizOption} ${
-                      selectedOption === oIdx ? styles.quizOptionSelected : ""
-                    }`}
+                    className={`${styles.quizOption} ${selectedOption === oIdx ? styles.quizOptionSelected : ""
+                      }`}
                     onClick={() => {
                       setSelectedOption(oIdx);
                       setQuizSubmitted(false);
@@ -358,9 +432,8 @@ export default function AlgorithmLab() {
 
               {quizSubmitted && (
                 <div
-                  className={`${styles.feedbackBox} ${
-                    quizIsCorrect ? styles.feedbackSuccess : styles.feedbackError
-                  }`}
+                  className={`${styles.feedbackBox} ${quizIsCorrect ? styles.feedbackSuccess : styles.feedbackError
+                    }`}
                 >
                   <strong>
                     {quizIsCorrect
@@ -383,23 +456,72 @@ export default function AlgorithmLab() {
                   <Terminal size={15} />
                   <span>Write & Test Your Algorithm (C++ Playground)</span>
                 </div>
+                <span style={{ fontSize: "11px", color: "#34d399", fontWeight: 700, display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
+                  ONLINE JUDGE
+                </span>
               </div>
 
-              <textarea
-                className={styles.codeTextarea}
-                value={userCode}
-                onChange={(e) => setUserCode(e.target.value)}
-                placeholder="Write your algorithm code here..."
-                spellCheck={false}
-              />
+              {/* Monaco Code Editor */}
+              <div className={styles.editorWrap}>
+                <Editor
+                  height="220px"
+                  language="cpp"
+                  theme="vs-dark"
+                  value={userCode}
+                  onChange={(val) => setUserCode(val || "")}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 13,
+                    fontFamily: "'Fira Code', monospace",
+                    scrollBeyondLastLine: false,
+                    tabSize: 2,
+                    automaticLayout: true,
+                    lineNumbersMinChars: 3,
+                    padding: { top: 8, bottom: 8 },
+                  }}
+                />
+              </div>
+
+              {/* Custom Input Accordion */}
+              <div className={styles.customInputSection}>
+                <button
+                  type="button"
+                  className={styles.customInputToggle}
+                  onClick={() => setShowCustomInput((prev) => !prev)}
+                  style={needsInput ? { borderColor: "rgba(56, 189, 248, 0.5)", background: "rgba(14, 165, 233, 0.12)", color: "#38bdf8" } : {}}
+                >
+                  {showCustomInput || needsInput ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                  <span>{needsInput ? "Program Input (cin >>) Detected - stdin" : "Custom Input (stdin)"}</span>
+                </button>
+                {(showCustomInput || needsInput) && (
+                  <textarea
+                    className={styles.customInputArea}
+                    value={customInput}
+                    onChange={(e) => setCustomInput(e.target.value)}
+                    placeholder="Enter custom input / stdin for cin (e.g. 25)..."
+                    spellCheck={false}
+                  />
+                )}
+              </div>
 
               <button
                 type="button"
                 className={styles.runCodeBtn}
                 onClick={handleRunCode}
+                disabled={isRunningCode}
               >
-                <Play size={14} />
-                <span>Run & Test Algorithm</span>
+                {isRunningCode ? (
+                  <>
+                    <Loader2 size={14} className={styles.spinIcon} />
+                    <span>Running...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play size={14} />
+                    <span>Run</span>
+                  </>
+                )}
               </button>
 
               {codeRunOutput && (
@@ -409,15 +531,46 @@ export default function AlgorithmLab() {
                     borderColor: codeRunOutput.success ? "#10b981" : "#f43f5e",
                   }}
                 >
-                  <pre
-                    style={{
-                      margin: 0,
-                      color: codeRunOutput.success ? "#34d399" : "#fda4af",
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {codeRunOutput.message}
-                  </pre>
+                  <div className={styles.consoleStatusRow}>
+                    <span
+                      className={`${styles.consoleBadge} ${codeRunOutput.success
+                        ? styles.badgeSuccess
+                        : codeRunOutput.status === "TIME_LIMIT_EXCEEDED"
+                          ? styles.badgeWarn
+                          : styles.badgeError
+                        }`}
+                    >
+                      {codeRunOutput.status || (codeRunOutput.success ? "SUCCESS" : "ERROR")}
+                    </span>
+
+                    {codeRunOutput.executionTime && (
+                      <span className={styles.consoleMeta}>
+                        <Clock size={12} />
+                        <span>{codeRunOutput.executionTime}</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {codeRunOutput.compileError && (
+                    <div style={{ color: "#fda4af", whiteSpace: "pre-wrap", fontSize: "12px" }}>
+                      <strong style={{ display: "block", marginBottom: "4px" }}>Compilation Error:</strong>
+                      <pre style={{ margin: 0, color: "#fca5a5", whiteSpace: "pre-wrap" }}>{codeRunOutput.compileError}</pre>
+                    </div>
+                  )}
+
+                  {codeRunOutput.stderr && !codeRunOutput.compileError && (
+                    <div style={{ color: "#fb7185", whiteSpace: "pre-wrap", fontSize: "12px" }}>
+                      <strong style={{ display: "block", marginBottom: "4px" }}>Standard Error:</strong>
+                      <pre style={{ margin: 0, color: "#fda4af", whiteSpace: "pre-wrap" }}>{codeRunOutput.stderr}</pre>
+                    </div>
+                  )}
+
+                  {codeRunOutput.stdout && (
+                    <div style={{ whiteSpace: "pre-wrap", fontSize: "12px" }}>
+                      <strong style={{ color: "#34d399", display: "block", marginBottom: "4px" }}>Standard Output:</strong>
+                      <pre style={{ margin: 0, color: "#e2e8f0", whiteSpace: "pre-wrap" }}>{codeRunOutput.stdout}</pre>
+                    </div>
+                  )}
                 </div>
               )}
             </section>

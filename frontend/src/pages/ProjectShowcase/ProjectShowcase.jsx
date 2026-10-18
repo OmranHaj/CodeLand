@@ -29,6 +29,7 @@ import {
 import ProjectPreviewFrame from "../../components/Learning/ProjectPreviewFrame";
 import LessonAnimation from "../../components/Learning/animations/LessonAnimation";
 import LessonRobot from "../../components/Learning/LessonRobot";
+import LessonExplanationPanel from "../../components/Learning/LessonExplanationPanel";
 import styles from "./ProjectShowcase.module.css";
 
 const LEVEL_ID = "project-showcase";
@@ -1789,6 +1790,8 @@ function ProjectShowcase() {
               anchorRef={robotAnchorRef}
             />
           </section>
+
+          <LessonExplanationPanel lessonId={activeUnit.id} />
 
           {/* ============================================== */}
           {/* BRIEF */}

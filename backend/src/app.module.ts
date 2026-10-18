@@ -9,6 +9,7 @@ import { LearningModule } from './learning/learning.module.js';
 import { ProfileModule } from './profile/profile.module.js';
 import { AchievementsModule } from './achievements/achievements.module.js';
 import { AdminModule } from './admin/admin.module.js';
+import { JudgeModule } from './judge/judge.module.js';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AdminModule } from './admin/admin.module.js';
     ProfileModule,
     AchievementsModule,
     AdminModule,
+    JudgeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -18,6 +18,7 @@ import {
   FileText,
   ShieldCheck,
   Heart,
+  Swords,
 } from "lucide-react";
 import {
   getHomeRoute,
@@ -58,6 +59,7 @@ export default function HubLayout({ children, title = "Learning space" }) {
     ["/student/dashboard", "Overview", LayoutDashboard],
     ["/courses", "Explore courses", Compass],
     ["/challenges", "Practice arena", Code2],
+    ["/student/contest", "Sunday Arena", Swords],
     ["/student/achievements", "Achievements", Trophy],
   ];
 
@@ -73,6 +75,7 @@ export default function HubLayout({ children, title = "Learning space" }) {
     ["/admin/users", "User Management", Users],
     ["/courses", "Explore Courses", Compass],
     ["/challenges", "Practice Arena", Code2],
+    ["/student/contest", "Sunday Arena", Swords],
     ["/student/dashboard", "Student View", LayoutDashboard],
     ["/parent/dashboard", "Parent View", Users],
   ];

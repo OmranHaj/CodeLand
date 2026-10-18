@@ -31,6 +31,7 @@ model User {
   ParentCheer_ParentCheer_childIdToUser  ParentCheer[]         @relation("ParentCheer_childIdToUser")
   ParentCheer_ParentCheer_parentIdToUser ParentCheer[]         @relation("ParentCheer_parentIdToUser")
   submissions                            ProjectSubmission[]
+  codeSubmissions                        CodeSubmission[]
   parent                                 User?                 @relation("ParentChildren", fields: [parentId], references: [id], onDelete: Cascade)
   children                               User[]                @relation("ParentChildren")
   UserAchievement                        UserAchievement[]
@@ -193,6 +194,14 @@ enum ProgressStatus {
   COMPLETED
 }
 
+enum SubmissionStatus {
+  ACCEPTED
+  WRONG_ANSWER
+  COMPILATION_ERROR
+  RUNTIME_ERROR
+  TIME_LIMIT_EXCEEDED
+}
+
 model AdminAuditLog {
   id           String   @id @default(uuid())
   adminId      String
@@ -277,14 +286,51 @@ model Challenge {
   estimatedMinutes Int      @default(15)
   status           String   @default("published")
   tasks            Json     @default("[]")
-  starterCode      String?  @db.Text
-  solutionCode     String?  @db.Text
-  hints            Json     @default("[]")
+  starterCode      String?          @db.Text
+  solutionCode     String?          @db.Text
+  hints            Json             @default("[]")
+  language         String           @default("cpp")
+  timeLimit        Float            @default(2.0)
+  memoryLimit      Int              @default(128)
   levelId          String
-  level            Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  level            Level            @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  testCases        TestCase[]
+  codeSubmissions  CodeSubmission[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   @@index([levelId])
+}
+
+model TestCase {
+  id             String    @id @default(uuid())
+  challengeId    String
+  input          String    @db.Text
+  expectedOutput String    @db.Text
+  isHidden       Boolean   @default(false)
+  order          Int       @default(0)
+  challenge      Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@index([challengeId])
+}
+
+model CodeSubmission {
+  id            String           @id @default(uuid())
+  userId        String
+  challengeId   String
+  code          String           @db.Text
+  language      String           @default("cpp")
+  status        SubmissionStatus
+  passedTests   Int              @default(0)
+  totalTests    Int              @default(0)
+  executionTime Float?
+  errorMessage  String?          @db.Text
+  createdAt     DateTime         @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@index([userId, challengeId])
+  @@index([challengeId])
 }
 

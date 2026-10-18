@@ -28,6 +28,7 @@ import {
 import { getLevelContent, recordLessonCompletion, fetchStudentProgress } from "../../services/learningContentService";
 
 import LessonRobot from "../../components/Learning/LessonRobot";
+import LessonExplanationPanel from "../../components/Learning/LessonExplanationPanel";
 
 import styles from "./HTMLFoundations.module.css";
 
@@ -1220,6 +1221,10 @@ function HTMLFoundations() {
 
               <span>{activeUnit.data.difficulty}</span>
             </div>
+
+            {activeUnit.kind === "lesson" && (
+              <LessonExplanationPanel lessonId={activeUnit.data.id} />
+            )}
 
             {activeUnit.kind === "lesson" &&
               activeUnit.data.blocks

@@ -10,6 +10,7 @@ import {
   Code2,
   Cpu,
   Lightbulb,
+  Loader2,
   LockKeyhole,
   Play,
   RotateCcw,
@@ -22,6 +23,7 @@ import {
 
 import LessonRobot from "../../components/Learning/LessonRobot";
 import CppLessonAnimation from "../../components/Learning/CppLessonAnimation";
+import LessonExplanationPanel from "../../components/Learning/LessonExplanationPanel";
 
 import cppStlCommandContent from "../../data/cppStlCommandContent";
 
@@ -117,18 +119,13 @@ function saveProgress(userId, progress) {
 /* ====================================================== */
 /* FUTURE C++ RUNNER */
 /* ====================================================== */
+/* C++ REMOTE COMPILER RUNNER                            */
+/* ====================================================== */
 
-async function runCppCode({ code, validation }) {
-  void code;
-  void validation;
+import { runCppExecution, detectCodeNeedsInput } from "../../services/judgeService";
 
-  return {
-    connected: false,
-    passed: false,
-    output: [],
-    error: null,
-    message: "The CodeLand C++ compiler service is not connected yet.",
-  };
+async function runCppCode({ code, customInput = "" }) {
+  return await runCppExecution({ code, customInput });
 }
 
 /* ====================================================== */
@@ -161,6 +158,15 @@ function CppStlCommand() {
   const [hintIndex, setHintIndex] = useState(-1);
 
   const [running, setRunning] = useState(false);
+
+  const [waitingForInput, setWaitingForInput] = useState(false);
+
+  const [customInput, setCustomInput] = useState("");
+
+  const needsInput = useMemo(
+    () => detectCodeNeedsInput(editorCode),
+    [editorCode],
+  );
 
   const [robotReaction, setRobotReaction] = useState({
     type: "idle",
@@ -297,16 +303,8 @@ function CppStlCommand() {
     return learningProgress.completedChallengeIds.includes(unit.id);
   };
 
-  const isUnlocked = (index) => {
-    if (!runnerAvailable) {
-      return true;
-    }
-
-    if (index === 0) {
-      return true;
-    }
-
-    return units.slice(0, index).every((unit) => isCompleted(unit));
+  const isUnlocked = () => {
+    return true;
   };
 
   /* ==================================================== */
@@ -376,6 +374,7 @@ function CppStlCommand() {
     setConsoleLines([]);
     setResult(null);
     setHintIndex(-1);
+    setCustomInput("");
 
     setRobotReaction((current) => ({
       type: "idle",
@@ -534,11 +533,36 @@ function CppStlCommand() {
   /* RUNNER */
   /* ==================================================== */
 
-  const handleRunCode = async () => {
+  const handleRunCode = async (overrideInput = null) => {
     if (!activeUnit || running) {
       return;
     }
 
+    const inputToUse = overrideInput !== null ? overrideInput : customInput;
+
+    // If code has cin/scanf/getline and no input was provided yet, wait for input!
+    if (needsInput && !inputToUse.trim() && overrideInput === null) {
+      setWaitingForInput(true);
+      setLabTab("console");
+      setConsoleLines([
+        {
+          type: "system",
+          text: "CodeLand C++ Interactive Console",
+        },
+        {
+          type: "muted",
+          text: "Program requires standard input (cin >>). Waiting for input...",
+        },
+      ]);
+      setResult({
+        type: "waiting",
+        message: "Program is waiting for input (cin >>). Enter value(s) below to continue.",
+      });
+      triggerRobotReaction("idle");
+      return;
+    }
+
+    setWaitingForInput(false);
     setRunning(true);
     setResult(null);
     setConsoleLines([]);
@@ -547,7 +571,7 @@ function CppStlCommand() {
     try {
       const response = await runCppCode({
         code: editorCode,
-        validation,
+        customInput: inputToUse,
       });
 
       if (!response.connected) {
@@ -568,7 +592,6 @@ function CppStlCommand() {
 
         setResult({
           type: "offline",
-          passed: false,
           message: response.message,
         });
 
@@ -594,11 +617,12 @@ function CppStlCommand() {
         ]);
       }
 
-      if (response.passed) {
+      if (response.success) {
         setResult({
           type: "success",
-          passed: true,
-          message: "Compilation successful. Mission complete!",
+          message: response.executionTime
+            ? `Execution finished in ${response.executionTime}`
+            : "Execution finished successfully.",
         });
 
         triggerRobotReaction("happy");
@@ -607,13 +631,10 @@ function CppStlCommand() {
           type: "success",
           key: (current?.key || 0) + 1,
         }));
-
-        completeUnit(activeUnit);
       } else {
         setResult({
           type: "error",
-          passed: false,
-          message: response.message || "The compiler found an issue.",
+          message: response.message || "Compilation or runtime error occurred.",
         });
 
         triggerRobotReaction("sad");
@@ -633,8 +654,7 @@ function CppStlCommand() {
 
       setResult({
         type: "error",
-        passed: false,
-        message: "Unable to compile code.",
+        message: "Unable to run code.",
       });
 
       triggerRobotReaction("sad");
@@ -643,43 +663,7 @@ function CppStlCommand() {
     }
   };
 
-  /* ==================================================== */
-  /* DEV COMPLETE */
-  /* ==================================================== */
 
-  const handleDevComplete = () => {
-    if (!import.meta.env.DEV || !activeUnit) {
-      return;
-    }
-
-    setResult({
-      type: "success",
-      passed: true,
-      message: "Development pass simulated.",
-    });
-
-    setLabTab("console");
-
-    setConsoleLines([
-      {
-        type: "system",
-        text: "Development compiler simulation",
-      },
-      {
-        type: "output",
-        text: "Mission passed.",
-      },
-    ]);
-
-    triggerRobotReaction("happy");
-
-    setFeedbackEffect((current) => ({
-      type: "success",
-      key: (current?.key || 0) + 1,
-    }));
-
-    completeUnit(activeUnit);
-  };
 
   /* ==================================================== */
   /* HINT / CONTINUE */
@@ -972,6 +956,10 @@ function CppStlCommand() {
                   <span>{activeUnit.data.xp} XP</span>
                 </div>
 
+                {activeUnit.kind === "lesson" && (
+                  <LessonExplanationPanel lessonId={activeUnit.data.id} />
+                )}
+
                 {activeUnit.kind === "lesson" &&
                   (activeUnit.data.blocks || []).map((block) => {
                     if (block.type === "text") {
@@ -1188,13 +1176,17 @@ function CppStlCommand() {
               className={`${styles.result} ${
                 result.type === "success"
                   ? styles.resultSuccess
-                  : result.type === "offline"
+                  : result.type === "waiting"
                     ? styles.resultOffline
-                    : styles.resultError
+                    : result.type === "offline"
+                      ? styles.resultOffline
+                      : styles.resultError
               }`}
             >
               {result.type === "success" ? (
                 <CheckCircle2 size={16} />
+              ) : result.type === "waiting" ? (
+                <Terminal size={16} />
               ) : result.type === "offline" ? (
                 <Terminal size={16} />
               ) : (
@@ -1204,14 +1196,137 @@ function CppStlCommand() {
               <div>
                 <strong>
                   {result.type === "success"
-                    ? "Mission complete"
-                    : result.type === "offline"
-                      ? "Compiler not connected"
-                      : "Compilation failed"}
+                    ? "Execution finished"
+                    : result.type === "waiting"
+                      ? "Waiting for input (cin >>)"
+                      : result.type === "offline"
+                        ? "Compiler not connected"
+                        : "Execution failed"}
                 </strong>
 
                 <span>{result.message}</span>
               </div>
+            </div>
+          )}
+
+          {waitingForInput && (
+            <div style={{
+              padding: "12px 16px",
+              background: "rgba(14, 165, 233, 0.12)",
+              borderTop: "1px solid rgba(56, 189, 248, 0.4)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "11px", fontWeight: 800, color: "#38bdf8", display: "flex", alignItems: "center", gap: "6px", textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                  <Terminal size={13} />
+                  Program is waiting for input (cin &gt;&gt;)
+                </span>
+                <span style={{ fontSize: "11px", color: "#94a3b8" }}>Standard Input</span>
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <input
+                  type="text"
+                  autoFocus
+                  value={customInput}
+                  onChange={(e) => setCustomInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleRunCode(customInput);
+                    }
+                  }}
+                  placeholder="Enter input value(s) for cin (e.g. 25)..."
+                  style={{
+                    flex: 1,
+                    padding: "8px 12px",
+                    background: "#020617",
+                    border: "1px solid rgba(56, 189, 248, 0.45)",
+                    borderRadius: "8px",
+                    color: "#38bdf8",
+                    fontFamily: "monospace",
+                    fontSize: "12px",
+                    outline: "none",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRunCode(customInput)}
+                  style={{
+                    padding: "0 14px",
+                    height: "36px",
+                    background: "linear-gradient(135deg, #0284c7, #38bdf8)",
+                    border: 0,
+                    borderRadius: "8px",
+                    color: "#fff",
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <Play size={12} fill="currentColor" />
+                  Send & Run
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRunCode("")}
+                  style={{
+                    padding: "0 10px",
+                    height: "36px",
+                    background: "rgba(255, 255, 255, 0.05)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    borderRadius: "8px",
+                    color: "#94a3b8",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Run empty
+                </button>
+              </div>
+            </div>
+          )}
+
+          {needsInput && !waitingForInput && (
+            <div style={{
+              padding: "10px 16px",
+              background: "rgba(14, 165, 233, 0.08)",
+              borderTop: "1px solid rgba(14, 165, 233, 0.25)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "6px",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "11px", fontWeight: 800, color: "#38bdf8", display: "flex", alignItems: "center", gap: "6px", textTransform: "uppercase", letterSpacing: "0.8px" }}>
+                  <Terminal size={12} />
+                  Program Input (cin &gt;&gt;) Detected
+                </span>
+                <span style={{ fontSize: "11px", color: "#94a3b8" }}>Value passed to cin</span>
+              </div>
+              <input
+                type="text"
+                value={customInput}
+                onChange={(e) => setCustomInput(e.target.value)}
+                placeholder="Enter value(s) for cin (e.g. 25)..."
+                style={{
+                  width: "100%",
+                  padding: "8px 12px",
+                  background: "#020617",
+                  border: "1px solid rgba(56, 189, 248, 0.35)",
+                  borderRadius: "8px",
+                  color: "#38bdf8",
+                  fontFamily: "monospace",
+                  fontSize: "12px",
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
             </div>
           )}
 
@@ -1223,38 +1338,49 @@ function CppStlCommand() {
             </div>
 
             <div className={styles.footerActions}>
-              {import.meta.env.DEV && !isCompleted(activeUnit) && (
-                <button
-                  type="button"
-                  className={styles.devPassButton}
-                  onClick={handleDevComplete}
-                >
-                  Simulate Pass
-                </button>
-              )}
-
-              {isCompleted(activeUnit) ? (
+              {activeUnitIndex > 0 && (
                 <button
                   type="button"
                   className={styles.continueButton}
-                  onClick={handleContinue}
+                  style={{
+                    background: "rgba(255, 255, 255, 0.06)",
+                    border: "1px solid rgba(255, 255, 255, 0.12)",
+                    color: "#cbd5e1",
+                  }}
+                  onClick={() => setActiveUnitId(units[activeUnitIndex - 1].id)}
                 >
-                  {activeUnitIndex === units.length - 1
-                    ? "Activate Core"
-                    : "Continue"}
-
-                  <ChevronRight size={15} />
+                  <ArrowLeft size={14} />
+                  Previous
                 </button>
-              ) : (
+              )}
+
+              <button
+                type="button"
+                className={styles.runButton}
+                disabled={running}
+                onClick={() => handleRunCode()}
+              >
+                {running ? (
+                  <>
+                    <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />
+                    Running...
+                  </>
+                ) : (
+                  <>
+                    <Play size={14} fill="currentColor" />
+                    Run
+                  </>
+                )}
+              </button>
+
+              {activeUnitIndex < units.length - 1 && (
                 <button
                   type="button"
-                  className={styles.runButton}
-                  disabled={running}
-                  onClick={handleRunCode}
+                  className={styles.continueButton}
+                  onClick={() => setActiveUnitId(units[activeUnitIndex + 1].id)}
                 >
-                  <Play size={14} fill="currentColor" />
-
-                  {running ? "Compiling..." : "Compile & Run"}
+                  Next
+                  <ChevronRight size={14} />
                 </button>
               )}
             </div>

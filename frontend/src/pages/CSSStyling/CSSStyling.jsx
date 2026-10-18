@@ -27,6 +27,7 @@ import {
 import { getLevelContent, recordLessonCompletion, fetchStudentProgress } from "../../services/learningContentService";
 import LessonRobot from "../../components/Learning/LessonRobot";
 import LessonAnimation from "../../components/Learning/animations/LessonAnimation";
+import LessonExplanationPanel from "../../components/Learning/LessonExplanationPanel";
 
 import styles from "./CSSStyling.module.css";
 
@@ -1366,6 +1367,10 @@ function CSSStyling() {
 
               <span>{activeUnit.data.difficulty}</span>
             </div>
+
+            {activeUnit.kind === "lesson" && (
+              <LessonExplanationPanel lessonId={activeUnit.data.id} />
+            )}
 
             {/* ========================================= */}
             {/* LESSON BLOCKS */}

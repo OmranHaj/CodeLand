@@ -145,7 +145,7 @@ export default function Dashboard() {
         p.trackId === "algo" ||
         // p.trackId === "python" || // MOCK DATA: Commented out because Python is not in the database
         p.levelId?.includes("algo")
-        // || p.levelId?.includes("python") // MOCK DATA: Commented out
+      // || p.levelId?.includes("python") // MOCK DATA: Commented out
     );
     const algoSum = algoRecords.reduce(
       (sum, r) => sum + (Number(r.progressPercent) || 0),

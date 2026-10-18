@@ -50,6 +50,7 @@ export function RouteEffects() {
       "/parent/guide": "Parent Guide & Safety",
       "/challenges": "Practice Arena",
       "/student/achievements": "Achievements",
+      "/student/contest": "Weekly Sunday Arena",
       "/student/settings": "Your Preferences",
       "/student/python-world": "Algorithm & Data Structures",
       "/student/algorithm-lab": "Algorithm Lab",
@@ -100,10 +101,22 @@ export function RouteEffects() {
 }
 
 export class RouteErrorBoundary extends Component {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
+  state = { failed: false, error: null };
+  static getDerivedStateFromError(error) {
+    return { failed: true, error };
   }
+  componentDidCatch(error, errorInfo) {
+    console.error("[RouteErrorBoundary] Caught error:", error, errorInfo);
+  }
+  handleResetStorage = () => {
+    try {
+      localStorage.removeItem("codeland_weekly_contest_v2");
+      localStorage.removeItem("codeland_sunday_arena_progress_v2");
+      localStorage.removeItem("codeland_student_contest_medals_v2");
+    } catch {}
+    this.setState({ failed: false, error: null });
+    window.location.reload();
+  };
   render() {
     if (this.state.failed)
       return (
@@ -114,10 +127,36 @@ export class RouteErrorBoundary extends Component {
             Something interrupted the page. Your saved progress is still on this
             browser.
           </p>
-          <button onClick={() => window.location.reload()}>Try again</button>
+          {this.state.error && (
+            <div
+              style={{
+                color: "#f87171",
+                fontFamily: "monospace",
+                fontSize: "12px",
+                margin: "12px auto",
+                maxWidth: "500px",
+                textAlign: "left",
+                background: "rgba(239, 68, 68, 0.1)",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                border: "1px solid rgba(239, 68, 68, 0.3)",
+              }}
+            >
+              {this.state.error?.message || String(this.state.error)}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+            <button onClick={() => window.location.reload()}>Try again</button>
+            <button
+              onClick={this.handleResetStorage}
+              style={{ background: "#475569" }}
+            >
+              Reset Session
+            </button>
+          </div>
           <Link
             to="/student/dashboard"
-            onClick={() => this.setState({ failed: false })}
+            onClick={() => this.setState({ failed: false, error: null })}
           >
             Back to your learning space
           </Link>

@@ -34,6 +34,7 @@ const Dashboard = lazy(() => import("./pages/Hub/Dashboard"));
 const Courses = lazy(() => import("./pages/Hub/Courses"));
 const Challenges = lazy(() => import("./pages/Hub/Challenges"));
 const Achievements = lazy(() => import("./pages/Hub/Achievements"));
+const WeeklyContest = lazy(() => import("./pages/Hub/WeeklyContest"));
 const Settings = lazy(() => import("./pages/Hub/Settings"));
 const PythonWorld = lazy(() => import("./pages/Hub/PythonWorld"));
 const AlgorithmLab = lazy(() => import("./pages/Hub/AlgorithmLab"));
@@ -170,6 +171,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["student"]}>
                   <Achievements />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/contest"
+              element={
+                <ProtectedRoute allowedRoles={["student", "admin", "superadmin"]}>
+                  <WeeklyContest />
                 </ProtectedRoute>
               }
             />

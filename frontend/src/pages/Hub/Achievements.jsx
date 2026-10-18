@@ -20,6 +20,9 @@ import {
 import gsap from "gsap";
 import HubLayout from "../../components/Hub/HubLayout";
 import Trophy3DShowcase from "../../components/Hub/Trophy3DShowcase";
+import ContestCertificate from "../../components/Contest/ContestCertificate";
+import { loadStudentMedals } from "../../services/contestService";
+import { getUser } from "../../services/learningHub";
 import {
   fetchAllAchievements,
   fetchMyAchievements,
@@ -84,8 +87,19 @@ export default function Achievements() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedBadge, setSelectedBadge] = useState(null);
+  const [contestMedals, setContestMedals] = useState(() => loadStudentMedals());
+  const [activeCertMedal, setActiveCertMedal] = useState(null);
 
   const gridRef = useRef(null);
+
+  // Sync contest medals from localStorage
+  useEffect(() => {
+    const handleMedals = () => {
+      setContestMedals(loadStudentMedals());
+    };
+    window.addEventListener("codeland:medals_update", handleMedals);
+    return () => window.removeEventListener("codeland:medals_update", handleMedals);
+  }, []);
 
   const loadData = useCallback(async () => {
     try {
@@ -249,6 +263,175 @@ export default function Achievements() {
       </div>
 
       {/* ================================================= */}
+      {/* WEEKLY SUNDAY CONTEST HONORS & CERTIFICATES       */}
+      {/* ================================================= */}
+      <div
+        style={{
+          marginBottom: "36px",
+          background: "linear-gradient(145deg, rgba(245, 158, 11, 0.08) 0%, rgba(13, 18, 33, 0.85) 100%)",
+          border: "1px solid rgba(245, 158, 11, 0.35)",
+          borderRadius: "20px",
+          padding: "24px 28px",
+          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.4)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "16px",
+            marginBottom: "20px",
+          }}
+        >
+          <div>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "11px",
+                fontWeight: 800,
+                letterSpacing: "0.15em",
+                color: "#fbbf24",
+                textTransform: "uppercase",
+              }}
+            >
+              <Trophy size={13} /> WEEKLY SUNDAY ARENA HONORS
+            </span>
+            <h2
+              style={{
+                fontSize: "20px",
+                fontWeight: 800,
+                color: "#f8fafc",
+                margin: "4px 0 2px 0",
+              }}
+            >
+              Championship Medals & Diplomas
+            </h2>
+            <p style={{ color: "#94a3b8", fontSize: "13px", margin: 0 }}>
+              Official recognition conferred during our weekly Sunday programming competitions.
+            </p>
+          </div>
+
+          <Link
+            to="/student/contest"
+            className="hub-btn ghost small"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              borderColor: "rgba(245, 158, 11, 0.4)",
+              color: "#fde047",
+            }}
+          >
+            Enter Sunday Arena <ArrowRight size={14} />
+          </Link>
+        </div>
+
+        {contestMedals.length > 0 ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: "16px",
+            }}
+          >
+            {contestMedals.map((medal) => {
+              const isGold = medal.medalType === "gold";
+              const isSilver = medal.medalType === "silver";
+              const accent = isGold ? "#fbbf24" : isSilver ? "#cbd5e1" : "#f97316";
+
+              return (
+                <div
+                  key={medal.id}
+                  style={{
+                    background: "rgba(10, 15, 30, 0.8)",
+                    border: `1px solid ${accent}50`,
+                    borderRadius: "16px",
+                    padding: "18px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    position: "relative",
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      <span style={{ fontSize: "28px" }}>
+                        {isGold ? "🥇" : isSilver ? "🥈" : "🥉"}
+                      </span>
+                      <div>
+                        <div
+                          style={{
+                            fontWeight: 800,
+                            fontSize: "14px",
+                            color: accent,
+                          }}
+                        >
+                          {medal.medalTitle}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#64748b" }}>
+                          Edition {medal.edition} • {medal.dateAwarded}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "#94a3b8",
+                        marginBottom: "14px",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      Score: <strong style={{ color: "#f8fafc" }}>{medal.score}</strong> • Earned{" "}
+                      <strong style={{ color: accent }}>+{medal.xpWon} XP</strong>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setActiveCertMedal(medal)}
+                    className="hub-btn primary small"
+                    style={{
+                      width: "100%",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      fontWeight: 700,
+                      fontSize: "12px",
+                    }}
+                  >
+                    <Award size={14} /> View & Print Official Diploma
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div
+            style={{
+              padding: "24px",
+              textAlign: "center",
+              color: "#94a3b8",
+              fontSize: "13px",
+            }}
+          >
+            No Sunday medals earned yet. Register for this Sunday's arena to compete for the podium!
+          </div>
+        )}
+      </div>
+
+      {/* ================================================= */}
       {/* LOADING STATE */}
       {/* ================================================= */}
       {loading ? (
@@ -289,9 +472,8 @@ export default function Achievements() {
 
             return (
               <article
-                className={`hub-badge-card hub-card-3d ${
-                  !isUnlocked ? "locked" : ""
-                } ${isSelected ? "selected" : ""}`}
+                className={`hub-badge-card hub-card-3d ${!isUnlocked ? "locked" : ""
+                  } ${isSelected ? "selected" : ""}`}
                 key={id}
                 onClick={() => setSelectedBadge(badge)}
                 style={{
@@ -374,6 +556,17 @@ export default function Achievements() {
           Keep discovering <ArrowRight size={14} />
         </Link>
       </div>
+
+      {/* Official Luxurious Printable Certificate Modal */}
+      {activeCertMedal && (
+        <ContestCertificate
+          medalData={activeCertMedal}
+          initialStudentName={
+            getUser()?.fullName || getUser()?.name || "CodeLand Champion"
+          }
+          onClose={() => setActiveCertMedal(null)}
+        />
+      )}
     </HubLayout>
   );
 }

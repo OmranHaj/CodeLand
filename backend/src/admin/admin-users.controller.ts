@@ -20,7 +20,7 @@ import { AdminGuard } from './guards/admin.guard.js';
 @Controller('admin/users')
 @UseGuards(JwtAuthGuard, AdminGuard)
 export class AdminUsersController {
-  constructor(private readonly adminUsersService: AdminUsersService) {}
+  constructor(private readonly adminUsersService: AdminUsersService) { }
 
   /**
    * Endpoint: GET /admin/users/stats

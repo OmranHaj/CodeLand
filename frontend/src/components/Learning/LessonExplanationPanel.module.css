@@ -1,0 +1,273 @@
+/* ====================================================== */
+/* LESSON EXPLANATION PANEL STYLES                        */
+/* Beginner-Friendly Written + Audio Explanation Component*/
+/* ====================================================== */
+
+.panel {
+  background: rgba(13, 20, 38, 0.88);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 16px;
+  margin: 18px 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  transition: all 0.25s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #6366f1, #38bdf8, transparent);
+  opacity: 0.7;
+}
+
+.panelExpanded {
+  border-color: rgba(99, 102, 241, 0.45);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+/* Header button */
+.header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: transparent;
+  border: none;
+  color: #f1f5f9;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease;
+}
+
+.header:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.headerIcon {
+  color: #818cf8;
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: 0.2px;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.16);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.audioChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 14px;
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  transition: all 0.2s ease;
+}
+
+.audioChipActive {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+  animation: pulseChip 1.8s infinite;
+}
+
+@keyframes pulseChip {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+
+/* Collapsible body */
+.body {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 16px 18px 20px 18px;
+  background: rgba(7, 12, 26, 0.5);
+}
+
+/* Audio Player Bar */
+.audioBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.audioBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.audioBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.playBtn {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+  padding: 7px 12px;
+}
+
+.playBtn:hover {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5);
+}
+
+.progressWrap {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progressTrack {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #38bdf8);
+  border-radius: 3px;
+  transition: width 0.15s ease;
+}
+
+.timeLabel {
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.speedBtn {
+  font-weight: 700;
+  color: #cbd5e1;
+  font-size: 11px;
+}
+
+/* Written explanation body */
+.explanationBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.explanationBody::-webkit-scrollbar {
+  width: 5px;
+}
+
+.explanationBody::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+}
+
+.explanationBody::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 4px;
+}
+
+.explanationBody::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionHeading {
+  font-size: 13px;
+  font-weight: 700;
+  color: #a5b4fc;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 6px 0 2px 0;
+}
+
+.paragraph {
+  font-size: 14px;
+  line-height: 1.68;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .audioBar {
+    gap: 8px;
+  }
+  .progressWrap {
+    width: 100%;
+    order: 3;
+  }
+}

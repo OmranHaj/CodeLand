@@ -28,6 +28,7 @@ import { getLevelContent, recordLessonCompletion, fetchStudentProgress } from ".
 
 import LessonRobot from "../../components/Learning/LessonRobot";
 import LessonAnimation from "../../components/Learning/animations/LessonAnimation";
+import LessonExplanationPanel from "../../components/Learning/LessonExplanationPanel";
 
 import styles from "./JavaScriptCore.module.css";
 
@@ -1356,6 +1357,10 @@ function JavaScriptCore() {
 
                   <span>{activeUnit.data.xp} XP</span>
                 </div>
+
+                {activeUnit.kind === "lesson" && (
+                  <LessonExplanationPanel lessonId={activeUnit.data.id} />
+                )}
 
                 {/* LESSON BLOCKS */}
 

@@ -12,7 +12,7 @@ const cppDataCircuitsContent = {
 
   execution: {
     mode: "backend-runner",
-    enabled: false,
+    enabled: true,
     language: "cpp",
   },
 
