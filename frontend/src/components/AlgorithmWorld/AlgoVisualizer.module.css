@@ -402,3 +402,10 @@
   color: #fbbf24;
   margin-right: 4px;
 }
+
+/* Small screens: toolbars wrap instead of running past the edge. */
+.visControls,
+.cameraModes {
+  flex-wrap: wrap;
+  max-width: 100%;
+}

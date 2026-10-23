@@ -68,7 +68,7 @@
   height: min(760px, calc(100dvh - 44px));
 
   display: grid;
-  grid-template-columns: 0.9fr 1fr;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
 
   overflow: hidden;
 
@@ -359,7 +359,7 @@
 .accountTypes {
   display: grid;
 
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 
   gap: 14px;
 }
@@ -710,7 +710,7 @@
 .passwordRow {
   display: grid;
 
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 
   gap: 12px;
 }
@@ -919,7 +919,7 @@
     width: min(620px, 100%);
     height: calc(100dvh - 36px);
 
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .visualSide {
@@ -984,7 +984,7 @@
   /* Account selection */
 
   .accountTypes {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
 
     gap: 9px;
   }
@@ -1017,7 +1017,7 @@
   /* Forms */
 
   .passwordRow {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
 
     gap: 8px;
   }

@@ -33,6 +33,8 @@ def main():
         print("__AI_JUDGE_RESULT__" + json.dumps(result, ensure_ascii=False))
     except Exception as e:
         error_result = {
+            # judge_error marks a judge/infrastructure failure, not a fault in the student's code.
+            "judge_error": True,
             "verdict": "Run Time Error",
             "failed_scenario": str(e),
             "feedback_ar": f"حدث خطأ أثناء فحص الكود: {str(e)}"

@@ -568,7 +568,7 @@
   min-height: 290px;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 1.35fr 1fr;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
   align-items: center;
   padding: 38px 44px;
   border-radius: 24px;
@@ -1958,13 +1958,13 @@
 
 .hub-split {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: 28px;
 }
 
 @media (max-width: 950px) {
   .hub-split {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -2112,14 +2112,14 @@
 
 .hub-settings-grid {
   display: grid;
-  grid-template-columns: 1.18fr 0.82fr;
+  grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr);
   gap: 32px;
   align-items: start;
 }
 
 @media (max-width: 1060px) {
   .hub-settings-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -2333,7 +2333,7 @@
 
 @media (max-width: 640px) {
   .hub-goal-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -3023,7 +3023,7 @@
     gap: 16px;
   }
   .hub-columns {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .hub-catalog {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3064,7 +3064,7 @@
     padding: 24px 20px;
   }
   .hub-feature {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     padding: 32px 24px;
     min-height: auto;
   }
@@ -3088,13 +3088,13 @@
 
 @media (max-width: 640px) {
   .hub-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .hub-catalog {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .hub-badge-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .hub-status {
     display: none;
@@ -3304,5 +3304,78 @@
   .hub *::after {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE FIXES — phones (≤640px) and tablets (≤1060px)
+   Grid tracks use minmax(0, 1fr) so long content can't force a column wider
+   than the screen (plain 1fr never shrinks below its content's min width).
+   ========================================================================== */
+
+.hub-settings-column,
+.hub-settings-card,
+.hub-setting-info,
+.hub-field-group {
+  min-width: 0;
+}
+
+@media (max-width: 1060px) {
+  .hub-settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .hub-settings-card {
+    padding: 20px 16px;
+  }
+
+  .hub-avatar-palette {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px;
+  }
+
+  .hub-palette-chips {
+    flex-wrap: wrap;
+  }
+
+  .hub-field-group label {
+    flex-wrap: wrap;
+    gap: 4px 10px;
+  }
+
+  .hub-setting-row {
+    flex-wrap: wrap;
+  }
+
+  .hub-font-size-group {
+    width: 100%;
+  }
+
+  .hub-font-size-group > * {
+    flex: 1;
+  }
+
+  .hub-family-code-box {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+/* Stat tiles: two per row on regular phones instead of one long column. */
+@media (max-width: 640px) and (min-width: 361px) {
+  .hub-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 22px 0 26px;
+  }
+
+  .hub-stat {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px;
   }
 }

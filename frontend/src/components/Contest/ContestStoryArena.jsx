@@ -50,13 +50,16 @@ import {
 import gsap from "gsap";
 import { Canvas, useFrame } from "@react-three/fiber";
 
+import ArenaRichText, { renderInline } from "../Arena/ArenaRichText";
 import {
-
-  CONTEST_CHAPTERS,
-
-  CONTEST_STORY_PROLOGUE,
-
-} from "../../data/contestStoryProblems";
+  fetchArenaProblem,
+  fetchArenaProblems,
+  formatXp,
+  revealArenaHint,
+  runArenaExamples,
+  submitArenaSolution,
+  xpAfterHint,
+} from "../../services/arenaProblemService";
 
 
 
@@ -856,7 +859,7 @@ const ARENA_STYLES = String.raw`
 
 .intel-tabs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 6px;
   margin: 18px 0 13px;
   padding: 4px;
@@ -1439,7 +1442,7 @@ const ARENA_STYLES = String.raw`
   }
 
   .arena-workspace {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .mission-panel,
@@ -1466,7 +1469,7 @@ const ARENA_STYLES = String.raw`
   }
 
   .arena-hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     padding: 22px;
   }
 
@@ -1550,7 +1553,7 @@ const ARENA_STYLES = String.raw`
 
 @media (max-width: 480px) {
   .sector-rail {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .hero-metrics {
@@ -1768,7 +1771,6 @@ const ARENA_STYLES = String.raw`
 
 `;
 
-const ARENA_PROGRESS_KEY = "codeland_sunday_arena_progress_v2";
 
 
 
@@ -1925,648 +1927,405 @@ function ArenaBackground({ accent, isRunning, isCompleted, chapterIndex }) {
   );
 }
 
-export default function ContestStoryArena({
+const DB_ARENA_STYLES = String.raw`
+.cinematic-arena .intel-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cinematic-arena .intel-tabs button { font-size: 11px; }
+.cinematic-arena .intel-label { font-size: 9.5px; letter-spacing: .08em; }
+.cinematic-arena .transmission-card p { font-size: 13.5px; }
+.arena-prose { color: #c3cddc; font-size: 13.5px; line-height: 1.75; overflow-wrap: anywhere; }
+.arena-prose p { margin: 0 0 10px; }
+.arena-prose p:last-child { margin-bottom: 0; }
+.arena-prose ul { margin: 0 0 10px; padding-left: 18px; }
+.arena-prose code { padding: 1px 5px; border-radius: 5px; color: #7dd3fc; background: rgba(56, 189, 248, .1); font-size: .9em; }
+.transmission-card .arena-prose { position: relative; z-index: 1; margin-top: 8px; font-style: italic; color: #a9b6c9; }
+.cinematic-arena .constraint-grid code { font-size: 12px; color: #b6c3d6; }
+.arena-figure { margin: 14px 0 0; }
+.arena-figure button { display: block; width: 100%; padding: 0; border: 1px solid color-mix(in srgb, var(--chapter-accent) 22%, transparent); border-radius: 12px; overflow: hidden; background: #050915; cursor: zoom-in; }
+.arena-figure img { display: block; width: 100%; max-height: 360px; object-fit: contain; }
+.arena-figure figcaption { margin-top: 6px; color: #64748b; font-size: 10.5px; text-align: center; }
+.arena-lightbox { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 24px; background: rgba(2, 4, 12, .92); cursor: zoom-out; }
+.arena-lightbox img { max-width: min(1100px, 100%); max-height: 90vh; border-radius: 12px; }
+.vector-io { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-top: 6px; }
+.vector-io span { display: block; margin-bottom: 4px; color: #627087; font-size: 9px; font-weight: 900; letter-spacing: .1em; }
+.vector-io pre { margin: 0; padding: 9px 10px; border: 1px solid rgba(56, 189, 248, .12); border-radius: 8px; color: #e2e8f0; background: #040812; font-family: "SFMono-Regular", Consolas, monospace; font-size: 12.5px; line-height: 1.55; white-space: pre; overflow-x: auto; }
+.vector-io .vector-out pre { color: #6ee7b7; }
+.cinematic-arena .vector-card p { font-size: 11.5px; color: #8391a7; }
+.hint-pane { display: grid; gap: 12px; }
+.hint-box { padding: 14px; border: 1px solid rgba(251, 191, 36, .25); border-radius: 12px; background: rgba(251, 191, 36, .05); }
+.hint-box h4 { display: flex; align-items: center; gap: 7px; margin: 0 0 8px; color: #fbbf24; font-size: 12px; }
+.hint-box p { margin: 0 0 12px; color: #c3cddc; font-size: 12.5px; line-height: 1.6; }
+.hint-foot { margin-top: 10px; color: #fbbf24; font-size: 11px; font-weight: 700; }
+.hint-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.hint-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border: 0; border-radius: 9px; color: #1c1303; background: linear-gradient(135deg, #fde047, #f59e0b); font-size: 11.5px; font-weight: 800; cursor: pointer; }
+.hint-btn:disabled { opacity: .55; cursor: wait; }
+.hint-ghost { padding: 8px 12px; border: 1px solid rgba(148, 163, 184, .25); border-radius: 9px; color: #cbd5e1; background: transparent; font-size: 11.5px; cursor: pointer; }
+.arena-state-card { display: grid; place-items: center; gap: 10px; min-height: 320px; padding: 40px 24px; text-align: center; color: #94a3b8; }
+.arena-state-card h2 { margin: 6px 0 0; color: #fff; font-size: 22px; }
+.arena-state-card p { max-width: 520px; margin: 0; font-size: 13.5px; line-height: 1.6; }
+.arena-state-card svg { color: var(--chapter-accent); }
+.arena-retry { display: inline-flex; align-items: center; gap: 7px; margin-top: 6px; padding: 9px 15px; border: 1px solid rgba(148, 163, 184, .25); border-radius: 10px; color: #e2e8f0; background: rgba(15, 23, 42, .6); font-weight: 700; cursor: pointer; }
+.arena-spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(148, 163, 184, .2); border-top-color: var(--chapter-accent); animation: arena-spin .9s linear infinite; }
+@keyframes arena-spin { to { transform: rotate(360deg); } }
+.xp-strike { margin-left: 6px; color: #64748b; text-decoration: line-through; }
+@media (max-width: 640px) { .vector-io { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .arena-spinner { animation: none; } }
+`;
 
-  onContestComplete,
+const LANGUAGES = [
+  { id: "cpp", label: "C++17", file: "cpp" },
+  { id: "python", label: "Python 3", file: "py" },
+  { id: "javascript", label: "JavaScript / Node", file: "js" },
+];
+const LANG_KEY = "codeland_arena_lang";
+const draftKey = (problemId, lang) => `codeland_arena_code_${problemId}_${lang}`;
 
-  user,
-
-}) {
-
-  // Load saved progress or default safely
-
-  const [arenaState, setArenaState] = useState(() => {
-
-    const fallback = {
-
-      currentChapterIndex: 0,
-
-      completedChapters: {},
-
-      totalScore: 0,
-
-      elapsedTotalSeconds: 0,
-
-      wrongAttemptsTotal: 0,
-
-      userCode: {},
-
-    };
-
-    try {
-
-      const saved = localStorage.getItem(ARENA_PROGRESS_KEY);
-
-      if (saved) {
-
-        const parsed = JSON.parse(saved);
-
-        if (parsed && typeof parsed === "object") {
-
-          return {
-
-            currentChapterIndex: Number.isInteger(parsed.currentChapterIndex)
-
-              ? Math.max(0, Math.min(CONTEST_CHAPTERS.length - 1, parsed.currentChapterIndex))
-
-              : 0,
-
-            completedChapters: parsed.completedChapters || {},
-
-            totalScore: Number(parsed.totalScore) || 0,
-
-            elapsedTotalSeconds: Number(parsed.elapsedTotalSeconds) || 0,
-
-            wrongAttemptsTotal: Number(parsed.wrongAttemptsTotal) || 0,
-
-            userCode: parsed.userCode || {},
-
-          };
-
-        }
-
-      }
-
-    } catch (e) {
-
-      console.warn("Error loading arena progress:", e);
-
-    }
-
+// Per-browser editor drafts (guarded: storage may be unavailable).
+function readStoredValue(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw === null ? fallback : JSON.parse(raw);
+  } catch {
     return fallback;
+  }
+}
+function writeStoredValue(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Drafts simply won't persist.
+  }
+}
 
+/**
+ * @param {string} [contestId]  a past contest to browse (defaults to the current one)
+ * @param {boolean} [readOnly]  contest not live: Run works, Submit is off, hints are free
+ */
+export default function ContestStoryArena({ onContestComplete, onProgress, user, contestId, readOnly = false }) {
+  const role = (user?.role || "").toLowerCase();
+  const isStudent = role === "student" || role === "child";
+
+  // ---------------- data from the backend ----------------
+  const [problems, setProblems] = useState([]);
+  const [loadState, setLoadState] = useState("loading"); // "loading" | "ready" | "error"
+  const [loadError, setLoadError] = useState("");
+  const [details, setDetails] = useState({});
+  const [detailError, setDetailError] = useState("");
+
+  // ---------------- UI state ----------------
+  const [activeChapterIndex, setActiveChapterIndex] = useState(0);
+  const [selectedLang, setSelectedLang] = useState(() => {
+    const saved = readStoredValue(LANG_KEY, "cpp");
+    return LANGUAGES.some((l) => l.id === saved) ? saved : "cpp";
   });
-
-
-
-  const [activeChapterIndex, setActiveChapterIndex] = useState(
-
-    arenaState?.currentChapterIndex || 0
-
-  );
-
-  const [selectedLang, setSelectedLang] = useState("javascript");
-
   const [code, setCode] = useState("");
-
-  const [isRunning, setIsRunning] = useState(false);
-
+  const [busy, setBusy] = useState(null); // "run" | "submit" | null
   const [terminalLogs, setTerminalLogs] = useState([]);
-
-  const [currentChapterSeconds, setCurrentChapterSeconds] = useState(0);
-
-  const [chapterWrongAttempts, setChapterWrongAttempts] = useState(0);
-
-  const [activeTab, setActiveTab] = useState("description"); // "description" | "hints"
-
+  const [activeTab, setActiveTab] = useState("description"); // "description" | "vectors" | "hint"
   const [copiedCode, setCopiedCode] = useState(false);
+  const [hintConfirm, setHintConfirm] = useState(false);
+  const [hintBusy, setHintBusy] = useState(false);
+  const [hintError, setHintError] = useState("");
+  const [zoomed, setZoomed] = useState(false);
+  const [sessionSeconds, setSessionSeconds] = useState(0);
+  const [chapterSeconds, setChapterSeconds] = useState(0);
 
+  const isRunning = Boolean(busy);
 
-
-  const activeChapter = CONTEST_CHAPTERS[activeChapterIndex] || CONTEST_CHAPTERS[0];
-
-  const isChapterCompleted = Boolean(
-
-    arenaState?.completedChapters?.[activeChapter?.id]
-
-  );
-
-
-
-  // Sync state to localStorage
-
-  const saveState = (newState) => {
-
-    setArenaState(newState);
-
+  const loadProblems = async () => {
+    setLoadState("loading");
+    setLoadError("");
     try {
-
-      localStorage.setItem(ARENA_PROGRESS_KEY, JSON.stringify(newState));
-
-    } catch (e) {
-
-      console.error("Failed to save arena progress:", e);
-
+      const list = await fetchArenaProblems(contestId);
+      const sorted = (Array.isArray(list) ? list : []).sort(
+        (a, b) => (a.difficultyIndex ?? 0) - (b.difficultyIndex ?? 0)
+      );
+      setProblems(sorted);
+      // Start on the first sector the student has not solved yet.
+      const firstOpen = sorted.findIndex((p) => !p.progress?.solved);
+      setActiveChapterIndex(firstOpen === -1 ? Math.max(0, sorted.length - 1) : firstOpen);
+      setLoadState("ready");
+    } catch (err) {
+      setLoadError(err.message || "Could not load the arena.");
+      setLoadState("error");
     }
-
   };
 
+  useEffect(() => {
+    loadProblems();
+  }, [contestId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const activeSummary = problems[activeChapterIndex] || null;
+  const activeId = activeSummary?.id;
+  const activeChapter = activeId ? details[activeId] : null;
+  const progress = activeChapter?.progress || activeSummary?.progress || {};
+  const isChapterCompleted = Boolean(progress.solved);
+  // The server decides (live window + registration); readOnly is the page's own hint.
+  const canSubmit = isStudent && !readOnly && activeChapter?.competition?.canSubmit !== false;
+  const contestStage = activeChapter?.competition?.stage;
+  // Hints are free only once the contest is over; while live they cost XP and need registration.
+  const freeHints = contestStage ? contestStage === "ended" || contestStage === "archived" : readOnly && Boolean(contestId);
 
-  // Initialize code for current chapter and language
+  // Load full details (statement, examples, image…) for the active sector.
+  useEffect(() => {
+    if (!activeId || details[activeId]) return;
+    let cancelled = false;
+    setDetailError("");
+    fetchArenaProblem(activeId)
+      .then((detail) => {
+        if (!cancelled) setDetails((prev) => ({ ...prev, [activeId]: detail }));
+      })
+      .catch((err) => {
+        if (!cancelled) setDetailError(err.message || "Could not load this sector.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeId, details]);
+
+  // Restore the draft (or starter code) when the sector or language changes.
+  const starterCode = activeChapter?.starterCode;
+  useEffect(() => {
+    if (!activeId || !starterCode) return;
+    setCode(readStoredValue(draftKey(activeId, selectedLang), null) ?? (starterCode[selectedLang] || ""));
+  }, [activeId, selectedLang, starterCode]);
 
   useEffect(() => {
-
-    const codeKey = `${activeChapter.id}_${selectedLang}`;
-
-    if (arenaState.userCode && arenaState.userCode[codeKey]) {
-
-      setCode(arenaState.userCode[codeKey]);
-
-    } else {
-
-      setCode(activeChapter.starterCode[selectedLang] || "");
-
-    }
-
     setTerminalLogs([]);
+    setChapterSeconds(0);
+    setHintConfirm(false);
+    setHintError("");
+    setActiveTab("description");
+  }, [activeId]);
 
-    setCurrentChapterSeconds(0);
-
-    setChapterWrongAttempts(0);
-
-  }, [activeChapterIndex, selectedLang]);
-
-
-
-  // Live timer for current chapter
+  // Session + sector timers (display only).
+  useEffect(() => {
+    if (loadState !== "ready" || problems.length === 0) return undefined;
+    const timer = setInterval(() => {
+      setSessionSeconds((s) => s + 1);
+      if (!isChapterCompleted) setChapterSeconds((s) => s + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [loadState, problems.length, isChapterCompleted]);
 
   useEffect(() => {
+    if (!zoomed) return undefined;
+    const onKey = (e) => e.key === "Escape" && setZoomed(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoomed]);
 
-    if (isChapterCompleted) return;
+  /** Applies backend progress (and an optional revealed hint) to list + details. */
+  const applyProgress = (id, nextProgress, hint) => {
+    setProblems((prev) => prev.map((p) => (p.id === id ? { ...p, progress: nextProgress } : p)));
+    setDetails((prev) =>
+      prev[id]
+        ? {
+            ...prev,
+            [id]: {
+              ...prev[id],
+              progress: nextProgress,
+              ...(hint ? { hint, hintRevealed: true } : {}),
+            },
+          }
+        : prev
+    );
+  };
 
-    const timer = setInterval(() => {
+  const handleCodeChange = (value) => {
+    setCode(value);
+    if (activeId) writeStoredValue(draftKey(activeId, selectedLang), value);
+  };
 
-      setCurrentChapterSeconds((prev) => prev + 1);
+  const handleEditorKeyDown = (event) => {
+    if (event.key !== "Tab") return;
+    event.preventDefault();
+    const el = event.currentTarget;
+    const { selectionStart, selectionEnd } = el;
+    const next = `${code.slice(0, selectionStart)}    ${code.slice(selectionEnd)}`;
+    handleCodeChange(next);
+    requestAnimationFrame(() => {
+      el.selectionStart = el.selectionEnd = selectionStart + 4;
+    });
+  };
 
-      setArenaState((prev) => ({
-
-        ...prev,
-
-        elapsedTotalSeconds: prev.elapsedTotalSeconds + 1,
-
-      }));
-
-    }, 1000);
-
-    return () => clearInterval(timer);
-
-  }, [activeChapterIndex, isChapterCompleted]);
-
-
-
-  // Reset code to baseline starter
+  const handleLanguage = (lang) => {
+    setSelectedLang(lang);
+    writeStoredValue(LANG_KEY, lang);
+  };
 
   const handleResetCode = () => {
-
-    const starter = activeChapter.starterCode[selectedLang] || "";
-
-    setCode(starter);
-
-    setTerminalLogs([
-
-      { type: "info", text: "↺ Code reset to initial mission template." },
-
-    ]);
-
+    const starter = starterCode?.[selectedLang] || "";
+    handleCodeChange(starter);
+    setTerminalLogs([{ type: "info", text: "↺ Code reset to the sector's starter template." }]);
   };
-
-
-
-  // Copy code to clipboard
 
   const handleCopyCode = () => {
-
     navigator.clipboard?.writeText?.(code);
-
     setCopiedCode(true);
-
     setTimeout(() => setCopiedCode(false), 2000);
-
   };
 
-
-
-  // Run Test Cases & Submit
-
-  const handleExecute = (isSubmission = false) => {
-
-    setIsRunning(true);
-
-    const logs = [];
-
-
-
-    // Save current code
-
-    const codeKey = `${activeChapter.id}_${selectedLang}`;
-
-    const nextUserCode = { ...arenaState.userCode, [codeKey]: code };
-
-
-
-    if (selectedLang !== "javascript") {
-
-      // Simulated compiler feedback for Python / C++
-
-      setTimeout(() => {
-
-        logs.push({
-
-          type: "info",
-
-          text: `[Compiler: ${selectedLang.toUpperCase()}] Compiling & running test suite...`,
-
-        });
-
-        logs.push({
-
-          type: "pass",
-
-          text: `✓ Test Case 1: PASS (2.1ms)`,
-
-        });
-
-        logs.push({
-
-          type: "pass",
-
-          text: `✓ Test Case 2: PASS (1.8ms)`,
-
-        });
-
-        logs.push({
-
-          type: "pass",
-
-          text: `✓ Test Case 3: PASS (3.4ms)`,
-
-        });
-
-        handlePassChapter(logs, nextUserCode);
-
-        setIsRunning(false);
-
-      }, 700);
-
-      return;
-
+  const describeExamples = (results, logs) => {
+    for (const r of results || []) {
+      const time = r.executionTime ? ` (${r.executionTime})` : "";
+      if (r.passed) {
+        logs.push({ type: "pass", text: `✓ Example ${r.index + 1}: PASS${time}` });
+      } else {
+        logs.push({ type: "error", text: `✗ Example ${r.index + 1}: FAIL${time}` });
+        if (r.error) {
+          logs.push({ type: "warning", text: r.error.split("\n").slice(0, 6).join("\n") });
+        } else {
+          logs.push({ type: "info", text: `   expected: ${JSON.stringify(r.expectedOutput)}` });
+          logs.push({ type: "info", text: `   got:      ${JSON.stringify(r.actualOutput || "")}` });
+        }
+      }
     }
+  };
 
+  const shake = () =>
+    gsap.fromTo(
+      ".arena-terminal-window",
+      { x: -6 },
+      { x: 6, duration: 0.08, repeat: 5, yoyo: true, ease: "power1.inOut" }
+    );
 
-
-    // Real Execution for JavaScript inside sandbox
+  // Run = examples only (no XP). Submit = full judging + XP, computed server-side.
+  const handleExecute = async (isSubmission = false) => {
+    if (!activeChapter || !code.trim()) return;
+    setBusy(isSubmission ? "submit" : "run");
+    const langLabel = LANGUAGES.find((l) => l.id === selectedLang)?.label || selectedLang;
+    const logs = [
+      {
+        type: "info",
+        text: `[${langLabel}] ${isSubmission ? "Submitting" : "Running"} on ${activeChapter.examples?.length || 0} example(s)…`,
+      },
+    ];
+    setTerminalLogs([...logs]);
 
     try {
-
-      // Evaluate function
-
-      const userFn = new Function(`
-
-        ${code}
-
-        if (typeof filterPackets === 'function') return filterPackets;
-
-        if (typeof isBeaconSymmetric === 'function') return isBeaconSymmetric;
-
-        if (typeof maxEnergySurge === 'function') return maxEnergySurge;
-
-        if (typeof shortestGridPath === 'function') return shortestGridPath;
-
-        if (typeof minQuantumCells === 'function') return minQuantumCells;
-
-        if (typeof longestValidParentheses === 'function') return longestValidParentheses;
-
-        throw new Error("Target function definition not found in script.");
-
-      `)();
-
-
-
-      // Run validator
-
-      const validation = activeChapter.validatorFn(userFn);
-
-
-
-      if (validation.pass) {
-
+      if (!isSubmission) {
+        const res = await runArenaExamples(activeChapter.id, { code, language: selectedLang });
+        describeExamples(res.exampleResults, logs);
         logs.push({
-
-          type: "info",
-
-          text: `⚡ Executing ${activeChapter.title} verification suite...`,
-
+          type: res.verdict === "Accepted" ? "success" : "warning",
+          text:
+            res.verdict === "Accepted"
+              ? "All examples pass. Submit to verify and claim the XP."
+              : `Run result: ${res.verdict}`,
         });
-
-        activeChapter.sampleTests.forEach((t, i) => {
-
-          logs.push({
-
-            type: "pass",
-
-            text: `✓ Test Case ${i + 1}: PASS (Execution: 0.${Math.floor(1 + Math.random() * 8)}ms)`,
-
-          });
-
-        });
-
-        logs.push({
-
-          type: "pass",
-
-          text: `✓ All hidden stress test vectors passed successfully!`,
-
-        });
-
-
-
-        handlePassChapter(logs, nextUserCode);
-
-      } else {
-
-        // Validation Failed
-
-        const newWrong = chapterWrongAttempts + 1;
-
-        setChapterWrongAttempts(newWrong);
-
-
-
-        logs.push({
-
-          type: "error",
-
-          text: `✗ TEST FAILED: ${validation.error}`,
-
-        });
-
-        logs.push({
-
-          type: "warning",
-
-          text: `⚠️ Penalty applied: Attempt #${newWrong} (-25 pts). Review constraints and try again!`,
-
-        });
-
-
-
         setTerminalLogs(logs);
-
-        saveState({
-
-          ...arenaState,
-
-          wrongAttemptsTotal: arenaState.wrongAttemptsTotal + 1,
-
-          userCode: nextUserCode,
-
-        });
-
-
-
-        // Shake animation on error
-
-        gsap.fromTo(
-
-          ".arena-terminal-window",
-
-          { x: -6 },
-
-          { x: 6, duration: 0.08, repeat: 5, yoyo: true, ease: "power1.inOut" }
-
-        );
-
+        if (res.verdict !== "Accepted") shake();
+        return;
       }
 
-    } catch (err) {
-
-      const newWrong = chapterWrongAttempts + 1;
-
-      setChapterWrongAttempts(newWrong);
-
-
-
-      logs.push({
-
-        type: "error",
-
-        text: `✗ RUNTIME ERROR: ${err.message}`,
-
-      });
-
-      logs.push({
-
-        type: "warning",
-
-        text: `⚠️ Penalty applied: Attempt #${newWrong} (-25 pts).`,
-
-      });
-
-
-
+      const res = await submitArenaSolution(activeChapter.id, { code, language: selectedLang });
+      describeExamples(res.exampleResults, logs);
+      // Hidden tests: counts only — their inputs never reach the browser.
+      const hidden = res.hiddenTests;
+      if (hidden?.total > 0) {
+        logs.push(
+          hidden.failedTest
+            ? {
+                type: "error",
+                text: `✗ Hidden test ${hidden.failedTest}: ${res.verdict} (${hidden.passed}/${hidden.total} hidden tests passed)`,
+              }
+            : hidden.passed === hidden.total
+            ? { type: "pass", text: `✓ Hidden tests: ${hidden.passed}/${hidden.total} passed` }
+            : { type: "info", text: `Hidden tests not run yet — fix the examples first (${hidden.total} waiting).` }
+        );
+      }
+      if (res.verdict === "Accepted") {
+        if (res.xpAwarded > 0) {
+          logs.push({ type: "success", text: `🎉 SECTOR ${String(activeChapterIndex + 1).padStart(2, "0")} CLEARED!` });
+          logs.push({
+            type: "score",
+            text: res.progress?.hintUsed
+              ? `+${formatXp(res.xpAwarded)} XP (problem ${formatXp(activeChapter.xp)} XP − 25% hint penalty)`
+              : `+${formatXp(res.xpAwarded)} XP — full reward, no hint used`,
+          });
+        } else {
+          logs.push({ type: "success", text: "✓ Accepted again — XP is awarded only once per sector." });
+        }
+        if (res.feedback) logs.push({ type: "info", text: res.feedback });
+        gsap.fromTo(
+          ".arena-status-bar",
+          { scale: 0.98, boxShadow: "0 0 40px rgba(52, 211, 153, 0.6)" },
+          { scale: 1, boxShadow: "none", duration: 0.5 }
+        );
+      } else {
+        logs.push({ type: "error", text: `✗ Verdict: ${res.verdict}` });
+        if (res.feedback) logs.push({ type: "warning", text: res.feedback });
+        if (res.failedScenario && res.failedScenario !== "None") {
+          logs.push({ type: "info", text: `Failed on: ${res.failedScenario}` });
+        }
+        shake();
+      }
       setTerminalLogs(logs);
+      applyProgress(activeChapter.id, res.progress, res.hint);
+      if (res.xpAwarded > 0) onProgress?.();
 
-      saveState({
-
-        ...arenaState,
-
-        wrongAttemptsTotal: arenaState.wrongAttemptsTotal + 1,
-
-        userCode: nextUserCode,
-
-      });
-
+      // Whole contest cleared in this session → let the page award the medal.
+      if (res.xpAwarded > 0) {
+        const nextProblems = problems.map((p) =>
+          p.id === activeChapter.id ? { ...p, progress: res.progress } : p
+        );
+        if (nextProblems.every((p) => p.progress?.solved)) {
+          const earned = nextProblems.reduce((sum, p) => sum + (p.progress?.earnedXp || 0), 0);
+          const maxScore = nextProblems.reduce((sum, p) => sum + p.xp, 0);
+          setTimeout(() => {
+            onContestComplete?.({
+              totalScore: earned,
+              maxScore,
+              elapsedSeconds: sessionSeconds,
+              wrongAttempts: totalAttempts - nextProblems.length,
+            });
+          }, 1500);
+        }
+      }
+    } catch (err) {
+      logs.push({ type: "error", text: `✗ ${err.message || "The judge could not be reached."}` });
+      setTerminalLogs(logs);
+      shake();
     } finally {
-
-      setIsRunning(false);
-
+      setBusy(null);
     }
-
   };
 
-
-
-  // Chapter Passed Handler
-
-  const handlePassChapter = (logs, nextUserCode) => {
-
-    // Scoring Formula:
-
-    // Base Points + Speed Bonus - (Wrong Attempts * 25) + Flawless Bonus
-
-    const base = activeChapter.basePoints;
-
-    const timeTarget = activeChapter.timeTargetSeconds;
-
-    const timeUsed = currentChapterSeconds;
-
-
-
-    const speedBonus = Math.max(
-
-      0,
-
-      Math.round(base * 0.4 * Math.max(0, 1 - timeUsed / timeTarget))
-
-    );
-
-
-
-    const penalties = chapterWrongAttempts * 25;
-
-    const flawlessBonus = chapterWrongAttempts === 0 ? 50 : 0;
-
-
-
-    const chapterFinalScore = Math.max(
-
-      50,
-
-      base + speedBonus - penalties + flawlessBonus
-
-    );
-
-
-
-    logs.push({
-
-      type: "success",
-
-      text: `🎉 CHAPTER ${activeChapter.chapterNumber} CLEARED!`,
-
-    });
-
-    logs.push({
-
-      type: "score",
-
-      text: `Score Breakdown: Base (${base}) + Speed Bonus (+${speedBonus}) - Penalty (-${penalties}) + Flawless (+${flawlessBonus}) = ${chapterFinalScore} PTS!`,
-
-    });
-
-
-
-    setTerminalLogs(logs);
-
-
-
-    const nextCompleted = {
-
-      ...arenaState.completedChapters,
-
-      [activeChapter.id]: {
-
-        score: chapterFinalScore,
-
-        elapsedSeconds: timeUsed,
-
-        wrongAttempts: chapterWrongAttempts,
-
-        completedAt: new Date().toISOString(),
-
-      },
-
-    };
-
-
-
-    const nextTotalScore = Object.values(nextCompleted).reduce(
-
-      (sum, item) => sum + (item.score || 0),
-
-      0
-
-    );
-
-
-
-    const nextCurrentIdx = Math.min(
-
-      CONTEST_CHAPTERS.length - 1,
-
-      activeChapterIndex + 1
-
-    );
-
-
-
-    const nextState = {
-
-      ...arenaState,
-
-      completedChapters: nextCompleted,
-
-      totalScore: nextTotalScore,
-
-      currentChapterIndex: nextCurrentIdx,
-
-      userCode: nextUserCode,
-
-    };
-
-
-
-    saveState(nextState);
-
-
-
-    // Pulse animation
-
-    gsap.fromTo(
-
-      ".arena-status-bar",
-
-      { scale: 0.98, boxShadow: "0 0 40px rgba(52, 211, 153, 0.6)" },
-
-      { scale: 1, boxShadow: "none", duration: 0.5 }
-
-    );
-
-
-
-    // Check if entire contest completed (all 6 chapters)
-
-    const completedCount = Object.keys(nextCompleted).length;
-
-    if (completedCount === CONTEST_CHAPTERS.length) {
-
-      setTimeout(() => {
-
-        onContestComplete?.({
-
-          totalScore: nextTotalScore,
-
-          elapsedSeconds: nextState.elapsedTotalSeconds,
-
-          wrongAttempts: nextState.wrongAttemptsTotal,
-
-        });
-
-      }, 1500);
-
+  const handleRevealHint = async () => {
+    if (!activeChapter) return;
+    setHintBusy(true);
+    setHintError("");
+    try {
+      const res = await revealArenaHint(activeChapter.id);
+      applyProgress(activeChapter.id, res.progress, res.hint);
+      setHintConfirm(false);
+    } catch (err) {
+      setHintError(err.message || "Could not reveal the hint.");
+    } finally {
+      setHintBusy(false);
     }
-
   };
 
-
-
-  const totalChaptersCompleted = Object.keys(
-
-    arenaState.completedChapters
-
-  ).length;
-
-
-
+  // ---------------- derived values ----------------
+  const totalChaptersCompleted = problems.filter((p) => p.progress?.solved).length;
+  const totalAttempts = problems.reduce((sum, p) => sum + (p.progress?.submissionCount || 0), 0);
+  const earnedXp = problems.reduce((sum, p) => sum + (p.progress?.earnedXp || 0), 0);
+  const maxXp = problems.reduce((sum, p) => sum + (p.xp || 0), 0);
+  const completionPercent = Math.round((totalChaptersCompleted / Math.max(problems.length, 1)) * 100);
+  const isLockedAt = (idx) => isStudent && !readOnly && idx > 0 && !problems[idx - 1]?.progress?.solved;
+  const canGoPrev = activeChapterIndex > 0;
+  const canGoNext = activeChapterIndex < problems.length - 1 && !isLockedAt(activeChapterIndex + 1);
+  const story = problems[0]?.story;
 
   const arenaRootRef = useRef(null);
   const cursorGlowRef = useRef(null);
   const glowXRef = useRef(null);
   const glowYRef = useRef(null);
 
-  const chapterAccent = activeChapter?.difficultyColor || "#8b5cf6";
-  const completionPercent = Math.round(
-    (totalChaptersCompleted / Math.max(CONTEST_CHAPTERS.length, 1)) * 100
-  );
-  const canGoPrev = activeChapterIndex > 0;
-  const canGoNext =
-    activeChapterIndex < CONTEST_CHAPTERS.length - 1 &&
-    Boolean(arenaState.completedChapters[activeChapter.id]);
+  const chapterAccent = activeSummary?.difficultyColor || "#8b5cf6";
 
   useLayoutEffect(() => {
     if (!arenaRootRef.current) return undefined;
-
     const ctx = gsap.context(() => {
       const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
       intro
@@ -2581,52 +2340,28 @@ export default function ContestStoryArena({
           { opacity: 1, y: 0, scale: 1, duration: 0.55, stagger: 0.055 },
           "-=0.45"
         );
-
-      gsap.to(".hero-orbit", {
-        rotate: 360,
-        duration: 18,
-        repeat: -1,
-        ease: "none",
-      });
-
-      gsap.to(".hero-orbit-secondary", {
-        rotate: -360,
-        duration: 26,
-        repeat: -1,
-        ease: "none",
-      });
+      gsap.to(".hero-orbit", { rotate: 360, duration: 18, repeat: -1, ease: "none" });
+      gsap.to(".hero-orbit-secondary", { rotate: -360, duration: 26, repeat: -1, ease: "none" });
     }, arenaRootRef);
 
     if (cursorGlowRef.current) {
-      glowXRef.current = gsap.quickTo(cursorGlowRef.current, "x", {
-        duration: 0.45,
-        ease: "power3.out",
-      });
-      glowYRef.current = gsap.quickTo(cursorGlowRef.current, "y", {
-        duration: 0.45,
-        ease: "power3.out",
-      });
+      glowXRef.current = gsap.quickTo(cursorGlowRef.current, "x", { duration: 0.45, ease: "power3.out" });
+      glowYRef.current = gsap.quickTo(cursorGlowRef.current, "y", { duration: 0.45, ease: "power3.out" });
     }
-
     return () => ctx.revert();
-  }, []);
+  }, [loadState]);
 
   useEffect(() => {
-    if (!arenaRootRef.current) return undefined;
+    if (!arenaRootRef.current || !activeChapter) return undefined;
     const ctx = gsap.context(() => {
       gsap.fromTo(
         ".chapter-motion",
         { opacity: 0, y: 20, filter: "blur(9px)" },
         { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, stagger: 0.045, ease: "power3.out" }
       );
-      gsap.fromTo(
-        ".sector-node.is-active",
-        { scale: 0.96 },
-        { scale: 1, duration: 0.55, ease: "back.out(1.8)" }
-      );
     }, arenaRootRef);
     return () => ctx.revert();
-  }, [activeChapterIndex]);
+  }, [activeChapter?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!terminalLogs.length || !arenaRootRef.current) return undefined;
@@ -2634,7 +2369,7 @@ export default function ContestStoryArena({
       gsap.fromTo(
         ".terminal-line",
         { opacity: 0, x: -10 },
-        { opacity: 1, x: 0, duration: 0.35, stagger: 0.055, ease: "power2.out" }
+        { opacity: 1, x: 0, duration: 0.35, stagger: 0.04, ease: "power2.out" }
       );
     }, arenaRootRef);
     return () => ctx.revert();
@@ -2653,12 +2388,7 @@ export default function ContestStoryArena({
           ease: "sine.inOut",
         });
       } else {
-        gsap.to(".run-pulse", {
-          scale: 1,
-          boxShadow: "0 0 0 rgba(0,0,0,0)",
-          duration: 0.28,
-          overwrite: true,
-        });
+        gsap.to(".run-pulse", { scale: 1, boxShadow: "0 0 0 rgba(0,0,0,0)", duration: 0.28, overwrite: true });
       }
     }, arenaRootRef);
     return () => ctx.revert();
@@ -2671,7 +2401,7 @@ export default function ContestStoryArena({
     glowYRef.current?.(event.clientY - bounds.top - 210);
   };
 
-  return (
+  const shell = (children) => (
     <div
       ref={arenaRootRef}
       className="contest-story-arena-container cinematic-arena"
@@ -2679,380 +2409,553 @@ export default function ContestStoryArena({
       onPointerMove={handleArenaPointerMove}
     >
       <style>{ARENA_STYLES}</style>
+      <style>{DB_ARENA_STYLES}</style>
       <ArenaBackground
         accent={chapterAccent}
         isRunning={isRunning}
         isCompleted={isChapterCompleted}
         chapterIndex={activeChapterIndex}
       />
-
       <div ref={cursorGlowRef} className="arena-cursor-glow" aria-hidden="true" />
       <div className="arena-vignette" aria-hidden="true" />
       <div className="arena-scanlines" aria-hidden="true" />
       <div className="arena-noise" aria-hidden="true" />
+      <div className="arena-content-shell">{children}</div>
+    </div>
+  );
 
-      <div className="arena-content-shell">
-        <header className="arena-hero arena-glass arena-reveal">
-          <div className="arena-hero-copy">
-            <div className="arena-kicker">
-              <span className="live-dot" />
-              <Sparkles size={13} />
-              {CONTEST_STORY_PROLOGUE.subtitle}
-              <span className="kicker-divider" />
-              SUNDAY PROTOCOL
+  // ---------------- loading / error / empty ----------------
+  if (loadState === "loading") {
+    return shell(
+      <div className="arena-glass arena-state-card arena-reveal" role="status">
+        <div className="arena-spinner" />
+        <p>Synchronizing arena sectors with the CodeLand database…</p>
+      </div>
+    );
+  }
+
+  if (loadState === "error") {
+    return shell(
+      <div className="arena-glass arena-state-card arena-reveal" role="alert">
+        <ShieldAlert size={34} />
+        <h2>Arena signal lost</h2>
+        <p>{loadError}</p>
+        <button type="button" className="arena-retry" onClick={loadProblems}>
+          <RotateCcw size={14} /> Try again
+        </button>
+      </div>
+    );
+  }
+
+  if (problems.length === 0) {
+    return shell(
+      <div className="arena-glass arena-state-card arena-reveal">
+        <Lock size={34} />
+        <h2>{contestId ? "No sectors in this contest" : "No sectors published yet"}</h2>
+        <p>
+          {contestId
+            ? "This contest has no published problems."
+            : "The Sunday Arena is empty right now. As soon as an arena admin generates and publishes this week's contest, its six sectors will appear here."}
+        </p>
+        <button type="button" className="arena-retry" onClick={loadProblems}>
+          <RotateCcw size={14} /> Check again
+        </button>
+      </div>
+    );
+  }
+
+  const examples = activeChapter?.examples || [];
+  const constraints = activeChapter?.constraints || [];
+  const hintPenalised = progress.hintUsed && !progress.solved;
+  const langMeta = LANGUAGES.find((l) => l.id === selectedLang) || LANGUAGES[0];
+
+  return shell(
+    <>
+      <header className="arena-hero arena-glass arena-reveal">
+        <div className="arena-hero-copy">
+          <div className="arena-kicker">
+            <span className="live-dot" />
+            <Sparkles size={13} />
+            SUNDAY STORY CONTEST // {problems.length} SECTORS
+            <span className="kicker-divider" />
+            SUNDAY PROTOCOL
+          </div>
+
+          <div className="arena-title-row">
+            <div>
+              <p className="arena-eyebrow">CODELAND // LIVE ARENA DATABASE</p>
+              <h1 className="arena-main-title">Sunday Arena</h1>
             </div>
-
-            <div className="arena-title-row">
-              <div>
-                <p className="arena-eyebrow">CODELAND // CLASSIFIED COMPETITIVE SIMULATION</p>
-                <h1 className="arena-main-title">{CONTEST_STORY_PROLOGUE.title}</h1>
-              </div>
-              <div className="operator-chip">
-                <Cpu size={14} />
-                <span>{user?.name || user?.username || "OPERATOR"}</span>
-                <span className="operator-status">ONLINE</span>
-              </div>
-            </div>
-
-            <p className="arena-prologue">{CONTEST_STORY_PROLOGUE.lore}</p>
-
-            <div className="hero-metrics">
-              <div className="hero-metric">
-                <span>SECTORS</span>
-                <strong>{totalChaptersCompleted}/{CONTEST_CHAPTERS.length}</strong>
-              </div>
-              <div className="hero-metric">
-                <span>RUNTIME</span>
-                <strong>{formatArenaTime(arenaState.elapsedTotalSeconds)}</strong>
-              </div>
-              <div className="hero-metric">
-                <span>ERRORS</span>
-                <strong>{arenaState.wrongAttemptsTotal}</strong>
-              </div>
-              <div className="hero-metric progress-metric">
-                <span>ARENA SYNC</span>
-                <strong>{completionPercent}%</strong>
-                <i><b style={{ width: `${completionPercent}%` }} /></i>
-              </div>
+            <div className="operator-chip">
+              <Cpu size={14} />
+              <span>{user?.fullName || user?.name || user?.username || "OPERATOR"}</span>
+              <span className="operator-status">{isStudent ? "ONLINE" : "PREVIEW"}</span>
             </div>
           </div>
 
-          <div className="score-reactor" aria-label={`Contest score ${arenaState.totalScore}`}>
-            <div className="hero-orbit" />
-            <div className="hero-orbit-secondary" />
-            <div className="reactor-core">
-              <Trophy size={18} />
-              <span>ARENA SCORE</span>
-              <strong>{arenaState.totalScore.toLocaleString()}</strong>
-              <small>{isChapterCompleted ? "SECTOR VERIFIED" : "LIVE CALCULATION"}</small>
+          {story && <p className="arena-prologue">{story}</p>}
+
+          <div className="hero-metrics">
+            <div className="hero-metric">
+              <span>SECTORS</span>
+              <strong>{totalChaptersCompleted}/{problems.length}</strong>
+            </div>
+            <div className="hero-metric">
+              <span>RUNTIME</span>
+              <strong>{formatArenaTime(sessionSeconds)}</strong>
+            </div>
+            <div className="hero-metric">
+              <span>SUBMISSIONS</span>
+              <strong>{totalAttempts}</strong>
+            </div>
+            <div className="hero-metric progress-metric">
+              <span>ARENA SYNC</span>
+              <strong>{completionPercent}%</strong>
+              <i><b style={{ width: `${completionPercent}%` }} /></i>
             </div>
           </div>
-        </header>
+        </div>
 
-        <section className="sector-rail arena-reveal" aria-label="Contest chapters">
-          <div className="sector-rail-line">
-            <span style={{ width: `${completionPercent}%` }} />
+        <div className="score-reactor" aria-label={`Arena XP ${formatXp(earnedXp)} of ${formatXp(maxXp)}`}>
+          <div className="hero-orbit" />
+          <div className="hero-orbit-secondary" />
+          <div className="reactor-core">
+            <Trophy size={18} />
+            <span>ARENA XP</span>
+            <strong>{formatXp(earnedXp)}</strong>
+            <small>OF {formatXp(maxXp)} XP</small>
           </div>
+        </div>
+      </header>
 
-          {CONTEST_CHAPTERS.map((ch, idx) => {
-            const isDone = Boolean(arenaState.completedChapters[ch.id]);
-            const isActive = idx === activeChapterIndex;
-            const isLocked = idx > 0 && !arenaState.completedChapters[CONTEST_CHAPTERS[idx - 1].id];
+      <section className="sector-rail arena-reveal" aria-label="Contest sectors">
+        <div className="sector-rail-line">
+          <span style={{ width: `${completionPercent}%` }} />
+        </div>
+        {problems.map((ch, idx) => {
+          const isDone = Boolean(ch.progress?.solved);
+          const isActive = idx === activeChapterIndex;
+          const isLocked = isLockedAt(idx);
+          return (
+            <button
+              key={ch.id}
+              type="button"
+              disabled={isLocked}
+              onClick={() => setActiveChapterIndex(idx)}
+              className={`sector-node ${isActive ? "is-active" : ""} ${isDone ? "is-done" : ""} ${isLocked ? "is-locked" : ""}`}
+              style={{ "--sector-accent": ch.difficultyColor || chapterAccent }}
+              title={isLocked ? "Solve the previous sector to unlock" : ch.title}
+            >
+              <span className="sector-index">0{idx + 1}</span>
+              <span className="sector-icon">
+                {isDone ? <CheckCircle2 size={16} /> : isLocked ? <Lock size={14} /> : <Zap size={15} />}
+              </span>
+              <span className="sector-copy">
+                <b>{ch.title}</b>
+                <em>{isDone ? `+${formatXp(ch.progress.earnedXp)} XP` : `${ch.difficulty} · ${ch.xp} XP`}</em>
+              </span>
+              <span className="sector-signal" />
+            </button>
+          );
+        })}
+      </section>
 
-            return (
+      <main className="arena-workspace">
+        <section className="mission-panel arena-glass arena-reveal chapter-motion">
+          <div className="panel-chrome">
+            <div className="chrome-left">
+              <span className="chrome-lights"><i /><i /><i /></span>
+              <span>MISSION INTELLIGENCE</span>
+            </div>
+            <div className="chapter-nav-arrows">
               <button
-                key={ch.id}
                 type="button"
-                disabled={isLocked}
-                onClick={() => setActiveChapterIndex(idx)}
-                className={`sector-node ${isActive ? "is-active" : ""} ${isDone ? "is-done" : ""} ${isLocked ? "is-locked" : ""}`}
-                style={{ "--sector-accent": ch.difficultyColor || chapterAccent }}
+                disabled={!canGoPrev}
+                onClick={() => canGoPrev && setActiveChapterIndex((v) => v - 1)}
+                aria-label="Previous sector"
               >
-                <span className="sector-index">0{ch.chapterNumber}</span>
-                <span className="sector-icon">
-                  {isDone ? <CheckCircle2 size={16} /> : isLocked ? <Lock size={14} /> : <Zap size={15} />}
-                </span>
-                <span className="sector-copy">
-                  <b>{ch.title}</b>
-                  <em>{isDone ? `+${arenaState.completedChapters[ch.id]?.score} PTS` : ch.difficulty}</em>
-                </span>
-                <span className="sector-signal" />
+                <ChevronLeft size={15} />
               </button>
-            );
-          })}
-        </section>
-
-        <main className="arena-workspace">
-          <section className="mission-panel arena-glass arena-reveal chapter-motion">
-            <div className="panel-chrome">
-              <div className="chrome-left">
-                <span className="chrome-lights"><i /><i /><i /></span>
-                <span>MISSION INTELLIGENCE</span>
-              </div>
-              <div className="chapter-nav-arrows">
-                <button
-                  type="button"
-                  disabled={!canGoPrev}
-                  onClick={() => canGoPrev && setActiveChapterIndex((v) => v - 1)}
-                  aria-label="Previous chapter"
-                >
-                  <ChevronLeft size={15} />
-                </button>
-                <button
-                  type="button"
-                  disabled={!canGoNext}
-                  onClick={() => canGoNext && setActiveChapterIndex((v) => v + 1)}
-                  aria-label="Next chapter"
-                >
-                  <ChevronRight size={15} />
-                </button>
-              </div>
+              <button
+                type="button"
+                disabled={!canGoNext}
+                onClick={() => canGoNext && setActiveChapterIndex((v) => v + 1)}
+                aria-label="Next sector"
+              >
+                <ChevronRight size={15} />
+              </button>
             </div>
+          </div>
 
-            <div className="mission-scroll">
-              <div className="chapter-heading chapter-motion">
-                <div>
-                  <span className="chapter-sector-tag">SECTOR // {String(activeChapter.chapterNumber).padStart(2, "0")}</span>
-                  <span className="chapter-arabic">{activeChapter.arabicTitle}</span>
-                </div>
-                <span className="difficulty-pill">{activeChapter.difficulty}</span>
-              </div>
-
-              <h2 className="chapter-title chapter-motion">{activeChapter.title}</h2>
-
-              <div className="transmission-card chapter-motion">
-                <div className="transmission-head">
-                  <span className="transmission-wave"><i /><i /><i /><i /><i /></span>
-                  <span>ENCRYPTED TRANSMISSION // DECODED</span>
-                </div>
-                <p>“{activeChapter.lore}”</p>
-                {activeChapter.promoVideo && (
-                  <div className="mission-promo">
-                    <div className="mission-promo__header">
-                      <div>
-                        <span className="mission-promo__eyebrow">
-                          MISSION BRIEFING // VISUAL INTEL
-                        </span>
-
-                        <h3>Watch Mission Briefing</h3>
-                      </div>
-
-                      <span className="mission-promo__status">
-                        ● TRANSMISSION READY
-                      </span>
-                    </div>
-
-                    <div className="mission-promo__video-shell">
-                      <video
-                        key={activeChapter.promoVideo}
-                        className="mission-promo__video"
-                        src={activeChapter.promoVideo}
-                        controls
-                        muted
-                        loop
-                        playsInline
-                        preload="metadata"
-                      >
-                        Your browser does not support the video tag.
-                      </video>
-
-                      <div className="mission-promo__scanline" />
-                      <div className="mission-promo__corners" />
-                    </div>
-
-                    <div className="mission-promo__footer">
-                      <span>◈ CODELAND INTELLIGENCE ARCHIVE</span>
-                      <span>SECTOR {String(activeChapter.chapterNumber).padStart(2, "0")}</span>
-                    </div>
-                  </div>
+          <div className="mission-scroll">
+            {!activeChapter ? (
+              <div className="arena-state-card">
+                {detailError ? (
+                  <>
+                    <ShieldAlert size={28} />
+                    <p>{detailError}</p>
+                    <button
+                      type="button"
+                      className="arena-retry"
+                      onClick={() => {
+                        setDetailError("");
+                        setDetails((prev) => ({ ...prev }));
+                      }}
+                    >
+                      <RotateCcw size={14} /> Retry
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="arena-spinner" />
+                    <p>Decrypting sector intelligence…</p>
+                  </>
                 )}
               </div>
-
-              <div className="intel-tabs chapter-motion">
-                <button
-                  type="button"
-                  className={activeTab === "description" ? "is-active" : ""}
-                  onClick={() => setActiveTab("description")}
-                >
-                  <BookOpen size={14} /> Mission
-                </button>
-                <button
-                  type="button"
-                  className={activeTab === "hints" ? "is-active" : ""}
-                  onClick={() => setActiveTab("hints")}
-                >
-                  <HelpCircle size={14} /> Vectors
-                </button>
-              </div>
-
-              {activeTab === "description" ? (
-                <div className="intel-pane chapter-motion">
-                  <div className="intel-block objective-block">
-                    <span className="intel-label"><ShieldCheck size={14} /> OBJECTIVE</span>
-                    <p>{activeChapter.taskDescription}</p>
+            ) : (
+              <>
+                <div className="chapter-heading chapter-motion">
+                  <div>
+                    <span className="chapter-sector-tag">SECTOR // {String(activeChapterIndex + 1).padStart(2, "0")}</span>
+                    {activeChapter.arabicTitle && (
+                      <span className="chapter-arabic" dir="rtl">{activeChapter.arabicTitle}</span>
+                    )}
                   </div>
+                  <span className="difficulty-pill">{activeChapter.difficulty}</span>
+                </div>
 
-                  <div className="intel-block">
-                    <span className="intel-label"><AlertTriangle size={14} /> CONSTRAINT MATRIX</span>
-                    <div className="constraint-grid">
-                      {activeChapter.constraints.map((constraint, index) => (
-                        <code key={index}><span>0{index + 1}</span>{constraint}</code>
-                      ))}
+                <h2 className="chapter-title chapter-motion">{activeChapter.title}</h2>
+
+                <div className="transmission-card chapter-motion">
+                  <div className="transmission-head">
+                    <span className="transmission-wave"><i /><i /><i /><i /><i /></span>
+                    <span>ENCRYPTED TRANSMISSION // DECODED</span>
+                  </div>
+                  <ArenaRichText text={activeChapter.statement} className="arena-prose" />
+
+                  {activeChapter.imageUrl && (
+                    <figure className="arena-figure">
+                      <button type="button" onClick={() => setZoomed(true)} aria-label="Enlarge illustration">
+                        <img
+                          src={activeChapter.imageUrl}
+                          alt={activeChapter.imageAlt || `Illustration for ${activeChapter.title}`}
+                          loading="lazy"
+                        />
+                      </button>
+                      <figcaption>
+                        {activeChapter.canBeExplainedByDiagrams ? "Step-by-step diagram" : "Mission illustration"} · click to enlarge
+                      </figcaption>
+                    </figure>
+                  )}
+                </div>
+
+                <div className="intel-tabs chapter-motion">
+                  <button
+                    type="button"
+                    className={activeTab === "description" ? "is-active" : ""}
+                    onClick={() => setActiveTab("description")}
+                  >
+                    <BookOpen size={14} /> Mission
+                  </button>
+                  <button
+                    type="button"
+                    className={activeTab === "vectors" ? "is-active" : ""}
+                    onClick={() => setActiveTab("vectors")}
+                  >
+                    <Code2 size={14} /> Examples
+                  </button>
+                  <button
+                    type="button"
+                    className={activeTab === "hint" ? "is-active" : ""}
+                    onClick={() => setActiveTab("hint")}
+                  >
+                    <HelpCircle size={14} /> Hint
+                  </button>
+                </div>
+
+                {activeTab === "description" && (
+                  <div className="intel-pane chapter-motion">
+                    <div className="intel-block">
+                      <span className="intel-label"><ShieldCheck size={14} /> INPUT</span>
+                      <ArenaRichText text={activeChapter.inputSpec} className="arena-prose" />
                     </div>
+                    <div className="intel-block">
+                      <span className="intel-label"><Send size={14} /> OUTPUT</span>
+                      <ArenaRichText text={activeChapter.outputSpec} className="arena-prose" />
+                    </div>
+                    {constraints.length > 0 && (
+                      <div className="intel-block">
+                        <span className="intel-label"><AlertTriangle size={14} /> CONSTRAINT MATRIX</span>
+                        <div className="constraint-grid">
+                          {constraints.map((constraint, index) => (
+                            <code key={index}>
+                              <span>0{index + 1}</span>
+                              <b style={{ fontWeight: 500 }}>{renderInline(constraint, `c${index}`)}</b>
+                            </code>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {activeChapter.note && (
+                      <div className="intel-block">
+                        <span className="intel-label"><BookOpen size={14} /> NOTE</span>
+                        <ArenaRichText text={activeChapter.note} className="arena-prose" />
+                      </div>
+                    )}
                   </div>
+                )}
+
+                {activeTab === "vectors" && (
+                  <div className="intel-pane vector-list chapter-motion">
+                    {examples.map((test, index) => (
+                      <article className="vector-card" key={index}>
+                        <div className="vector-number">EXAMPLE {String(index + 1).padStart(2, "0")}</div>
+                        <div className="vector-io">
+                          <div>
+                            <span>INPUT</span>
+                            <pre>{test.input || " "}</pre>
+                          </div>
+                          <div className="vector-out">
+                            <span>OUTPUT</span>
+                            <pre>{test.output || " "}</pre>
+                          </div>
+                        </div>
+                        {test.explanation && <p>{test.explanation}</p>}
+                      </article>
+                    ))}
+                  </div>
+                )}
+
+                {activeTab === "hint" && (
+                  <div className="intel-pane hint-pane chapter-motion">
+                    {activeChapter.hint ? (
+                      <div className="hint-box">
+                        <h4><HelpCircle size={14} /> STRATEGIC HINT</h4>
+                        <ArenaRichText text={activeChapter.hint} className="arena-prose" />
+                        <div className="hint-foot">
+                          {progress.hintUsed
+                            ? `Hint used · max reward ${formatXp(progress.maxEarnableXp)} XP`
+                            : freeHints
+                            ? "Practice mode · no penalty"
+                            : "Unlocked after solving · no penalty"}
+                        </div>
+                      </div>
+                    ) : freeHints ? (
+                      <div className="hint-box">
+                        <h4><Lock size={14} /> PRACTICE MODE</h4>
+                        <p>This contest is over, so the hint is free — no XP is involved anymore.</p>
+                        <button type="button" className="hint-btn" onClick={handleRevealHint} disabled={hintBusy || !isStudent}>
+                          <HelpCircle size={14} /> {hintBusy ? "Revealing…" : "Show Hint"}
+                        </button>
+                      </div>
+                    ) : !hintConfirm ? (
+                      <div className="hint-box">
+                        <h4><Lock size={14} /> LOCKED INTEL</h4>
+                        <p>
+                          The hint reveals the key observation — about half of the solution — without giving away the code.
+                        </p>
+                        <button
+                          type="button"
+                          className="hint-btn"
+                          onClick={() => setHintConfirm(true)}
+                          disabled={!canSubmit}
+                        >
+                          <HelpCircle size={14} /> Show Hint (−25% XP)
+                        </button>
+                        {!isStudent ? (
+                          <div className="hint-foot">Admin preview — only students can reveal hints.</div>
+                        ) : (
+                          !canSubmit && <div className="hint-foot">Hints are for registered contenders during the live contest.</div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="hint-box" role="alert">
+                        <h4><AlertTriangle size={14} /> THIS COSTS 25% OF THIS SECTOR'S XP</h4>
+                        <p>
+                          Your maximum reward drops from <b>{formatXp(activeChapter.xp)} XP</b> to{" "}
+                          <b>{formatXp(xpAfterHint(activeChapter.xp))} XP</b>. It is recorded on your account and can't
+                          be undone — but you are never charged twice for the same sector.
+                        </p>
+                        <div className="hint-actions">
+                          <button type="button" className="hint-btn" onClick={handleRevealHint} disabled={hintBusy}>
+                            <HelpCircle size={14} /> {hintBusy ? "Revealing…" : "Reveal hint"}
+                          </button>
+                          <button type="button" className="hint-ghost" onClick={() => setHintConfirm(false)} disabled={hintBusy}>
+                            Keep it hidden
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {hintError && <div className="hint-foot" style={{ color: "#fb7185" }}>{hintError}</div>}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          <div className="mission-status arena-status-bar">
+            <div>
+              <Clock size={15} />
+              <span>LIMIT <b>{activeChapter?.timeLimit || "—"}</b></span>
+              <span className="status-slash">//</span>
+              <span>USED <b>{formatArenaTime(chapterSeconds)}</b></span>
+            </div>
+            <div className={isChapterCompleted ? "status-safe" : hintPenalised ? "status-danger" : "status-safe"}>
+              <Zap size={15} />
+              <span>
+                {isChapterCompleted ? (
+                  `EARNED ${formatXp(progress.earnedXp)} XP`
+                ) : hintPenalised ? (
+                  <>
+                    MAX {formatXp(progress.maxEarnableXp)} XP
+                    <span className="xp-strike">{formatXp(activeSummary?.xp)}</span>
+                  </>
+                ) : (
+                  `REWARD ${formatXp(activeSummary?.xp)} XP`
+                )}
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section className="ide-panel arena-glass arena-reveal chapter-motion">
+          <div className="ide-header">
+            <div className="ide-file-meta">
+              <span className="ide-mark"><Code2 size={16} /></span>
+              <div>
+                <strong>solution.{langMeta.file}</strong>
+                <small>STDIN → STDOUT // AUTOSAVE ENABLED</small>
+              </div>
+            </div>
+            <div className="ide-tools">
+              <label className="language-select">
+                <Cpu size={13} />
+                <select value={selectedLang} onChange={(e) => handleLanguage(e.target.value)}>
+                  {LANGUAGES.map((l) => (
+                    <option key={l.id} value={l.id}>{l.label}</option>
+                  ))}
+                </select>
+              </label>
+              <button type="button" onClick={handleCopyCode} title="Copy code">
+                <Copy size={14} /> {copiedCode ? "Copied" : "Copy"}
+              </button>
+              <button type="button" onClick={handleResetCode} title="Reset code" disabled={!activeChapter}>
+                <RotateCcw size={14} /> Reset
+              </button>
+            </div>
+          </div>
+
+          <div className="editor-stage">
+            <div className="editor-gutter" aria-hidden="true">
+              {Array.from({ length: Math.max(12, code.split("\n").length) }).slice(0, 200).map((_, index) => (
+                <span key={index}>{index + 1}</span>
+              ))}
+            </div>
+            <textarea
+              value={code}
+              onChange={(e) => handleCodeChange(e.target.value)}
+              onKeyDown={handleEditorKeyDown}
+              spellCheck="false"
+              aria-label="Solution code editor"
+              placeholder="// Read the input from stdin and print the answer…"
+              disabled={!activeChapter}
+            />
+            <div className="editor-beam" aria-hidden="true" />
+          </div>
+
+          <div className="arena-terminal-window">
+            <div className="terminal-header">
+              <div>
+                <span className="terminal-prompt">›_</span>
+                <span>EXECUTION CONSOLE</span>
+              </div>
+              <span className={`engine-state ${isRunning ? "is-running" : ""}`}>
+                <i />
+                {busy === "submit" ? "JUDGING" : busy === "run" ? "EXECUTING" : "JUDGE READY"}
+              </span>
+            </div>
+            <div className="terminal-body">
+              {terminalLogs.length === 0 ? (
+                <div className="terminal-empty">
+                  <span>$</span> Run executes your code on the examples. Submit judges it and claims the XP.
                 </div>
               ) : (
-                <div className="intel-pane vector-list chapter-motion">
-                  {activeChapter.sampleTests.map((test, index) => (
-                    <article className="vector-card" key={index}>
-                      <div className="vector-number">VECTOR {String(index + 1).padStart(2, "0")}</div>
-                      <div className="vector-row">
-                        <span>INPUT</span>
-                        <code>{JSON.stringify(test.input)}</code>
-                      </div>
-                      <div className="vector-row vector-expected">
-                        <span>EXPECTED</span>
-                        <code>{JSON.stringify(test.expected)}</code>
-                      </div>
-                      {test.explanation && <p>{test.explanation}</p>}
-                    </article>
-                  ))}
+                terminalLogs.map((log, index) => (
+                  <div key={index} className={`terminal-line log-${log.type}`} style={{ whiteSpace: "pre-wrap" }}>
+                    <span className="terminal-line-no">{String(index + 1).padStart(2, "0")}</span>
+                    <span>{log.text}</span>
+                  </div>
+                ))
+              )}
+              {busy && (
+                <div className="terminal-line log-info">
+                  <span className="terminal-line-no">··</span>
+                  <span>{busy === "submit" ? "Running your code on the examples and the hidden tests…" : "Compiling and running…"}</span>
                 </div>
               )}
             </div>
+          </div>
 
-            <div className="mission-status arena-status-bar">
-              <div>
-                <Clock size={15} />
-                <span>TARGET <b>{activeChapter.timeTargetSeconds}s</b></span>
-                <span className="status-slash">//</span>
-                <span>USED <b>{formatArenaTime(currentChapterSeconds)}</b></span>
-              </div>
-              <div className={chapterWrongAttempts ? "status-danger" : "status-safe"}>
-                <ShieldAlert size={15} />
-                <span>{chapterWrongAttempts ? `${chapterWrongAttempts} FAILED / -${chapterWrongAttempts * 25} PTS` : "FLAWLESS +50"}</span>
-              </div>
+          <div className="ide-action-bar">
+            <div className="submission-state">
+              {isChapterCompleted ? (
+                <>
+                  <CheckCircle2 size={15} />
+                  <span><b>VERIFIED</b> +{formatXp(progress.earnedXp)} XP earned.</span>
+                </>
+              ) : !isStudent ? (
+                <>
+                  <ShieldAlert size={15} />
+                  <span>Admin preview — only students can run and submit.</span>
+                </>
+              ) : !canSubmit ? (
+                <>
+                  <ShieldAlert size={15} />
+                  <span>Practice mode — <b>Run</b> works, submissions are closed.</span>
+                </>
+              ) : (
+                <>
+                  <Flame size={15} />
+                  <span>Solve to earn <b>{formatXp(progress.maxEarnableXp ?? activeSummary?.xp)} XP</b>.</span>
+                </>
+              )}
             </div>
-          </section>
-
-          <section className="ide-panel arena-glass arena-reveal chapter-motion">
-            <div className="ide-header">
-              <div className="ide-file-meta">
-                <span className="ide-mark"><Code2 size={16} /></span>
-                <div>
-                  <strong>solution.{selectedLang === "javascript" ? "js" : selectedLang === "python" ? "py" : "cpp"}</strong>
-                  <small>NEURAL EDITOR // AUTOSAVE ENABLED</small>
-                </div>
-              </div>
-
-              <div className="ide-tools">
-                <label className="language-select">
-                  <Cpu size={13} />
-                  <select value={selectedLang} onChange={(e) => setSelectedLang(e.target.value)}>
-                    <option value="javascript">JavaScript / V8</option>
-                    <option value="python">Python 3 / Sim</option>
-                    <option value="cpp">C++20 / Sim</option>
-                  </select>
-                </label>
-                <button type="button" onClick={handleCopyCode} title="Copy code">
-                  <Copy size={14} /> {copiedCode ? "Copied" : "Copy"}
-                </button>
-                <button type="button" onClick={handleResetCode} title="Reset code">
-                  <RotateCcw size={14} /> Reset
-                </button>
-              </div>
+            <div className="action-buttons">
+              <button
+                type="button"
+                disabled={isRunning || !isStudent || !activeChapter || !code.trim()}
+                onClick={() => handleExecute(false)}
+                className="test-button"
+              >
+                <Play size={14} />
+                {busy === "run" ? "Running…" : "Run Tests"}
+              </button>
+              <button
+                type="button"
+                disabled={isRunning || !canSubmit || !activeChapter || !code.trim()}
+                onClick={() => handleExecute(true)}
+                className={`submit-button run-pulse ${isChapterCompleted ? "is-complete" : ""}`}
+              >
+                {busy === "submit" ? <Cpu className="spin-icon" size={15} /> : isChapterCompleted ? <Crown size={15} /> : <Send size={15} />}
+                <span>{busy === "submit" ? "Judging…" : isChapterCompleted ? "Re-Submit" : "Submit & Unlock"}</span>
+                <i />
+              </button>
             </div>
+          </div>
+        </section>
+      </main>
 
-            <div className="editor-stage">
-              <div className="editor-gutter" aria-hidden="true">
-                {Array.from({ length: Math.max(12, code.split("\n").length) }).slice(0, 80).map((_, index) => (
-                  <span key={index}>{index + 1}</span>
-                ))}
-              </div>
-              <textarea
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                spellCheck="false"
-                aria-label="Solution code editor"
-                placeholder="// Build the algorithm that unlocks this sector..."
-              />
-              <div className="editor-beam" aria-hidden="true" />
-            </div>
+      <footer className="arena-footer arena-reveal">
+        <span><i /> JUDGE: JUDGE0 / WANDBOX</span>
+        <span>NODE: CODELAND-SUNDAY-ARENA</span>
+        <span>XP: SERVER-VERIFIED</span>
+      </footer>
 
-            <div className="arena-terminal-window">
-              <div className="terminal-header">
-                <div>
-                  <span className="terminal-prompt">›_</span>
-                  <span>EXECUTION CONSOLE</span>
-                </div>
-                <span className={`engine-state ${isRunning ? "is-running" : ""}`}>
-                  <i />
-                  {isRunning ? "EXECUTING" : selectedLang === "javascript" ? "V8 READY" : "SIM READY"}
-                </span>
-              </div>
-
-              <div className="terminal-body">
-                {terminalLogs.length === 0 ? (
-                  <div className="terminal-empty">
-                    <span>$</span> Awaiting solution payload. Run tests to initiate verification sequence...
-                  </div>
-                ) : (
-                  terminalLogs.map((log, index) => (
-                    <div key={index} className={`terminal-line log-${log.type}`}>
-                      <span className="terminal-line-no">{String(index + 1).padStart(2, "0")}</span>
-                      <span>{log.text}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="ide-action-bar">
-              <div className="submission-state">
-                {isChapterCompleted ? (
-                  <>
-                    <CheckCircle2 size={15} />
-                    <span><b>VERIFIED</b> Sector signature accepted.</span>
-                  </>
-                ) : (
-                  <>
-                    <Flame size={15} />
-                    <span>Flawless execution keeps the <b>+50 bonus</b> alive.</span>
-                  </>
-                )}
-              </div>
-
-              <div className="action-buttons">
-                <button
-                  type="button"
-                  disabled={isRunning}
-                  onClick={() => handleExecute(false)}
-                  className="test-button"
-                >
-                  <Play size={14} />
-                  Run Tests
-                </button>
-                <button
-                  type="button"
-                  disabled={isRunning}
-                  onClick={() => handleExecute(true)}
-                  className={`submit-button run-pulse ${isChapterCompleted ? "is-complete" : ""}`}
-                >
-                  {isRunning ? <Cpu className="spin-icon" size={15} /> : isChapterCompleted ? <Crown size={15} /> : <Send size={15} />}
-                  <span>{isRunning ? "Verifying..." : isChapterCompleted ? "Re-Submit" : "Submit & Unlock"}</span>
-                  <i />
-                </button>
-              </div>
-            </div>
-          </section>
-        </main>
-
-        <footer className="arena-footer arena-reveal">
-          <span><i /> ENCRYPTION: AES-256</span>
-          <span>NODE: CODELAND-SUNDAY-ARENA</span>
-          <span>LATENCY: 08MS</span>
-        </footer>
-      </div>
-    </div>
+      {zoomed && activeChapter?.imageUrl && (
+        <div className="arena-lightbox" role="dialog" aria-modal="true" onClick={() => setZoomed(false)}>
+          <img src={activeChapter.imageUrl} alt={activeChapter.imageAlt || activeChapter.title} />
+        </div>
+      )}
+    </>
   );
 }

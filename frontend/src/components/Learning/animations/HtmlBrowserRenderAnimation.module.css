@@ -220,7 +220,7 @@
 
 .explanation {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
   border-top: 1px solid rgba(255, 255, 255, 0.055);
   background: rgba(255, 255, 255, 0.04);
@@ -229,7 +229,7 @@
 .explanation > div {
   padding: 16px;
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 9px;
   background: rgba(6, 8, 20, 0.95);
 }
@@ -249,7 +249,7 @@
 
 @media (max-width: 760px) {
   .flowGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .processor {
@@ -257,6 +257,6 @@
   }
 
   .explanation {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }

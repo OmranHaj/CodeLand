@@ -1127,7 +1127,7 @@
 .explanation {
   display: grid;
 
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 
   border-top: 1px solid rgba(255, 216, 77, 0.055);
 
@@ -1252,7 +1252,7 @@
 
 @media (max-width: 880px) {
   .workspace {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .runtimePanel {
@@ -1268,7 +1268,7 @@
   }
 
   .explanation {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .explanation > div + div {
@@ -1339,11 +1339,11 @@
   }
 
   .runtimeSteps {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .summary {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .footerSignal {

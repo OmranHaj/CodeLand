@@ -189,7 +189,7 @@
 
   display: grid;
 
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
 
   align-items: center;
 }
@@ -1284,7 +1284,7 @@
 
   display: grid;
 
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
 
   align-items: center;
 
@@ -1756,7 +1756,7 @@
   }
 
   .topBar {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .content {
@@ -1764,7 +1764,7 @@
   }
 
   .pathsGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .pathCard {
@@ -1777,7 +1777,7 @@
   }
 
   .selectionPanel {
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
   }
 
   .selectionMeta {
@@ -1844,7 +1844,7 @@
   }
 
   .selectionPanel {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
 
     gap: 17px;
   }

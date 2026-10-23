@@ -289,6 +289,11 @@ export class LearningService {
       isChallenge?: boolean;
       isProject?: boolean;
       xpEarned?: number;
+      /**
+       * false when the caller already added xpEarned to User.totalXp in its own
+       * transaction (Sunday Arena); xpEarned is then only logged in DailyActivity.
+       */
+      creditTotalXp?: boolean;
     } = {},
   ): Promise<{ streakDays: number; incremented: boolean; isRestart: boolean }> {
     const now = new Date();
@@ -319,7 +324,7 @@ export class LearningService {
         streakDays: streakResult.newStreak,
         lastStreakAt: now,
         lastActiveAt: now,
-        ...(xpToAdd > 0 ? { totalXp: { increment: xpToAdd } } : {}),
+        ...(xpToAdd > 0 && options.creditTotalXp !== false ? { totalXp: { increment: xpToAdd } } : {}),
       },
     });
 

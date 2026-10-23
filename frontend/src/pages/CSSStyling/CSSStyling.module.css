@@ -2003,7 +2003,7 @@
 
   display: grid;
 
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 
   overflow: hidden;
 
@@ -2343,7 +2343,7 @@
   .workspace {
     height: auto;
 
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .sidebar {
@@ -2442,7 +2442,7 @@
   }
 
   .completeStats {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .completeStats div + div {

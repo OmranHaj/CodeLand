@@ -389,6 +389,15 @@ export default function AdminStudio() {
                 <span>Add Lesson to {activeCourse?.title}</span>
               </button>
 
+              <Link
+                to="/admin/arena?generate=1"
+                className="admin-btn primary"
+                id="btn-generate-problem-hero"
+              >
+                <Sparkles size={16} />
+                <span>Generate Problems</span>
+              </Link>
+
               <button
                 type="button"
                 className="admin-btn secondary"

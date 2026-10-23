@@ -104,7 +104,7 @@
 
   display: grid;
 
-  grid-template-columns: 1fr minmax(260px, 430px) 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 430px) minmax(0, 1fr);
 
   align-items: center;
 
@@ -348,7 +348,7 @@
 
   display: grid;
 
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
 
   align-items: stretch;
 
@@ -589,7 +589,7 @@
 
   display: grid;
 
-  grid-template-columns: 34px 1fr auto;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
 
   align-items: center;
 
@@ -1044,7 +1044,7 @@
 
   display: grid;
 
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
 
   align-items: center;
 
@@ -1199,7 +1199,7 @@
 
   display: grid;
 
-  grid-template-columns: 44px 1fr;
+  grid-template-columns: 44px minmax(0, 1fr);
 
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px),
@@ -1582,7 +1582,7 @@
 
   display: grid;
 
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 
   gap: 7px;
 }
@@ -1667,7 +1667,7 @@
 
     z-index: 40;
 
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
 
     gap: 10px;
   }
@@ -1679,7 +1679,7 @@
   .workspace {
     height: auto;
 
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .sidebar,
@@ -1738,7 +1738,7 @@
   }
 
   .robotCard {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .robotStage {
@@ -1762,7 +1762,7 @@
   }
 
   .unitList {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .briefingScroll {
@@ -1774,7 +1774,7 @@
   }
 
   .chamberHeader {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .runnerOffline,
@@ -1783,7 +1783,7 @@
   }
 
   .editor {
-    grid-template-columns: 38px 1fr;
+    grid-template-columns: 38px minmax(0, 1fr);
   }
 
   .chamberFooter {

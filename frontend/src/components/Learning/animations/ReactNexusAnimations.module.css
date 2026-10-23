@@ -1190,7 +1190,7 @@
 @media (max-width: 1180px) {
   .introWorkspace,
   .jsxWorkspace {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .browserPanel {
@@ -1209,7 +1209,7 @@
 
   .introWorkspace,
   .jsxWorkspace {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .browserPanel {
@@ -1217,7 +1217,7 @@
   }
 
   .reuseFlow {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .reuseArrow {
@@ -1228,11 +1228,11 @@
 
   .summary,
   .explanation {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .treeBranches {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .verticalConnector {

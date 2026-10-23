@@ -516,7 +516,7 @@ function ProjectCreatorProfileAnimation({
                 style={{
                   display: "grid",
 
-                  gridTemplateColumns: "31px 1fr",
+                  gridTemplateColumns: "31px minmax(0, 1fr)",
 
                   gap: 9,
 

@@ -664,7 +664,7 @@
 .answerOption {
   display: grid;
 
-  grid-template-columns: 24px 1fr auto;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
 
   gap: 8px;
 
@@ -988,7 +988,7 @@
 @media (max-width: 980px) {
   .profileFlow,
   .quizWorkspace {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .flowArrow {
@@ -998,7 +998,7 @@
   }
 
   .quizRuntime {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 
     min-height: 110px;
   }
@@ -1031,7 +1031,7 @@
   }
 
   .quizRuntime {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .runtimeTrack {

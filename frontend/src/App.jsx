@@ -46,6 +46,7 @@ const Help = lazy(() => import("./pages/Hub/Help"));
 const NotFound = lazy(() => import("./pages/Hub/NotFound"));
 const AdminStudio = lazy(() => import("./pages/Admin/AdminStudio"));
 const AdminUsers = lazy(() => import("./pages/Admin/AdminUsers"));
+const AdminArenaProblems = lazy(() => import("./pages/Admin/AdminArenaProblems"));
 
 function subscribeSession(callback) {
   window.addEventListener("codeland:update", callback);
@@ -107,6 +108,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
                   <AdminUsers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/arena"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+                  <AdminArenaProblems />
                 </ProtectedRoute>
               }
             />

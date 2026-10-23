@@ -813,7 +813,7 @@
 
 .intel-tabs {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 6px;
     margin: 18px 0 13px;
     padding: 4px;
@@ -1451,7 +1451,7 @@
     }
 
     .arena-workspace {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .mission-panel,
@@ -1478,7 +1478,7 @@
     }
 
     .arena-hero {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         padding: 22px;
     }
 
@@ -1562,7 +1562,7 @@
 
 @media (max-width: 480px) {
     .sector-rail {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .hero-metrics {

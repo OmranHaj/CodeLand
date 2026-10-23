@@ -1,444 +1,297 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from "react";
-
-import { Link } from "react-router-dom";
-
+import { Link, useSearchParams } from "react-router-dom";
 import {
-
   Award,
-
   Calendar,
-
   CheckCircle2,
-
   Clock,
-
   Code2,
-
   Crown,
-
   Flame,
-
-  Globe,
-
-  HelpCircle,
-
-  Info,
-
-  Layers,
-
+  History,
   Lock,
-
-  Medal,
-
-  Play,
-
   Printer,
-
   RefreshCw,
-
   Search,
-
   ShieldAlert,
-
   ShieldCheck,
-
-  Sparkles,
-
   Swords,
-
-  Timer,
-
   Trophy,
-
   UserCheck,
-
   UserPlus,
-
   Users,
-
+  X,
   Zap,
-
 } from "lucide-react";
-
 import gsap from "gsap";
 
 import HubLayout from "../../components/Hub/HubLayout";
-
 import Arena3DScene from "../../components/Contest/Arena3DScene";
-
 import ContestCertificate from "../../components/Contest/ContestCertificate";
-
 import ContestStoryArena from "../../components/Contest/ContestStoryArena";
-
+import { formatXp } from "../../services/arenaProblemService";
 import {
-
-  CONTEST_CHAPTERS,
-
-  CONTEST_STORY_PROLOGUE,
-
-} from "../../data/contestStoryProblems";
-
-import {
-
-  loadContestState,
-
-  saveContestState,
-
-  getEffectiveStage,
-
-  getTimeUntilSunday,
-
-  isUserRegistered,
-
-  registerCurrentStudent,
-
-  unregisterCurrentStudent,
-
-  loadStudentMedals,
-
-  awardStudentMedal,
-
-  SEED_COMPETITORS,
-
+  STAGE_LABELS,
+  STAGE_THEME,
+  divisionFor,
+  fetchContestHistory,
+  fetchCurrentContest,
+  fetchMyMedals,
+  fetchStandings,
+  formatContestWindow,
+  formatDateTime,
+  getCountdown,
+  registerForContest,
+  toCertificateMedal,
+  unregisterFromContest,
 } from "../../services/contestService";
-
 import { getUser } from "../../services/learningHub";
 
-import { fetchStudentProgress } from "../../services/learningContentService";
+const WC_EXTRA_STYLES = String.raw`
+  .wc-state { display: grid; place-items: center; gap: 10px; padding: 46px 20px; text-align: center; color: #94a3b8; }
+  .wc-state h2 { margin: 0; color: #fff; font-size: 22px; }
+  .wc-state p { margin: 0; max-width: 560px; line-height: 1.6; }
+  .wc-spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(148,163,184,.2); border-top-color: var(--wc-accent); animation: wc-spin .9s linear infinite; }
+  @keyframes wc-spin { to { transform: rotate(360deg); } }
+  .wc-admin-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 16px; border-radius: 14px; border: 1px solid rgba(56,189,248,.25); background: rgba(56,189,248,.06); color: #cbd5e1; font-size: 13px; }
+  .wc-admin-bar a { color: #38bdf8; font-weight: 800; text-decoration: none; }
+  .wc-standings { display: grid; gap: 8px; }
+  .wc-standing-row { display: grid; grid-template-columns: 54px minmax(0, 1.6fr) repeat(3, minmax(0, .8fr)); align-items: center; gap: 10px; padding: 11px 14px; border-radius: 14px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); color: #cbd5e1; font-size: 13.5px; }
+  .wc-standing-row.head { background: transparent; border: 0; color: #64748b; font-size: 10.5px; font-weight: 900; letter-spacing: .12em; }
+  .wc-standing-row.me { border-color: rgba(var(--wc-accent-rgb), .6); background: rgba(var(--wc-accent-rgb), .08); }
+  .wc-standing-row strong { color: #fff; }
+  .wc-standing-rank { font-weight: 900; color: #e2e8f0; }
+  .wc-standing-rank.r1 { color: #fbbf24; } .wc-standing-rank.r2 { color: #cbd5e1; } .wc-standing-rank.r3 { color: #fb923c; }
+  .wc-history { display: grid; gap: 12px; }
+  .wc-history-card { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 16px 18px; border-radius: 16px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); }
+  .wc-history-card h3 { margin: 0 0 4px; color: #fff; font-size: 16px; }
+  .wc-history-card p { margin: 0; color: #94a3b8; font-size: 13px; max-width: 620px; }
+  .wc-history-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .wc-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; color: #cbd5e1; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); }
+  .wc-chip.gold { color: #fde68a; border-color: rgba(251,191,36,.4); } .wc-chip.silver { color: #e2e8f0; } .wc-chip.bronze { color: #fdba74; border-color: rgba(251,146,60,.4); }
+  .wc-history-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .wc-overlay { position: fixed; inset: 0; z-index: 1300; overflow-y: auto; padding: 24px; background: rgba(2,4,12,.9); backdrop-filter: blur(10px); }
+  .wc-overlay-card { max-width: 1280px; margin: 0 auto; }
+  .wc-overlay-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; color: #fff; }
+  .wc-icon-btn { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); color: #fff; cursor: pointer; }
+  .wc-medal-empty { opacity: .45; }
+  @media (max-width: 760px) {
+    .wc-standing-row { grid-template-columns: 40px minmax(0, 1fr) 70px; }
+    .wc-standing-row > :nth-child(4), .wc-standing-row > :nth-child(5) { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .wc-spinner { animation: none; } }
+`;
 
+/** Contenders get a rank only after solving a sector; before that they show "—". */
+const rankLabel = (rank) => (rank ? `#${rank}` : "—");
 
+const MEDAL_UI = [
+  { rank: 2, type: "silver", label: "SILVER // RANK 02", emoji: "🥈", color: "#cbd5e1", bonus: 300 },
+  { rank: 1, type: "gold", label: "GRAND CHAMPION // RANK 01", emoji: "🥇", color: "#fbbf24", bonus: 500 },
+  { rank: 3, type: "bronze", label: "BRONZE // RANK 03", emoji: "🥉", color: "#fb923c", bonus: 150 },
+];
 
 export default function WeeklyContest() {
+  const [currentUser] = useState(getUser);
+  const role = (currentUser?.role || "").toLowerCase();
+  const isStudent = role === "student" || role === "child";
+  const [searchParams] = useSearchParams();
 
-  const [contestState, setContestState] = useState(loadContestState);
+  // "roster" | "arena" | "podium" | "history" | "rules"
+  const [activeTab, setActiveTab] = useState(() =>
+    ["arena", "problems"].includes(searchParams.get("tab")) ? "arena" : "roster"
+  );
 
-  const [currentUser, setCurrentUser] = useState(getUser);
+  // ---------------- server data ----------------
+  const [data, setData] = useState(null); // GET /arena/contest/current
+  const [loadState, setLoadState] = useState("loading"); // "loading" | "ready" | "error"
+  const [loadError, setLoadError] = useState("");
+  const [serverOffset, setServerOffset] = useState(0);
+  const [standings, setStandings] = useState(null);
+  const [medals, setMedals] = useState([]);
+  const [history, setHistory] = useState(null);
+  const [historyError, setHistoryError] = useState("");
+  const [historyView, setHistoryView] = useState(null); // { contest, mode: "standings" | "problems", standings }
 
-  const [userProgress, setUserProgress] = useState(null);
-
-  const [countdown, setCountdown] = useState(getTimeUntilSunday);
-
+  // ---------------- UI state ----------------
+  const [now, setNow] = useState(() => Date.now());
   const [searchQuery, setSearchQuery] = useState("");
-
   const [selectedDivision, setSelectedDivision] = useState("all");
-
-  const [activeTab, setActiveTab] = useState("roster"); // "roster" | "arena" | "podium" | "rules"
-
+  const [regBusy, setRegBusy] = useState(false);
   const [certificateMedal, setCertificateMedal] = useState(null);
-
   const [celebrationMessage, setCelebrationMessage] = useState(null);
 
-
-
   const heroRef = useRef(null);
-
   const cardsGridRef = useRef(null);
+  const reloadedForRef = useRef(null);
 
+  const contest = data?.contest || null;
+  const stage = contest?.stage || "none";
+  const effectiveStage = STAGE_THEME[stage] || "registration";
+  const isRegistered = Boolean(data?.registration?.registered);
 
+  const notify = (message) => {
+    setCelebrationMessage(message);
+    setTimeout(() => setCelebrationMessage(null), 4500);
+  };
 
-  // Load live user progress to get exact real XP and streak
-
-  useEffect(() => {
-
-    fetchStudentProgress()
-
-      .then((data) => {
-
-        if (data?.user) {
-
-          setUserProgress(data);
-
-          setCurrentUser((prev) => ({
-
-            ...prev,
-
-            ...data.user,
-
-          }));
-
-        }
-
-      })
-
-      .catch((err) => console.warn("Could not fetch progress:", err));
-
+  const loadContest = useCallback(async () => {
+    try {
+      const res = await fetchCurrentContest();
+      setData(res);
+      setServerOffset(new Date(res.serverTime).getTime() - Date.now());
+      setLoadState("ready");
+      return res;
+    } catch (err) {
+      setLoadError(err.message || "Could not reach the arena.");
+      setLoadState("error");
+      return null;
+    }
   }, []);
 
-
-
-  // Sync state updates
-
-  useEffect(() => {
-
-    const handleUpdate = () => {
-
-      setContestState(loadContestState());
-
-    };
-
-    window.addEventListener("codeland:contest_update", handleUpdate);
-
-    return () => window.removeEventListener("codeland:contest_update", handleUpdate);
-
+  const loadStandings = useCallback(async (contestId) => {
+    if (!contestId) {
+      setStandings(null);
+      return;
+    }
+    try {
+      setStandings(await fetchStandings(contestId));
+    } catch {
+      setStandings(null);
+    }
   }, []);
 
-
-
-  // Ticking countdown clock
+  const loadMedals = useCallback(async () => {
+    try {
+      const list = await fetchMyMedals();
+      setMedals(Array.isArray(list) ? list : []);
+    } catch {
+      setMedals([]);
+    }
+  }, []);
 
   useEffect(() => {
+    loadContest();
+    loadMedals();
+  }, [loadContest, loadMedals]);
 
-    const timer = setInterval(() => {
+  useEffect(() => {
+    loadStandings(contest?.id);
+  }, [contest?.id, loadStandings]);
 
-      setCountdown(getTimeUntilSunday());
+  useEffect(() => {
+    if (activeTab !== "history" || history) return;
+    fetchContestHistory()
+      .then((list) => setHistory(Array.isArray(list) ? list : []))
+      .catch((err) => setHistoryError(err.message || "Could not load past contests."));
+  }, [activeTab, history]);
 
-    }, 1000);
-
+  // Ticking clock (display only — the server enforces the window).
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
-
   }, []);
 
+  const countdownTarget = stage === "upcoming" ? contest?.startsAt : stage === "live" ? contest?.endsAt : null;
+  const countdown = getCountdown(countdownTarget, serverOffset, now);
 
-
-  const effectiveStage = getEffectiveStage(contestState);
-
-  const isRegistered = isUserRegistered(currentUser, contestState);
-
-
-
-  // Safe registered list fallback
-
-  const registeredList = useMemo(() => {
-
-    return Array.isArray(contestState?.registeredStudents) && contestState.registeredStudents.length > 0
-
-      ? contestState.registeredStudents
-
-      : SEED_COMPETITORS;
-
-  }, [contestState?.registeredStudents]);
-
-
-
-  // Live telemetry calculations
-
-  const totalCompetitors = registeredList.length;
-
-  const totalXpInArena = useMemo(() => {
-
-    return registeredList.reduce((acc, s) => acc + (s?.xp || 0), 0);
-
-  }, [registeredList]);
-
-
-
-  const avgXp = totalCompetitors ? Math.round(totalXpInArena / totalCompetitors) : 0;
-
-
-
-  // Filtered competitors
-
-  const filteredCompetitors = useMemo(() => {
-
-    return registeredList
-
-      .filter((s) => {
-
-        if (!s) return false;
-
-        const name = s.name || "";
-
-        const handle = s.handle || "";
-
-        const div = s.division || "";
-
-        const matchesSearch =
-
-          name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-
-          handle.toLowerCase().includes(searchQuery.toLowerCase());
-
-        const matchesDiv =
-
-          selectedDivision === "all" ||
-
-          div.toLowerCase() === selectedDivision.toLowerCase();
-
-        return matchesSearch && matchesDiv;
-
-      })
-
-      .sort((a, b) => (b?.xp || 0) - (a?.xp || 0));
-
-  }, [registeredList, searchQuery, selectedDivision]);
-
-
-
-  // Handle student registration toggle
-
-  const handleToggleRegistration = () => {
-
-    const userXp = userProgress?.user?.totalXp || 500;
-
-    const userStreak = userProgress?.user?.streakDays || 3;
-
-
-
-    if (isRegistered) {
-
-      unregisterCurrentStudent(currentUser);
-
-      setCelebrationMessage("You have unregistered from this Sunday's Arena.");
-
-    } else {
-
-      registerCurrentStudent(currentUser, userXp, userStreak);
-
-      setCelebrationMessage("✓ Arena Pass Confirmed! You are officially registered for Sunday's battle.");
-
-
-
-      // Visual flash animation
-
-      gsap.fromTo(
-
-        ".contest-reg-card",
-
-        { scale: 0.96, boxShadow: "0 0 50px rgba(168, 85, 247, 0.8)" },
-
-        { scale: 1, boxShadow: "0 0 20px rgba(168, 85, 247, 0.2)", duration: 0.6 }
-
-      );
-
-    }
-
-
-
-    setContestState(loadContestState());
-
-    setTimeout(() => setCelebrationMessage(null), 4000);
-
-  };
-
-
-
-  // Change stage simulator
-
-  const handleStageChange = (newStage) => {
-
-    const nextState = { ...contestState, stageOverride: newStage };
-
-    setContestState(nextState);
-
-    saveContestState(nextState);
-
-  };
-
-
-
-  // Simulate claiming a medal and viewing certificate
-
-  const handleClaimMedal = (medalType, rank) => {
-
-    const awarded = awardStudentMedal({
-
-      user: currentUser,
-
-      medalType,
-
-      rank,
-
-      edition: contestState.edition || "#42",
-
-      score: medalType === "gold" ? "995 / 1000" : medalType === "silver" ? "940 / 1000" : "890 / 1000",
-
-      totalParticipants: totalCompetitors,
-
-    });
-
-    setCertificateMedal(awarded);
-
-  };
-
-
-
-  // Called when all 6 story chapters are completed in ContestStoryArena
-
-  const handleContestFinish = ({ totalScore, elapsedSeconds, wrongAttempts }) => {
-
-    const rank = totalScore >= 1200 ? 1 : totalScore >= 800 ? 2 : 3;
-
-    const medalType = rank === 1 ? "gold" : rank === 2 ? "silver" : "bronze";
-
-
-
-    const awarded = awardStudentMedal({
-
-      user: currentUser,
-
-      medalType,
-
-      rank,
-
-      edition: contestState.edition || "#42",
-
-      score: `${totalScore} / 1700`,
-
-      totalParticipants: totalCompetitors,
-
-    });
-
-
-
-    setCelebrationMessage(
-
-      `🎉 MISSION COMPLETE! You cleared all 6 Citadel chapters with ${totalScore} PTS! Awarded ${medalType.toUpperCase()} Medal!`
-
-    );
-
-    setActiveTab("podium");
-
-    setCertificateMedal(awarded);
-
-  };
-
-
-
-  // Auto-switch to arena tab when Sunday live mode is active
-
+  // When the countdown reaches zero the stage changed on the server: refetch once.
   useEffect(() => {
+    if (!countdownTarget || countdown.diffMs > 0 || reloadedForRef.current === countdownTarget) return;
+    reloadedForRef.current = countdownTarget;
+    loadContest().then(() => {
+      loadStandings(contest?.id);
+      loadMedals();
+    });
+  }, [countdownTarget, countdown.diffMs, contest?.id, loadContest, loadStandings, loadMedals]);
 
-    if (effectiveStage === "live" && isRegistered) {
+  // Open the arena automatically when the contest is live and the student is in.
+  useEffect(() => {
+    if (stage === "live" && isRegistered) setActiveTab("arena");
+  }, [stage, isRegistered]);
 
+  const entries = standings?.entries || [];
+  const me = standings?.me || data?.myStanding || null;
+  const participants = contest?.participants ?? entries.length;
+  const contestMedal = medals.find((m) => m.contestId === contest?.id) || null;
+
+  const filteredCompetitors = useMemo(
+    () =>
+      entries.filter((s) => {
+        const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const division = divisionFor(s.totalXp).division.toLowerCase();
+        return matchesSearch && (selectedDivision === "all" || division === selectedDivision);
+      }),
+    [entries, searchQuery, selectedDivision]
+  );
+
+  // Registration is open only during the week before the contest (server-decided).
+  const canRegisterNow = Boolean(contest?.registrationOpen);
+  const canLeaveNow = canRegisterNow;
+  const registrationNotYetOpen =
+    stage === "upcoming" && !canRegisterNow && contest?.registrationOpensAt && new Date(contest.registrationOpensAt) > new Date(now + serverOffset);
+
+  const handleToggleRegistration = async () => {
+    if (!contest || !isStudent || regBusy) return;
+    if (isRegistered && !canLeaveNow) {
       setActiveTab("arena");
-
+      return;
     }
+    setRegBusy(true);
+    try {
+      if (isRegistered) {
+        await unregisterFromContest(contest.id);
+        notify("You have left this Sunday's Arena.");
+      } else {
+        await registerForContest(contest.id);
+        notify("✓ Arena Pass Confirmed! You are officially registered for this contest.");
+        gsap.fromTo(
+          ".wc-hero-copy",
+          { boxShadow: "0 0 50px rgba(168, 85, 247, 0.6)" },
+          { boxShadow: "0 0 0 rgba(0,0,0,0)", duration: 0.8 }
+        );
+      }
+      await loadContest();
+      await loadStandings(contest.id);
+    } catch (err) {
+      notify(err.message || "Registration failed.");
+    } finally {
+      setRegBusy(false);
+    }
+  };
 
-  }, [effectiveStage, isRegistered]);
+  // Every sector cleared: medals are decided by the server when the contest ends.
+  const handleContestFinish = ({ totalScore }) => {
+    notify(
+      `🎉 MISSION COMPLETE! You cleared every sector with ${formatXp(totalScore)} XP. Final medals are awarded when the contest closes.`
+    );
+    loadStandings(contest?.id);
+    setActiveTab("podium");
+  };
 
+  const openHistoryStandings = async (item) => {
+    setHistoryView({ contest: item, mode: "standings", standings: null });
+    try {
+      const res = await fetchStandings(item.id);
+      setHistoryView({ contest: item, mode: "standings", standings: res });
+    } catch (err) {
+      notify(err.message || "Could not load the standings.");
+      setHistoryView(null);
+    }
+  };
 
+  const openCertificate = (medal) => setCertificateMedal(toCertificateMedal(medal));
 
   // GSAP Animations
-
   useLayoutEffect(() => {
-
     if (heroRef.current) {
-
       gsap.fromTo(
-
         heroRef.current.querySelectorAll(".stagger-in"),
-
         { opacity: 0, y: 25 },
-
         { opacity: 1, y: 0, duration: 0.6, stagger: 0.08, ease: "power2.out" }
-
       );
-
     }
-
-  }, []);
-
-
+  }, [loadState]);
 
   // Cinematic page choreography
   useLayoutEffect(() => {
@@ -448,60 +301,39 @@ export default function WeeklyContest() {
         { opacity: 0, y: 28, scale: 0.985 },
         { opacity: 1, y: 0, scale: 1, duration: 0.8, stagger: 0.07, ease: "power3.out" }
       );
-
-      gsap.to(".wc-orbit-ring-a", {
-        rotation: 360,
-        duration: 24,
-        repeat: -1,
-        ease: "none",
-      });
-
-      gsap.to(".wc-orbit-ring-b", {
-        rotation: -360,
-        duration: 34,
-        repeat: -1,
-        ease: "none",
-      });
-
-      gsap.to(".wc-scan-beam", {
-        yPercent: 900,
-        duration: 5.5,
-        repeat: -1,
-        ease: "none",
-      });
+      gsap.to(".wc-orbit-ring-a", { rotation: 360, duration: 24, repeat: -1, ease: "none" });
+      gsap.to(".wc-orbit-ring-b", { rotation: -360, duration: 34, repeat: -1, ease: "none" });
+      gsap.to(".wc-scan-beam", { yPercent: 900, duration: 5.5, repeat: -1, ease: "none" });
     });
-
     return () => ctx.revert();
-  }, []);
+  }, [loadState]);
 
   useLayoutEffect(() => {
-    gsap.fromTo(
-      ".wc-tab-content",
-      { opacity: 0, y: 18 },
-      { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }
-    );
+    gsap.fromTo(".wc-tab-content", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" });
   }, [activeTab]);
 
-  const stageLabel =
-    effectiveStage === "live"
-      ? "LIVE COMBAT WINDOW"
-      : effectiveStage === "concluded"
-        ? "ARENA ARCHIVED"
-        : "REGISTRATION WINDOW";
-
-  const stageAccent =
-    effectiveStage === "live"
-      ? "#22c55e"
-      : effectiveStage === "concluded"
-        ? "#fbbf24"
-        : "#a855f7";
+  const stageLabel = STAGE_LABELS[stage] || STAGE_LABELS.none;
+  const stageAccent = effectiveStage === "live" ? "#22c55e" : effectiveStage === "concluded" ? "#fbbf24" : "#a855f7";
 
   const tabs = [
     { id: "roster", label: "Contenders", Icon: Users },
     { id: "arena", label: "Story Arena", Icon: Swords },
     { id: "podium", label: "Podium", Icon: Trophy },
+    { id: "history", label: "History", Icon: History },
     { id: "rules", label: "Protocols", Icon: ShieldCheck },
   ];
+
+  const registerLabel = !contest
+    ? "No contest scheduled"
+    : isRegistered
+    ? canLeaveNow
+      ? "Arena Pass Active · Leave"
+      : "Arena Pass Active · Enter"
+    : canRegisterNow
+    ? "Register for Sunday Arena"
+    : registrationNotYetOpen
+    ? `Registration opens ${formatDateTime(contest.registrationOpensAt)}`
+    : "Registration closed";
 
   return (
     <HubLayout title="Weekly Contest">
@@ -1741,7 +1573,7 @@ export default function WeeklyContest() {
         @keyframes wcSpin { to { transform: rotate(360deg); } }
 
         @media (max-width: 1180px) {
-          .wc-hero { grid-template-columns: 1fr; }
+          .wc-hero { grid-template-columns: minmax(0, 1fr); }
           .wc-visual { min-height: 430px; }
           .wc-stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
           .wc-sectors { grid-template-columns: repeat(2, minmax(0,1fr)); }
@@ -1757,21 +1589,21 @@ export default function WeeklyContest() {
           .wc-section-head { align-items: flex-start; flex-direction: column; }
           .wc-tools { width: 100%; }
           .wc-searchbox { min-width: 0; flex: 1 1 220px; }
-          .wc-podium-stage { grid-template-columns: 1fr; padding-top: 10px; }
+          .wc-podium-stage { grid-template-columns: minmax(0, 1fr); padding-top: 10px; }
           .wc-medal-card.gold { transform: none; min-height: 300px; }
           .wc-medal-card.gold:hover { transform: translateY(-6px); }
-          .wc-rules-grid { grid-template-columns: 1fr; }
+          .wc-rules-grid { grid-template-columns: minmax(0, 1fr); }
         }
 
         @media (max-width: 620px) {
-          .wc-stats { grid-template-columns: 1fr; }
+          .wc-stats { grid-template-columns: minmax(0, 1fr); }
           .wc-countdown { grid-template-columns: repeat(2, minmax(0,1fr)); }
           .wc-visual { min-height: 360px; }
           .wc-panel { padding: 15px; }
-          .wc-sectors { grid-template-columns: 1fr; }
+          .wc-sectors { grid-template-columns: minmax(0, 1fr); }
           .wc-vault { padding: 30px 16px 20px; }
           .wc-pass-banner, .wc-dev-shortcut { align-items: flex-start; flex-direction: column; }
-          .wc-tabs { width: 100%; display: grid; grid-template-columns: repeat(2,1fr); }
+          .wc-tabs { width: 100%; display: grid; grid-template-columns: repeat(2,minmax(0, 1fr)); }
           .wc-tab { justify-content: center; }
           .wc-tab.active::after { display: none; }
           .wc-nav-status { display: none; }
@@ -1785,6 +1617,7 @@ export default function WeeklyContest() {
           }
         }
       `}</style>
+      <style>{WC_EXTRA_STYLES}</style>
 
       <div className={`wc-shell stage-${effectiveStage}`}>
         <div className="wc-cosmos">
@@ -1793,29 +1626,15 @@ export default function WeeklyContest() {
         </div>
 
         <div className="wc-layout">
-          <div className="wc-devbar wc-reveal">
-            <div className="wc-devbar-label">
-              <Sparkles size={14} color="#fbbf24" />
-              <span><strong>ARENA SIMULATOR</strong> // evaluator controls</span>
+          {!isStudent && (
+            <div className="wc-admin-bar wc-reveal">
+              <span>
+                <ShieldCheck size={14} style={{ verticalAlign: "middle", marginRight: 6 }} />
+                Admin view — registration and submissions are for students. The schedule is set and enforced on the server.
+              </span>
+              <Link to="/admin/arena">Manage contest & schedule →</Link>
             </div>
-            <div className="wc-sim-controls">
-              {[
-                ["auto", "AUTO"],
-                ["registration", "COUNTDOWN"],
-                ["live", "LIVE"],
-                ["concluded", "PODIUM"],
-              ].map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => handleStageChange(value)}
-                  className={`wc-sim-btn ${contestState.stageOverride === value ? "active" : ""}`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
+          )}
 
           {celebrationMessage && (
             <div className="wc-toast">
@@ -1824,417 +1643,622 @@ export default function WeeklyContest() {
             </div>
           )}
 
-          <section ref={heroRef} className="wc-hero">
-            <div className="wc-hero-copy wc-glass wc-reveal">
-              <div>
-                <div className="wc-eyebrow stagger-in">
-                  <span className="wc-live-dot" />
-                  {stageLabel}
-                </div>
-
-                <div className="wc-kicker stagger-in">
-                  CODELAND // SUNDAY CHAMPIONSHIP PROTOCOL
-                </div>
-
-                <h1 className="wc-title stagger-in">
-                  {contestState.title || "Operation Citadel"}
-                  <span>Enter the Algorithmic Battleground</span>
-                </h1>
-
-                <p className="wc-intro stagger-in">
-                  The weekly arena where CodeLand contenders enter under strict time pressure,
-                  breach six algorithmic sectors, climb the live standings, and fight for
-                  <strong> Gold, Silver, and Bronze distinction.</strong>
-                </p>
-
-                <div className="wc-countdown stagger-in">
-                  {[
-                    { label: "DAYS", val: countdown.days },
-                    { label: "HOURS", val: String(countdown.hours).padStart(2, "0") },
-                    { label: "MINS", val: String(countdown.minutes).padStart(2, "0") },
-                    { label: "SECS", val: String(countdown.seconds).padStart(2, "0") },
-                  ].map((item) => (
-                    <div className="wc-timecell" key={item.label}>
-                      <span className="wc-timevalue">{item.val}</span>
-                      <span className="wc-timelabel">{item.label}</span>
+          {loadState === "loading" ? (
+            <div className="wc-panel wc-state">
+              <div className="wc-spinner" />
+              <p>Synchronizing with the arena server…</p>
+            </div>
+          ) : loadState === "error" ? (
+            <div className="wc-panel wc-state">
+              <ShieldAlert size={32} color="#fb7185" />
+              <h2>Arena signal lost</h2>
+              <p>{loadError}</p>
+              <button type="button" className="wc-secondary-btn" onClick={loadContest}>
+                <RefreshCw size={14} /> Try again
+              </button>
+            </div>
+          ) : (
+            <>
+              <section ref={heroRef} className="wc-hero">
+                <div className="wc-hero-copy wc-glass wc-reveal">
+                  <div>
+                    <div className="wc-eyebrow stagger-in">
+                      <span className="wc-live-dot" />
+                      {stageLabel}
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              <div className="wc-actions stagger-in">
-                <button type="button" className="wc-primary-btn" onClick={handleToggleRegistration}>
-                  {isRegistered ? <UserCheck size={17} /> : <UserPlus size={17} />}
-                  {isRegistered ? "Arena Pass Active" : "Register for Sunday Arena"}
-                </button>
-
-                {effectiveStage === "concluded" && (
-                  <button
-                    type="button"
-                    className="wc-secondary-btn"
-                    onClick={() => handleClaimMedal("gold", 1)}
-                  >
-                    <Printer size={16} /> Open Certificate Vault
-                  </button>
-                )}
-
-                <div className="wc-action-note">
-                  {isRegistered
-                    ? "Identity verified. Your combat slot is synchronized for Sunday."
-                    : "Open to all CodeLand Academy students. One-click arena registration."}
-                </div>
-              </div>
-            </div>
-
-            <div className="wc-visual wc-reveal">
-              <Arena3DScene stage={effectiveStage} />
-              <div className="wc-visual-overlay" />
-              <div className="wc-orbit-ring-a" />
-              <div className="wc-orbit-ring-b" />
-              <div className="wc-scan-beam" />
-              <span className="wc-corner tl" />
-              <span className="wc-corner tr" />
-              <span className="wc-corner bl" />
-              <span className="wc-corner br" />
-
-              <div className="wc-hud-top">
-                <span className="wc-hud-chip">CITADEL CORE // <strong>ONLINE</strong></span>
-                <span className="wc-hud-chip">LATENCY 08MS</span>
-              </div>
-              <div className="wc-hud-bottom">
-                <span className="wc-hud-chip">NODE 0x42 // AES-256</span>
-                <span className="wc-hud-chip">STAGE // <strong>{effectiveStage.toUpperCase()}</strong></span>
-              </div>
-            </div>
-          </section>
-
-          <section className="wc-stats wc-reveal">
-            {[
-              { Icon: Users, color: "#c084fc", value: `${totalCompetitors} Students`, label: "Registered contenders" },
-              { Icon: Zap, color: "#fbbf24", value: `${totalXpInArena.toLocaleString()} XP`, label: "Total contender XP pool" },
-              { Icon: Trophy, color: "#38bdf8", value: `${avgXp.toLocaleString()} XP`, label: "Average arena XP" },
-              { Icon: Calendar, color: "#34d399", value: "Every Sunday", label: "10:00 AM UTC // 2 hours" },
-            ].map(({ Icon, color, value, label }) => (
-              <div key={label} className="wc-stat" style={{ "--stat-color": color }}>
-                <div className="wc-stat-icon"><Icon size={22} /></div>
-                <div>
-                  <div className="wc-stat-value">{value}</div>
-                  <div className="wc-stat-label">{label}</div>
-                </div>
-              </div>
-            ))}
-          </section>
-
-          <div className="wc-nav wc-reveal">
-            <div className="wc-tabs">
-              {tabs.map(({ id, label, Icon }) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={`wc-tab ${activeTab === id ? "active" : ""}`}
-                  onClick={() => setActiveTab(id)}
-                >
-                  <Icon size={15} />
-                  {label}
-                  {id === "arena" && effectiveStage === "live" && (
-                    <span style={{ color: "#4ade80", fontSize: 8, fontWeight: 900 }}>LIVE</span>
-                  )}
-                  {id === "arena" && effectiveStage !== "live" && <Lock size={10} />}
-                </button>
-              ))}
-            </div>
-            <div className="wc-nav-status">
-              <span className="wc-live-dot" style={{ color: stageAccent }} />
-              SYSTEM <b>{effectiveStage.toUpperCase()}</b>
-            </div>
-          </div>
-
-          {activeTab === "roster" && (
-            <section className="wc-panel wc-tab-content">
-              <div className="wc-section-head">
-                <div>
-                  <div className="wc-section-kicker">CONTENDER DATABASE // LIVE INDEX</div>
-                  <h2 className="wc-section-title">Arena Roster</h2>
-                  <div className="wc-section-sub">
-                    {filteredCompetitors.length} of {totalCompetitors} enrolled contenders // ranked by XP signal
-                  </div>
-                </div>
-
-                <div className="wc-tools">
-                  <div className="wc-searchbox">
-                    <Search size={14} />
-                    <input
-                      className="wc-input"
-                      type="text"
-                      placeholder="Search contender..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <select
-                    className="wc-select"
-                    value={selectedDivision}
-                    onChange={(e) => setSelectedDivision(e.target.value)}
-                  >
-                    <option value="all">All Divisions</option>
-                    <option value="grandmaster">Grandmaster</option>
-                    <option value="master">Master</option>
-                    <option value="challenger">Challenger</option>
-                    <option value="rising star">Rising Star</option>
-                  </select>
-                </div>
-              </div>
-
-              <div ref={cardsGridRef} className="wc-roster-grid">
-                {filteredCompetitors.length === 0 ? (
-                  <div className="wc-empty">No contender signal matches your current filters.</div>
-                ) : (
-                  filteredCompetitors.map((student, idx) => {
-                    const isMe =
-                      student.id === currentUser?.id ||
-                      student.isCurrentUser ||
-                      student.email === currentUser?.email;
-                    const initials = (student.name || "?")
-                      .split(" ")
-                      .map((part) => part[0])
-                      .join("")
-                      .slice(0, 2)
-                      .toUpperCase();
-
-                    return (
-                      <article
-                        key={student.id || `${student.name}-${idx}`}
-                        className={`wc-contender ${isMe ? "me" : ""}`}
-                        style={{ "--division": student.divisionColor || "#8b5cf6" }}
-                      >
-                        <div className="wc-contender-top">
-                          <div className="wc-profile">
-                            <div className="wc-avatar">
-                              {student.avatar ? <img src={student.avatar} alt={student.name || "Contender"} /> : initials}
-                            </div>
-                            <div style={{ minWidth: 0 }}>
-                              <div className="wc-name">
-                                {student.name || "Unnamed Contender"}
-                                {isMe && <span className="wc-you">YOU</span>}
-                              </div>
-                              <div className="wc-handle">{student.handle || "@unknown"}</div>
-                            </div>
-                          </div>
-
-                          <div className={`wc-rank ${idx === 0 ? "top1" : idx === 1 ? "top2" : idx === 2 ? "top3" : ""}`}>
-                            #{idx + 1}
-                          </div>
-                        </div>
-
-                        <div className="wc-badges">
-                          <span className="wc-division-badge">{student.division || "Unranked"}</span>
-                          <span className="wc-confirmed"><CheckCircle2 size={10} /> Confirmed</span>
-                        </div>
-
-                        <div className="wc-contender-bottom">
-                          <div className="wc-xp"><Zap size={13} /> {(student.xp || 0).toLocaleString()} XP</div>
-                          <div className="wc-streak"><Flame size={12} /> {student.streak || 3}d streak</div>
-                        </div>
-                      </article>
-                    );
-                  })
-                )}
-              </div>
-            </section>
-          )}
-
-          {activeTab === "arena" && (
-            <section className="wc-tab-content">
-              {effectiveStage !== "live" ? (
-                <div className="wc-vault">
-                  <div className="wc-vault-emblem">
-                    <div className="wc-lock-core"><Lock size={30} /></div>
-                  </div>
-
-                  <div className="wc-section-kicker">RESTRICTED ACCESS // SUNDAY PROTOCOL</div>
-                  <h2 className="wc-vault-title">Operation Citadel is Sealed</h2>
-                  <p className="wc-vault-copy">
-                    Six containment sectors remain encrypted until the official Sunday combat window.
-                    Pre-register now so your identity token is already synchronized when the core opens.
-                  </p>
-
-                  <div className={`wc-pass-banner ${isRegistered ? "ready" : ""}`}>
-                    <div>
-                      <div className="wc-pass-title">
-                        {isRegistered ? "✓ ARENA PASS CONFIRMED" : "⚠ REGISTRATION TOKEN NOT FOUND"}
-                      </div>
-                      <div className="wc-pass-copy">
-                        {isRegistered
-                          ? "Your seat is secured. Sector 01 will unlock automatically when the arena goes live."
-                          : "Register before Sunday to guarantee immediate entry when the countdown reaches zero."}
-                      </div>
+                    <div className="wc-kicker stagger-in">
+                      CODELAND // SUNDAY CHAMPIONSHIP PROTOCOL{contest ? ` // EDITION #${contest.edition}` : ""}
                     </div>
-                    {!isRegistered && (
-                      <button type="button" className="wc-primary-btn" onClick={handleToggleRegistration}>
-                        <UserPlus size={15} /> Register
-                      </button>
+
+                    <h1 className="wc-title stagger-in">
+                      {contest?.title || "Sunday Arena"}
+                      <span>Enter the Algorithmic Battleground</span>
+                    </h1>
+
+                    <p className="wc-intro stagger-in">
+                      {contest?.story ||
+                        "The weekly arena where CodeLand contenders breach six algorithmic sectors, climb the live standings, and fight for Gold, Silver, and Bronze distinction."}
+                    </p>
+
+                    {countdownTarget ? (
+                      <>
+                        <div className="wc-section-kicker stagger-in" style={{ marginTop: 14 }}>
+                          {stage === "upcoming"
+                            ? `ARENA OPENS IN${canRegisterNow ? " · REGISTRATION CLOSES AT THE START" : ""}`
+                            : "ARENA CLOSES IN · REGISTRATION IS CLOSED"}
+                        </div>
+                        <div className="wc-countdown stagger-in">
+                          {[
+                            { label: "DAYS", val: countdown.days },
+                            { label: "HOURS", val: String(countdown.hours).padStart(2, "0") },
+                            { label: "MINS", val: String(countdown.minutes).padStart(2, "0") },
+                            { label: "SECS", val: String(countdown.seconds).padStart(2, "0") },
+                          ].map((item) => (
+                            <div className="wc-timecell" key={item.label}>
+                              <span className="wc-timevalue">{item.val}</span>
+                              <span className="wc-timelabel">{item.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="wc-section-sub stagger-in" style={{ marginTop: 14 }}>
+                        <Calendar size={13} style={{ verticalAlign: "middle", marginRight: 6 }} />
+                        {contest ? formatContestWindow(contest) : "No contest is scheduled right now."}
+                      </div>
                     )}
                   </div>
 
-                  <div className="wc-sectors">
-                    {CONTEST_CHAPTERS.map((ch) => (
-                      <div key={ch.id} className="wc-sector" style={{ "--sector-color": ch.difficultyColor || "#a855f7" }}>
-                        <div className="wc-sector-num">SECTOR {String(ch.chapterNumber).padStart(2, "0")} // {ch.arabicTitle}</div>
-                        <div className="wc-sector-title">{ch.title}</div>
-                        <div className="wc-sector-meta">{ch.difficulty} · {ch.basePoints} PTS</div>
-                        <Lock className="wc-sector-lock" size={14} />
+                  <div className="wc-actions stagger-in">
+                    {isStudent && (
+                      <button
+                        type="button"
+                        className="wc-primary-btn"
+                        onClick={handleToggleRegistration}
+                        disabled={regBusy || !contest || (!isRegistered && !canRegisterNow)}
+                      >
+                        {isRegistered ? <UserCheck size={17} /> : <UserPlus size={17} />}
+                        {regBusy ? "Syncing…" : registerLabel}
+                      </button>
+                    )}
+
+                    {medals.length > 0 && (
+                      <button type="button" className="wc-secondary-btn" onClick={() => openCertificate(contestMedal || medals[0])}>
+                        <Printer size={16} /> Open Certificate Vault
+                      </button>
+                    )}
+
+                    <div className="wc-action-note">
+                      {!contest
+                        ? "The next contest appears here as soon as an arena admin publishes it."
+                        : isRegistered
+                        ? stage === "live"
+                          ? "You're in. The arena is live — go clear the sectors!"
+                          : "Identity verified. Your combat slot is synchronized."
+                        : canRegisterNow
+                        ? "Registration is open until the arena opens on Sunday at 17:00."
+                        : registrationNotYetOpen
+                        ? "Registration opens one week before the contest."
+                        : "Registration closed when the contest started — see you next Sunday!"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="wc-visual wc-reveal">
+                  <Arena3DScene stage={effectiveStage} />
+                  <div className="wc-visual-overlay" />
+                  <div className="wc-orbit-ring-a" />
+                  <div className="wc-orbit-ring-b" />
+                  <div className="wc-scan-beam" />
+                  <span className="wc-corner tl" />
+                  <span className="wc-corner tr" />
+                  <span className="wc-corner bl" />
+                  <span className="wc-corner br" />
+
+                  <div className="wc-hud-top">
+                    <span className="wc-hud-chip">ARENA CORE // <strong>{contest ? "ONLINE" : "STANDBY"}</strong></span>
+                    <span className="wc-hud-chip">{contest ? `EDITION #${contest.edition}` : "NO EDITION"}</span>
+                  </div>
+                  <div className="wc-hud-bottom">
+                    <span className="wc-hud-chip">SERVER-VERIFIED SCORING</span>
+                    <span className="wc-hud-chip">STAGE // <strong>{stage.toUpperCase()}</strong></span>
+                  </div>
+                </div>
+              </section>
+
+              <section className="wc-stats wc-reveal">
+                {[
+                  { Icon: Users, color: "#c084fc", value: `${participants} Students`, label: "Registered contenders" },
+                  { Icon: Zap, color: "#fbbf24", value: `${formatXp(contest?.maxScore || 0)} XP`, label: `Prize pool · ${contest?.problemCount || 0} sectors` },
+                  {
+                    Icon: Trophy,
+                    color: "#38bdf8",
+                    value: !me ? "—" : me.rank ? `#${me.rank} · ${formatXp(me.score)} XP` : "Not ranked yet",
+                    label: !me ? "Register to get a rank" : me.rank ? "Your live standing" : "Solve a sector to get ranked",
+                  },
+                  { Icon: Calendar, color: "#34d399", value: contest ? formatContestWindow(contest) : "Every Sunday", label: "Every Sunday 17:00 – 20:00" },
+                ].map(({ Icon, color, value, label }) => (
+                  <div key={label} className="wc-stat" style={{ "--stat-color": color }}>
+                    <div className="wc-stat-icon"><Icon size={22} /></div>
+                    <div>
+                      <div className="wc-stat-value">{value}</div>
+                      <div className="wc-stat-label">{label}</div>
+                    </div>
+                  </div>
+                ))}
+              </section>
+
+              <div className="wc-nav wc-reveal">
+                <div className="wc-tabs">
+                  {tabs.map(({ id, label, Icon }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      className={`wc-tab ${activeTab === id ? "active" : ""}`}
+                      onClick={() => setActiveTab(id)}
+                    >
+                      <Icon size={15} />
+                      {label}
+                      {id === "arena" && stage === "live" && (
+                        <span style={{ color: "#4ade80", fontSize: 8, fontWeight: 900 }}>LIVE</span>
+                      )}
+                      {id === "arena" && (stage === "upcoming" || stage === "unscheduled") && <Lock size={10} />}
+                    </button>
+                  ))}
+                </div>
+                <div className="wc-nav-status">
+                  <span className="wc-live-dot" style={{ color: stageAccent }} />
+                  SYSTEM <b>{stage.toUpperCase()}</b>
+                </div>
+              </div>
+
+              {/* ===================== ROSTER ===================== */}
+              {activeTab === "roster" && (
+                <section className="wc-panel wc-tab-content">
+                  <div className="wc-section-head">
+                    <div>
+                      <div className="wc-section-kicker">CONTENDER DATABASE // LIVE STANDINGS</div>
+                      <h2 className="wc-section-title">Arena Roster</h2>
+                      <div className="wc-section-sub">
+                        {filteredCompetitors.length} of {entries.length} registered contenders // ranked by contest XP, then speed
+                      </div>
+                    </div>
+
+                    <div className="wc-tools">
+                      <div className="wc-searchbox">
+                        <Search size={14} />
+                        <input
+                          className="wc-input"
+                          type="text"
+                          placeholder="Search contender..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                      </div>
+                      <select
+                        className="wc-select"
+                        value={selectedDivision}
+                        onChange={(e) => setSelectedDivision(e.target.value)}
+                      >
+                        <option value="all">All Divisions</option>
+                        <option value="grandmaster">Grandmaster</option>
+                        <option value="master">Master</option>
+                        <option value="challenger">Challenger</option>
+                        <option value="rising star">Rising Star</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div ref={cardsGridRef} className="wc-roster-grid">
+                    {!contest ? (
+                      <div className="wc-empty">No contest is scheduled yet, so there are no contenders.</div>
+                    ) : entries.length === 0 ? (
+                      <div className="wc-empty">Nobody has registered yet — be the first contender!</div>
+                    ) : filteredCompetitors.length === 0 ? (
+                      <div className="wc-empty">No contender signal matches your current filters.</div>
+                    ) : (
+                      filteredCompetitors.map((student, idx) => {
+                        const { division, color } = divisionFor(student.totalXp);
+                        const initials = student.name
+                          .split(" ")
+                          .map((part) => part[0])
+                          .join("")
+                          .slice(0, 2)
+                          .toUpperCase();
+                        return (
+                          <article
+                            key={`${student.rank}-${student.name}-${idx}`}
+                            className={`wc-contender ${student.isMe ? "me" : ""}`}
+                            style={{ "--division": color }}
+                          >
+                            <div className="wc-contender-top">
+                              <div className="wc-profile">
+                                <div className="wc-avatar">
+                                  {student.avatar ? <img src={student.avatar} alt={student.name} /> : initials}
+                                </div>
+                                <div style={{ minWidth: 0 }}>
+                                  <div className="wc-name">
+                                    {student.name}
+                                    {student.isMe && <span className="wc-you">YOU</span>}
+                                  </div>
+                                  <div className="wc-handle">
+                                    {student.rank
+                                      ? `${student.solvedCount} solved · ${formatXp(student.score)} contest XP`
+                                      : "Not started yet"}
+                                  </div>
+                                </div>
+                              </div>
+                              <div
+                                className={`wc-rank ${student.rank === 1 ? "top1" : student.rank === 2 ? "top2" : student.rank === 3 ? "top3" : ""}`}
+                                title={student.rank ? undefined : "Ranked after solving a first sector"}
+                              >
+                                {rankLabel(student.rank)}
+                              </div>
+                            </div>
+
+                            <div className="wc-badges">
+                              <span className="wc-division-badge">{division}</span>
+                              <span className="wc-confirmed"><CheckCircle2 size={10} /> Registered</span>
+                            </div>
+
+                            <div className="wc-contender-bottom">
+                              <div className="wc-xp"><Zap size={13} /> {formatXp(student.totalXp)} XP</div>
+                              <div className="wc-streak"><Flame size={12} /> {student.streakDays}d streak</div>
+                            </div>
+                          </article>
+                        );
+                      })
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {/* ===================== ARENA ===================== */}
+              {activeTab === "arena" && (
+                <section className="wc-tab-content">
+                  {!contest ? (
+                    <div className="wc-vault">
+                      <div className="wc-vault-emblem">
+                        <div className="wc-lock-core"><Lock size={30} /></div>
+                      </div>
+                      <div className="wc-section-kicker">STANDBY // NO ACTIVE EDITION</div>
+                      <h2 className="wc-vault-title">No Contest Scheduled</h2>
+                      <p className="wc-vault-copy">
+                        The Sunday Arena is empty right now. As soon as an arena admin generates and publishes this
+                        week's contest, it will appear here with its countdown.
+                      </p>
+                    </div>
+                  ) : stage === "upcoming" || stage === "unscheduled" ? (
+                    <div className="wc-vault">
+                      <div className="wc-vault-emblem">
+                        <div className="wc-lock-core"><Lock size={30} /></div>
+                      </div>
+                      <div className="wc-section-kicker">RESTRICTED ACCESS // SUNDAY PROTOCOL</div>
+                      <h2 className="wc-vault-title">The Arena is Sealed</h2>
+                      <p className="wc-vault-copy">
+                        {contest.problemCount} sectors stay encrypted on the server until the live window opens
+                        {contest.startsAt ? ` (${formatContestWindow(contest)})` : ""}. Register now so your seat is ready.
+                      </p>
+
+                      {isStudent && (
+                        <div className={`wc-pass-banner ${isRegistered ? "ready" : ""}`}>
+                          <div>
+                            <div className="wc-pass-title">
+                              {isRegistered
+                                ? "✓ ARENA PASS CONFIRMED"
+                                : registrationNotYetOpen
+                                ? "⏳ REGISTRATION NOT OPEN YET"
+                                : "⚠ REGISTRATION TOKEN NOT FOUND"}
+                            </div>
+                            <div className="wc-pass-copy">
+                              {isRegistered
+                                ? "Your seat is secured. Sector 01 unlocks automatically when the arena goes live."
+                                : registrationNotYetOpen
+                                ? `Registration opens ${formatDateTime(contest.registrationOpensAt)} — one week before the contest.`
+                                : "Register before Sunday 17:00. Once the arena opens, registration closes for everyone."}
+                            </div>
+                          </div>
+                          {!isRegistered && canRegisterNow && (
+                            <button type="button" className="wc-primary-btn" onClick={handleToggleRegistration} disabled={regBusy}>
+                              <UserPlus size={15} /> Register
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="wc-sectors">
+                        {Array.from({ length: contest.problemCount || 0 }).map((_, idx) => (
+                          <div key={idx} className="wc-sector" style={{ "--sector-color": "#a855f7" }}>
+                            <div className="wc-sector-num">SECTOR {String(idx + 1).padStart(2, "0")}</div>
+                            <div className="wc-sector-title">Classified</div>
+                            <div className="wc-sector-meta">Revealed when the arena opens</div>
+                            <Lock className="wc-sector-lock" size={14} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="wc-arena-wrap">
+                      {stage !== "live" ? (
+                        <div className="wc-admin-bar" style={{ marginBottom: 12 }}>
+                          <span>
+                            <Clock size={14} style={{ verticalAlign: "middle", marginRight: 6 }} />
+                            This contest has ended — practice mode: Run works, submissions and XP are closed.
+                          </span>
+                          <button type="button" className="wc-secondary-btn" onClick={() => setActiveTab("podium")}>
+                            <Trophy size={14} /> Final standings
+                          </button>
+                        </div>
+                      ) : isStudent && !isRegistered ? (
+                        <div className="wc-admin-bar" style={{ marginBottom: 12 }}>
+                          <span>
+                            <Lock size={14} style={{ verticalAlign: "middle", marginRight: 6 }} />
+                            You didn't register for this edition, and registration closed when the arena opened. You can
+                            read the sectors and Run your code, but not submit. Registration for next Sunday opens after
+                            the next contest is published.
+                          </span>
+                        </div>
+                      ) : null}
+                      <ContestStoryArena
+                        key={contest.id}
+                        user={currentUser}
+                        readOnly={stage !== "live" || (isStudent && !isRegistered)}
+                        onProgress={() => loadStandings(contest.id)}
+                        onContestComplete={handleContestFinish}
+                      />
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {/* ===================== PODIUM ===================== */}
+              {activeTab === "podium" && (
+                <section className="wc-panel wc-tab-content">
+                  <div className="wc-section-head" style={{ justifyContent: "center", textAlign: "center" }}>
+                    <div>
+                      <div className="wc-section-kicker" style={{ color: "#fbbf24" }}>HALL OF SUNDAY GLADIATORS</div>
+                      <h2 className="wc-section-title">Championship Podium</h2>
+                      <div className="wc-section-sub">
+                        {stage === "live"
+                          ? "Live standings — medals are awarded by the server when the contest closes."
+                          : stage === "ended" || stage === "archived"
+                          ? "Final standings. Medals and bonus XP have been awarded."
+                          : "The podium fills up once the arena goes live."}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="wc-podium-stage">
+                    {MEDAL_UI.map((slot) => {
+                      const holder = entries.find((e) => e.rank === slot.rank && e.score > 0);
+                      const mine = holder?.isMe && contestMedal?.rank === slot.rank ? contestMedal : null;
+                      return (
+                        <article
+                          key={slot.type}
+                          className={`wc-medal-card ${slot.type === "gold" ? "gold" : ""} ${holder ? "" : "wc-medal-empty"}`}
+                          style={{ "--medal": slot.color }}
+                        >
+                          <div className="wc-medal-glow" />
+                          <div>
+                            {slot.type === "gold" && <Crown size={27} color="#fde047" />}
+                            <div className="wc-medal-emoji">{slot.emoji}</div>
+                            <div className="wc-medal-label">{slot.label}</div>
+                            <div className="wc-medal-name">{holder ? holder.name : "Unclaimed"}</div>
+                            <div className="wc-medal-score">
+                              {holder
+                                ? `${formatXp(holder.score)} / ${formatXp(standings?.maxScore || 0)} XP · +${slot.bonus} BONUS XP`
+                                : `+${slot.bonus} BONUS XP`}
+                            </div>
+                          </div>
+                          {mine && (
+                            <button type="button" className="wc-card-btn" onClick={() => openCertificate(mine)}>
+                              <Printer size={13} style={{ verticalAlign: "middle", marginRight: 6 }} />
+                              Open my certificate
+                            </button>
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+
+                  {entries.length > 0 && (
+                    <div className="wc-standings" style={{ marginTop: 22 }}>
+                      <div className="wc-standing-row head">
+                        <span>RANK</span><span>CONTENDER</span><span>XP</span><span>SOLVED</span><span>FAILED</span>
+                      </div>
+                      {entries.slice(0, 25).map((e, idx) => (
+                        <div key={`${e.rank}-${idx}`} className={`wc-standing-row ${e.isMe ? "me" : ""}`}>
+                          <span className={`wc-standing-rank r${e.rank}`}>{rankLabel(e.rank)}</span>
+                          <strong>{e.name}{e.isMe ? " (you)" : ""}</strong>
+                          <span>{formatXp(e.score)}</span>
+                          <span>{e.solvedCount}</span>
+                          <span>{e.failedCount}</span>
+                        </div>
+                      ))}
+                      {me && entries.findIndex((e) => e.isMe) >= 25 && (
+                        <div className="wc-standing-row me">
+                          <span className="wc-standing-rank">{rankLabel(me.rank)}</span>
+                          <strong>{me.name} (you)</strong>
+                          <span>{formatXp(me.score)}</span>
+                          <span>{me.solvedCount}</span>
+                          <span>{me.failedCount}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {/* ===================== HISTORY ===================== */}
+              {activeTab === "history" && (
+                <section className="wc-panel wc-tab-content">
+                  <div className="wc-section-head">
+                    <div>
+                      <div className="wc-section-kicker">ARENA ARCHIVE // PAST EDITIONS</div>
+                      <h2 className="wc-section-title">Contest History</h2>
+                      <div className="wc-section-sub">Every finished contest keeps its standings, medals and problems.</div>
+                    </div>
+                    <History size={30} color="#38bdf8" />
+                  </div>
+
+                  {historyError ? (
+                    <div className="wc-empty">{historyError}</div>
+                  ) : !history ? (
+                    <div className="wc-state"><div className="wc-spinner" /></div>
+                  ) : history.length === 0 ? (
+                    <div className="wc-empty">No finished contests yet — the first one will appear here after it closes.</div>
+                  ) : (
+                    <div className="wc-history">
+                      {history.map((item) => (
+                        <article key={item.id} className="wc-history-card">
+                          <div>
+                            <h3>{item.title} · Edition #{item.edition}</h3>
+                            <p>{item.story}</p>
+                            <div className="wc-history-meta">
+                              <span className="wc-chip"><Calendar size={11} /> {formatContestWindow(item)}</span>
+                              <span className="wc-chip"><Users size={11} /> {item.participants} contenders</span>
+                              {item.podium.map((p) => (
+                                <span key={p.rank} className={`wc-chip ${p.medalType}`}>
+                                  {p.medalType === "gold" ? "🥇" : p.medalType === "silver" ? "🥈" : "🥉"} {p.name}
+                                  {p.isMe ? " (you)" : ""} · {formatXp(p.score)} XP
+                                </span>
+                              ))}
+                              {item.me && (
+                                <span className="wc-chip">
+                                  <Award size={11} />{" "}
+                                  {item.me.rank
+                                    ? `You: #${item.me.rank} · ${formatXp(item.me.score)} / ${formatXp(item.maxScore)} XP`
+                                    : "You: registered, no sector solved"}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="wc-history-actions">
+                            <button type="button" className="wc-secondary-btn" onClick={() => openHistoryStandings(item)}>
+                              <Trophy size={14} /> Standings
+                            </button>
+                            <button
+                              type="button"
+                              className="wc-secondary-btn"
+                              onClick={() => setHistoryView({ contest: item, mode: "problems" })}
+                            >
+                              <Code2 size={14} /> Practice problems
+                            </button>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {/* ===================== RULES ===================== */}
+              {activeTab === "rules" && (
+                <section className="wc-panel wc-tab-content">
+                  <div className="wc-section-head">
+                    <div>
+                      <div className="wc-section-kicker">ARENA GOVERNANCE // SERVER-ENFORCED RULESET</div>
+                      <h2 className="wc-section-title">Arena Protocols</h2>
+                      <div className="wc-section-sub">Timing and scoring are decided by the server, not by your browser.</div>
+                    </div>
+                    <ShieldCheck size={30} color="#38bdf8" />
+                  </div>
+
+                  <div className="wc-rules-grid">
+                    <article className="wc-rule" style={{ "--rule-color": "#38bdf8" }}>
+                      <div className="wc-rule-index">PROTOCOL // 01</div>
+                      <div className="wc-rule-icon"><Clock size={21} /></div>
+                      <div className="wc-rule-title">Sunday Combat Window</div>
+                      <div className="wc-rule-copy">
+                        The arena runs every Sunday from 17:00 to 20:00
+                        {contest?.startsAt ? ` (this edition: ${formatContestWindow(contest)})` : ""}. Registration opens
+                        one week before and closes the moment the arena opens — nobody can join a running contest.
+                        Problems unlock at 17:00; submissions after 20:00 are rejected by the server.
+                      </div>
+                    </article>
+
+                    <article className="wc-rule" style={{ "--rule-color": "#a855f7" }}>
+                      <div className="wc-rule-index">PROTOCOL // 02</div>
+                      <div className="wc-rule-icon"><Code2 size={21} /></div>
+                      <div className="wc-rule-title">Scoring & Ranking</div>
+                      <div className="wc-rule-copy">
+                        Six story sectors worth 25 → 150 XP. Ranking: total XP, then sectors solved, then who got there
+                        first, then fewer failed submissions. A hint costs 25% of that sector's XP — once.
+                      </div>
+                    </article>
+
+                    <article className="wc-rule" style={{ "--rule-color": "#fbbf24" }}>
+                      <div className="wc-rule-index">PROTOCOL // 03</div>
+                      <div className="wc-rule-icon"><Award size={21} /></div>
+                      <div className="wc-rule-title">Podium Honors</div>
+                      <div className="wc-rule-copy">
+                        When the window closes the server awards Gold (+500 XP), Silver (+300 XP) and Bronze (+150 XP)
+                        to the top 3 scorers, with a printable, verifiable certificate.
+                      </div>
+                    </article>
+                  </div>
+
+                  <div className="wc-honor">
+                    <ShieldAlert size={20} style={{ flex: "0 0 auto" }} />
+                    <span>
+                      <strong style={{ color: "#e0e7ff" }}>Honor Code:</strong> compete using your own reasoning and
+                      submitted code. Arena integrity is part of the championship.
+                    </span>
+                  </div>
+                </section>
+              )}
+
+              <div className="wc-footer-signal">
+                ARENA NETWORK // SERVER-VERIFIED // {contest ? `EDITION #${contest.edition}` : "STANDBY"}
+              </div>
+            </>
+          )}
+        </div>
+
+        {historyView && (
+          <div className="wc-overlay" role="dialog" aria-modal="true">
+            <div className="wc-overlay-card">
+              <div className="wc-overlay-head">
+                <h2 style={{ margin: 0 }}>
+                  Edition #{historyView.contest.edition} · {historyView.mode === "problems" ? "Practice" : "Final standings"}
+                </h2>
+                <button type="button" className="wc-icon-btn" onClick={() => setHistoryView(null)} aria-label="Close">
+                  <X size={18} />
+                </button>
+              </div>
+              {historyView.mode === "problems" ? (
+                <ContestStoryArena user={currentUser} contestId={historyView.contest.id} readOnly />
+              ) : !historyView.standings ? (
+                <div className="wc-state"><div className="wc-spinner" /></div>
+              ) : historyView.standings.entries.length === 0 ? (
+                <div className="wc-empty">Nobody registered for this contest.</div>
+              ) : (
+                <div className="wc-panel">
+                  <div className="wc-standings">
+                    <div className="wc-standing-row head">
+                      <span>RANK</span><span>CONTENDER</span><span>XP</span><span>SOLVED</span><span>FAILED</span>
+                    </div>
+                    {historyView.standings.entries.map((e, idx) => (
+                      <div key={`${e.rank}-${idx}`} className={`wc-standing-row ${e.isMe ? "me" : ""}`}>
+                        <span className={`wc-standing-rank r${e.rank}`}>{rankLabel(e.rank)}</span>
+                        <strong>{e.name}{e.isMe ? " (you)" : ""}</strong>
+                        <span>{formatXp(e.score)}</span>
+                        <span>{e.solvedCount}</span>
+                        <span>{e.failedCount}</span>
                       </div>
                     ))}
                   </div>
-
-                  <div className="wc-dev-shortcut">
-                    <span><strong style={{ color: "#38bdf8" }}>EVALUATOR BYPASS:</strong> activate the live stage instantly for development/testing.</span>
-                    <button
-                      type="button"
-                      className="wc-secondary-btn"
-                      onClick={() => {
-                        if (!isRegistered) registerCurrentStudent(currentUser);
-                        handleStageChange("live");
-                        setContestState(loadContestState());
-                      }}
-                    >
-                      <Zap size={14} /> Unlock Live Arena
-                    </button>
-                  </div>
-                </div>
-              ) : !isRegistered ? (
-                <div className="wc-live-gate">
-                  <div className="wc-live-gate-icon"><Swords size={34} /></div>
-                  <div className="wc-section-kicker" style={{ color: "#4ade80" }}>SUNDAY SIGNAL CONFIRMED</div>
-                  <h2 className="wc-vault-title">The Arena Is Live</h2>
-                  <p className="wc-vault-copy">
-                    Operation Citadel has started. Activate your contender token now and enter Sector 01 immediately.
-                  </p>
-                  <button type="button" className="wc-primary-btn" onClick={handleToggleRegistration}>
-                    <UserCheck size={16} /> Quick Register & Enter Sector 01
-                  </button>
-                </div>
-              ) : (
-                <div className="wc-arena-wrap">
-                  <ContestStoryArena user={currentUser} onContestComplete={handleContestFinish} />
                 </div>
               )}
-            </section>
-          )}
-
-          {activeTab === "podium" && (
-            <section className="wc-panel wc-tab-content">
-              <div className="wc-section-head" style={{ justifyContent: "center", textAlign: "center" }}>
-                <div>
-                  <div className="wc-section-kicker" style={{ color: "#fbbf24" }}>HALL OF SUNDAY GLADIATORS</div>
-                  <h2 className="wc-section-title">Championship Podium</h2>
-                  <div className="wc-section-sub">Three signals remain when the Citadel closes. One becomes champion.</div>
-                </div>
-              </div>
-
-              <div className="wc-podium-stage">
-                <article className="wc-medal-card" style={{ "--medal": "#cbd5e1" }}>
-                  <div className="wc-medal-glow" />
-                  <div>
-                    <div className="wc-medal-emoji">🥈</div>
-                    <div className="wc-medal-label">SILVER // RANK 02</div>
-                    <div className="wc-medal-name">Maya Lin</div>
-                    <div className="wc-medal-score">+300 BONUS XP · 940 / 1000</div>
-                  </div>
-                  <button type="button" className="wc-card-btn" onClick={() => handleClaimMedal("silver", 2)}>
-                    Inspect Silver Certificate
-                  </button>
-                </article>
-
-                <article className="wc-medal-card gold" style={{ "--medal": "#fbbf24" }}>
-                  <div className="wc-medal-glow" />
-                  <div>
-                    <Crown size={27} color="#fde047" />
-                    <div className="wc-medal-emoji">🥇</div>
-                    <div className="wc-medal-label">GRAND CHAMPION // RANK 01</div>
-                    <div className="wc-medal-name">{currentUser?.fullName || currentUser?.name || "CodeLand Champion"}</div>
-                    <div className="wc-medal-score">+500 CHAMPION XP · 995 / 1000</div>
-                  </div>
-                  <button type="button" className="wc-card-btn" onClick={() => handleClaimMedal("gold", 1)}>
-                    <Printer size={13} style={{ verticalAlign: "middle", marginRight: 6 }} />
-                    Claim Gold Diploma
-                  </button>
-                </article>
-
-                <article className="wc-medal-card" style={{ "--medal": "#fb923c" }}>
-                  <div className="wc-medal-glow" />
-                  <div>
-                    <div className="wc-medal-emoji">🥉</div>
-                    <div className="wc-medal-label">BRONZE // RANK 03</div>
-                    <div className="wc-medal-name">Ziad El-Masri</div>
-                    <div className="wc-medal-score">+150 BONUS XP · 890 / 1000</div>
-                  </div>
-                  <button type="button" className="wc-card-btn" onClick={() => handleClaimMedal("bronze", 3)}>
-                    Inspect Bronze Certificate
-                  </button>
-                </article>
-              </div>
-            </section>
-          )}
-
-          {activeTab === "rules" && (
-            <section className="wc-panel wc-tab-content">
-              <div className="wc-section-head">
-                <div>
-                  <div className="wc-section-kicker">CITADEL GOVERNANCE // IMMUTABLE RULESET</div>
-                  <h2 className="wc-section-title">Arena Protocols</h2>
-                  <div className="wc-section-sub">Read before deployment. The combat window is strict and rank scoring is final.</div>
-                </div>
-                <ShieldCheck size={30} color="#38bdf8" />
-              </div>
-
-              <div className="wc-rules-grid">
-                <article className="wc-rule" style={{ "--rule-color": "#38bdf8" }}>
-                  <div className="wc-rule-index">PROTOCOL // 01</div>
-                  <div className="wc-rule-icon"><Clock size={21} /></div>
-                  <div className="wc-rule-title">Sunday Combat Window</div>
-                  <div className="wc-rule-copy">
-                    The arena opens every Sunday at 10:00 AM UTC and closes at 12:00 PM UTC. Submissions after the gate closes are not accepted for rank scoring.
-                  </div>
-                </article>
-
-                <article className="wc-rule" style={{ "--rule-color": "#a855f7" }}>
-                  <div className="wc-rule-index">PROTOCOL // 02</div>
-                  <div className="wc-rule-icon"><Code2 size={21} /></div>
-                  <div className="wc-rule-title">Algorithmic Trial Structure</div>
-                  <div className="wc-rule-copy">
-                    Operation Citadel is composed of six story-driven algorithmic sectors. Precision, speed, and low failed-attempt count determine your final combat score.
-                  </div>
-                </article>
-
-                <article className="wc-rule" style={{ "--rule-color": "#fbbf24" }}>
-                  <div className="wc-rule-index">PROTOCOL // 03</div>
-                  <div className="wc-rule-icon"><Award size={21} /></div>
-                  <div className="wc-rule-title">Podium Honors</div>
-                  <div className="wc-rule-copy">
-                    The Top 3 earn Gold, Silver, and Bronze distinction together with a printable, verifiable Certificate of Excellence signed by the platform founders.
-                  </div>
-                </article>
-              </div>
-
-              <div className="wc-honor">
-                <ShieldAlert size={20} style={{ flex: "0 0 auto" }} />
-                <span>
-                  <strong style={{ color: "#e0e7ff" }}>Honor Code:</strong> compete using your own reasoning and submitted code. Arena integrity is part of the championship itself.
-                </span>
-              </div>
-            </section>
-          )}
-
-          <div className="wc-footer-signal">
-            CITADEL NETWORK // SECURE CHANNEL ACTIVE // EDITION {contestState.edition || "#42"}
+            </div>
           </div>
-        </div>
+        )}
 
         {certificateMedal && (
           <ContestCertificate
             medalData={certificateMedal}
-            initialStudentName={currentUser?.fullName || currentUser?.name || "CodeLand Champion"}
+            initialStudentName={certificateMedal.studentName}
             onClose={() => setCertificateMedal(null)}
           />
         )}

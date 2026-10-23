@@ -165,7 +165,7 @@
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   max-width: 450px;
@@ -261,7 +261,7 @@
 
 .explanation {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
   border-top: 1px solid rgba(255, 255, 255, 0.055);
   background: rgba(255, 255, 255, 0.045);
@@ -269,7 +269,7 @@
 
 .explanation > div {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 10px;
   padding: 18px;
   background: rgba(6, 8, 20, 0.95);
@@ -294,11 +294,11 @@
   }
 
   .elementRow {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .explanation {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .topBar {

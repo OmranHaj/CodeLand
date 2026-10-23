@@ -7,6 +7,7 @@ from langgraph.prebuilt import ToolNode
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.runnables import Runnable
 from pydantic import BaseModel, Field
+import os
 
 # 1. إضافة "Compilation Error" إلى الـ Literal
 class SimpleSubmissionResult(BaseModel):
@@ -23,8 +24,9 @@ class SimpleSubmissionResult(BaseModel):
 # 2. دالة التقييم بعد التعديل
 def simple_ai_judge(problem_text: str, student_code: str) -> dict:
     judge_llm = ChatGoogleGenerativeAI(
-        model="models/gemini-2.5-flash",
-        google_api_key="AIzaSyBV-P4seDxsf1xseMw2rk4xJ91whI-nOzw",
+        # The previous hardcoded key was revoked by Google as leaked (403); set GEMINI_API_KEY instead.
+        model=os.environ.get("GEMINI_TEXT_MODEL", "models/gemini-3.8-flash"),
+        google_api_key=os.environ.get("GEMINI_API_KEY"),
         temperature=0.1
     ).with_structured_output(SimpleSubmissionResult)
     

@@ -10,6 +10,7 @@ import { ProfileModule } from './profile/profile.module.js';
 import { AchievementsModule } from './achievements/achievements.module.js';
 import { AdminModule } from './admin/admin.module.js';
 import { JudgeModule } from './judge/judge.module.js';
+import { ContestModule } from './contest/contest.module.js';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { JudgeModule } from './judge/judge.module.js';
     AchievementsModule,
     AdminModule,
     JudgeModule,
+    ContestModule,
   ],
   controllers: [AppController],
   providers: [AppService],

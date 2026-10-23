@@ -21,7 +21,7 @@ import gsap from "gsap";
 import HubLayout from "../../components/Hub/HubLayout";
 import Trophy3DShowcase from "../../components/Hub/Trophy3DShowcase";
 import ContestCertificate from "../../components/Contest/ContestCertificate";
-import { loadStudentMedals } from "../../services/contestService";
+import { fetchMyMedals, toCertificateMedal } from "../../services/contestService";
 import { getUser } from "../../services/learningHub";
 import {
   fetchAllAchievements,
@@ -87,18 +87,16 @@ export default function Achievements() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedBadge, setSelectedBadge] = useState(null);
-  const [contestMedals, setContestMedals] = useState(() => loadStudentMedals());
+  const [contestMedals, setContestMedals] = useState([]);
   const [activeCertMedal, setActiveCertMedal] = useState(null);
 
   const gridRef = useRef(null);
 
-  // Sync contest medals from localStorage
+  // Sunday Arena medals are awarded by the server when a contest closes.
   useEffect(() => {
-    const handleMedals = () => {
-      setContestMedals(loadStudentMedals());
-    };
-    window.addEventListener("codeland:medals_update", handleMedals);
-    return () => window.removeEventListener("codeland:medals_update", handleMedals);
+    fetchMyMedals()
+      .then((list) => setContestMedals((Array.isArray(list) ? list : []).map(toCertificateMedal)))
+      .catch(() => setContestMedals([]));
   }, []);
 
   const loadData = useCallback(async () => {

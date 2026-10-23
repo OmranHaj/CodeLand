@@ -1179,7 +1179,7 @@
 .explanation {
   display: grid;
 
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 
   border-top: 1px solid rgba(70, 223, 255, 0.06);
 
@@ -1342,7 +1342,7 @@
 
 @media (max-width: 900px) {
   .workspace {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
 
     align-items: stretch;
   }
@@ -1366,7 +1366,7 @@
   }
 
   .explanation {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .explanation > div + div {

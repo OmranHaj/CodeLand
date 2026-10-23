@@ -21,7 +21,8 @@ model User {
   parentId                               String?
   streakDays                             Int                   @default(0)
   lastStreakAt                           DateTime?
-  totalXp                                Int                   @default(0)
+  // Float because arena hint penalties award quarter XP (e.g. 25 * 0.75 = 18.75).
+  totalXp                                Float                 @default(0)
   lastActiveAt                           DateTime              @default(now())
   createdAt                              DateTime              @default(now())
   updatedAt                              DateTime              @updatedAt
@@ -43,6 +44,11 @@ model User {
   suspendReason                          String?
   adminAuditLogs                         AdminAuditLog[]       @relation("AdminAuditActor")
   targetAuditLogs                        AdminAuditLog[]       @relation("AdminAuditTarget")
+  arenaProblemsCreated                   ArenaProblem[]        @relation("ArenaProblemAuthor")
+  arenaAttempts                          ArenaProblemAttempt[]
+  arenaContestsCreated                   ArenaContest[]        @relation("ArenaContestAuthor")
+  arenaRegistrations                     ArenaRegistration[]
+  arenaMedals                            ArenaMedal[]
 
   @@index([parentId])
   @@index([role, status])
@@ -70,7 +76,7 @@ model DailyActivity {
   durationMinutes     Int      @default(0)
   lessonsCompleted    Int      @default(0)
   challengesCompleted Int      @default(0)
-  xpEarned            Int      @default(0)
+  xpEarned            Float    @default(0)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -334,3 +340,171 @@ model CodeSubmission {
   @@index([challengeId])
 }
 
+
+enum ArenaProblemStatus {
+  DRAFT
+  PUBLISHED
+}
+
+// A Sunday Arena problem produced by ai/generate_contest.py. Every field the
+// generator returns has a column here; rawOutput keeps the untouched payload
+// (minus the image bytes, which live in imageData).
+model ArenaProblem {
+  id                       String             @id @default(uuid())
+  status                   ArenaProblemStatus @default(DRAFT)
+  xp                       Int
+  title                    String
+  arabicTitle              String?
+  difficulty               String
+  difficultyIndex          Int                @default(0)
+  difficultyColor          String?
+  statement                String             @db.Text
+  taskDescription          String?            @db.Text
+  inputSpec                String             @db.Text
+  outputSpec               String             @db.Text
+  constraints              Json               @default("[]")
+  examples                 Json               @default("[]")
+  note                     String?            @db.Text
+  hint                     String             @db.Text
+  timeLimit                String?
+  memoryLimit              String?
+  starterCode              Json               @default("{}")
+  formattedProblem         String             @db.Text
+  imageData                Bytes?
+  imageMimeType            String?
+  imagePrompt              String?            @db.Text
+  canBeExplainedByDiagrams Boolean            @default(false)
+  storyPart                String?            @db.Text
+  coreIdea                 String?            @db.Text
+  sourceDescription        String             @db.Text
+  generationMode           String             @default("single")
+  batchId                  String?
+  rawOutput                Json
+  // Hidden-test judging: the reference solution computes every expected output,
+  // and an independent brute-force solution cross-checks it on small inputs.
+  referenceSolution        String?            @db.Text
+  bruteForceSolution       String?            @db.Text
+  validationStatus         String             @default("unvalidated")
+  validationError          String?            @db.Text
+  createdById              String?
+  publishedAt              DateTime?
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+
+  createdBy User?                 @relation("ArenaProblemAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  // batchId is the id of the contest (6-problem set) this problem belongs to.
+  contest   ArenaContest?         @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  attempts  ArenaProblemAttempt[]
+  testCases ArenaTestCase[]
+
+  @@index([status, xp])
+  @@index([batchId])
+}
+
+// One row per student per problem: the single source of truth for hint usage
+// and the XP the student actually earned (after the hint penalty).
+model ArenaProblemAttempt {
+  id              String    @id @default(uuid())
+  userId          String
+  problemId       String
+  hintUsed        Boolean   @default(false)
+  hintUsedAt      DateTime?
+  solved          Boolean   @default(false)
+  solvedAt        DateTime?
+  earnedXp        Float     @default(0)
+  submissionCount Int       @default(0)
+  // Rejected submissions before the problem was solved (leaderboard tie-break).
+  failedCount     Int       @default(0)
+  lastVerdict     String?
+  lastLanguage    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem ArenaProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+  @@index([problemId])
+}
+
+enum ArenaContestStatus {
+  CURRENT
+  ARCHIVED
+}
+
+// One Sunday Arena contest = one generated 6-problem set. The live window
+// (startsAt..endsAt) is enforced by the server; when a newer contest is
+// generated the previous one is ARCHIVED (kept with its standings and medals).
+model ArenaContest {
+  id          String             @id @default(uuid())
+  edition     Int                @unique @default(autoincrement())
+  title       String
+  story       String             @db.Text
+  status      ArenaContestStatus @default(CURRENT)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  finalizedAt DateTime?
+  archivedAt  DateTime?
+  createdById String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  createdBy     User?               @relation("ArenaContestAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  problems      ArenaProblem[]
+  registrations ArenaRegistration[]
+  medals        ArenaMedal[]
+
+  @@index([status])
+}
+
+model ArenaRegistration {
+  id           String   @id @default(uuid())
+  contestId    String
+  userId       String
+  registeredAt DateTime @default(now())
+
+  contest ArenaContest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([contestId, userId])
+  @@index([userId])
+}
+
+// Awarded by the server to the top 3 of a contest once it ends.
+model ArenaMedal {
+  id              String   @id @default(uuid())
+  contestId       String
+  userId          String
+  rank            Int
+  medalType       String
+  score           Float
+  maxScore        Float
+  solvedCount     Int
+  participants    Int
+  bonusXp         Int
+  certificateCode String   @unique
+  awardedAt       DateTime @default(now())
+
+  contest ArenaContest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([contestId, userId])
+  @@index([userId])
+}
+
+// Hidden tests of an arena problem. Never sent to students: submissions are
+// executed against every input and compared with expectedOutput.
+model ArenaTestCase {
+  id             String   @id @default(uuid())
+  problemId      String
+  order          Int
+  // "edge" = small hand-picked case, "large" = generated stress case
+  kind           String   @default("edge")
+  input          String   @db.Text
+  expectedOutput String   @db.Text
+  createdAt      DateTime @default(now())
+
+  problem ArenaProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([problemId, order])
+}

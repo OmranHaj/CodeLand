@@ -1170,7 +1170,7 @@
 
   display: grid;
 
-  grid-template-columns: 48px 1fr;
+  grid-template-columns: 48px minmax(0, 1fr);
 
   background: linear-gradient(145deg, #050914, #070c19);
 }
@@ -1613,7 +1613,7 @@
 
   display: grid;
 
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 
   overflow: hidden;
 
@@ -1802,7 +1802,7 @@
   }
 
   .header {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
 
     height: auto;
 
@@ -1818,7 +1818,7 @@
   .workspace {
     height: auto;
 
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .sidebar {

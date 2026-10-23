@@ -1257,11 +1257,11 @@
 
 @media (max-width: 640px) {
   .admin-metrics-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .admin-form-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .admin-field-group.full-width {
@@ -1549,3 +1549,60 @@
   color: #ffffff;
 }
 
+
+/* ==========================================================================
+   RESPONSIVE FIXES — phones
+   ========================================================================== */
+
+.admin-lesson-info,
+.admin-lesson-title-row h3 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .admin-curriculum-panel {
+    padding: 16px 12px;
+  }
+
+  .admin-lesson-card {
+    align-items: stretch;
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .admin-lesson-title-row,
+  .admin-lesson-meta {
+    flex-wrap: wrap;
+  }
+
+  .admin-lesson-meta {
+    gap: 6px 12px;
+  }
+
+  /* Buttons wrap from the left instead of being pushed off-screen. */
+  .admin-lesson-right {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .admin-lesson-right > * {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+/* Metric tiles: two per row on regular phones. */
+@media (max-width: 640px) and (min-width: 361px) {
+  .admin-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .admin-metric-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px;
+  }
+}

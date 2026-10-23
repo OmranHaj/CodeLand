@@ -187,7 +187,7 @@
 /* Hero Section (3D Mastery Beacon & Overview) */
 .heroGrid {
   display: grid;
-  grid-template-columns: 340px 1fr;
+  grid-template-columns: 340px minmax(0, 1fr);
   gap: 24px;
 }
 
@@ -241,7 +241,7 @@
 /* 4 Quick Stat Cards with 3D Tilt Hover */
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -368,7 +368,7 @@
 
 .heatmapGrid {
   display: grid;
-  grid-template-columns: repeat(15, 1fr);
+  grid-template-columns: repeat(15, minmax(0, 1fr));
   gap: 8px;
   margin-top: 12px;
 }
@@ -433,7 +433,7 @@
 /* 2-Column Analytics Grid */
 .analyticsGrid {
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
   gap: 24px;
 }
 
@@ -777,18 +777,18 @@
 /* Responsive Breakpoints */
 @media (max-width: 1050px) {
   .heroGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .analyticsGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 @media (max-width: 650px) {
   .statsGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .heatmapGrid {
-    grid-template-columns: repeat(10, 1fr);
+    grid-template-columns: repeat(10, minmax(0, 1fr));
   }
 }
