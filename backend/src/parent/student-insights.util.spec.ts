@@ -15,7 +15,14 @@ const activity = (daysAgo: number, minutes: number, lessons = 1, challenges = 0)
   const date = new Date(NOW);
   date.setDate(date.getDate() - daysAgo);
   date.setHours(0, 0, 0, 0);
-  return { date, durationMinutes: minutes, lessonsCompleted: lessons, challengesCompleted: challenges, xpEarned: 25 };
+  return {
+    date,
+    durationMinutes: 0,
+    activeSeconds: minutes * 60,
+    lessonsCompleted: lessons,
+    challengesCompleted: challenges,
+    xpEarned: 25,
+  };
 };
 
 const catalog: CatalogLevel[] = [
@@ -108,6 +115,25 @@ describe('buildStudentInsights', () => {
     expect(r.loadZone).toBe('NO ACTIVITY YET');
     expect(r.quizMetrics.persistenceRating).toBe('New Learner');
     expect(r.insights.conversationStarter).toContain("hasn't completed a lesson yet");
+  });
+
+  it('a day with study time but nothing completed still counts as active', () => {
+    const r = buildStudentInsights(base({ activities: [activity(0, 25, 0, 0)] }));
+    expect(r.dailyActivities[29]).toMatchObject({ minutes: 25, active: true, lessonsCompleted: 0 });
+    expect(r.activeDays).toBe(1);
+  });
+
+  it('keeps the old estimate for days recorded before real tracking existed', () => {
+    const legacy = { ...activity(3, 0, 2), durationMinutes: 20 };
+    const r = buildStudentInsights(base({ activities: [legacy, activity(0, 12)] }));
+    expect(r.dailyActivities[26].minutes).toBe(20);
+    expect(r.dailyActivities[29].minutes).toBe(12);
+    expect(r.monthlyMinutes).toBe(32);
+  });
+
+  it('rounds seconds to whole minutes', () => {
+    const day = { ...activity(0, 0), activeSeconds: 89 };
+    expect(buildStudentInsights(base({ activities: [day] })).dailyActivities[29].minutes).toBe(1);
   });
 
   it('maps recent achievements to badges with their real image and date', () => {

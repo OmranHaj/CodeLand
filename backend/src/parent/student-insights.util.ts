@@ -2,8 +2,9 @@
  * Turns a student's raw database records into the numbers shown on the organization dashboard
  * and monthly report. Pure functions (no database access) so every figure is unit-testable.
  *
- * Study time is an estimate: the platform records ~10 minutes per completed lesson or challenge
- * (see LearningService.recordActivityAndStreak); real time-on-page is not tracked.
+ * Study time is real time on lesson/challenge pages while visible and in use (activeSeconds).
+ * Days recorded before that tracking existed carry an old estimate in durationMinutes, which is
+ * added on so their history is not lost; new days only ever have real time.
  */
 
 export const WINDOW_DAYS = 30;
@@ -11,6 +12,7 @@ export const WINDOW_DAYS = 30;
 export interface ActivityRecord {
   date: Date;
   durationMinutes: number;
+  activeSeconds: number;
   lessonsCompleted: number;
   challengesCompleted: number;
   xpEarned: number;
@@ -83,6 +85,11 @@ function addDays(date: Date, days: number): Date {
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
+/** Minutes studied on a day: real tracked time plus any legacy estimate from before tracking. */
+export function activityMinutes(record: Pick<ActivityRecord, 'activeSeconds' | 'durationMinutes'>): number {
+  return Math.round((record.activeSeconds || 0) / 60) + (record.durationMinutes || 0);
+}
+
 function asIdList(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
 }
@@ -94,7 +101,7 @@ export function buildDailyTimeline(activities: ActivityRecord[], now: Date) {
   return Array.from({ length: WINDOW_DAYS }, (_, i) => {
     const date = addDays(today, i - (WINDOW_DAYS - 1));
     const record = byDay.get(dayKey(date));
-    const minutes = record?.durationMinutes ?? 0;
+    const minutes = record ? activityMinutes(record) : 0;
     return {
       date: dayKey(date),
       dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
@@ -103,7 +110,11 @@ export function buildDailyTimeline(activities: ActivityRecord[], now: Date) {
       lessonsCompleted: record?.lessonsCompleted ?? 0,
       challengesCompleted: record?.challengesCompleted ?? 0,
       xpEarned: record?.xpEarned ?? 0,
-      active: minutes > 0 || (record?.lessonsCompleted ?? 0) > 0 || (record?.challengesCompleted ?? 0) > 0,
+      active:
+        minutes > 0 ||
+        (record?.activeSeconds ?? 0) > 0 ||
+        (record?.lessonsCompleted ?? 0) > 0 ||
+        (record?.challengesCompleted ?? 0) > 0,
     };
   });
 }
@@ -198,7 +209,7 @@ export function buildStudentInsights(input: StudentInsightInput) {
   const previousStart = addDays(windowStart, -WINDOW_DAYS);
   const previousMinutes = input.activities
     .filter((a) => a.date >= previousStart && a.date < windowStart)
-    .reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
+    .reduce((sum, a) => sum + activityMinutes(a), 0);
 
   const monthlyMinutes = timeline.reduce((sum, d) => sum + d.minutes, 0);
   const activeDays = timeline.filter((d) => d.active).length;

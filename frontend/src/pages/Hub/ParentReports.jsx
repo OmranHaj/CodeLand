@@ -326,7 +326,7 @@ export default function ParentReports() {
         >
           <div style={{ padding: "16px", background: "#12192e", borderRadius: "14px", border: "1px solid #1f2a48" }}>
             <span style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>
-              Study Time (estimated)
+              Study Time
             </span>
             <strong style={{ fontSize: "22px", color: "#38bdf8" }}>
               {selectedChild.monthlyHours ?? 0} Hours
@@ -400,8 +400,8 @@ export default function ParentReports() {
               <>
                 {selectedChild.fullName || "Your student"} averaged{" "}
                 <strong>~{selectedChild.avgMinutesPerActiveDay} minutes per active day</strong> and about{" "}
-                <strong>{selectedChild.avgWeeklyHours} hours per week</strong> over the last 30 days. Time is
-                estimated from completed lessons and challenges.
+                <strong>{selectedChild.avgWeeklyHours} hours per week</strong> over the last 30 days. Time counts
+                only while a lesson or challenge page is open and in use.
               </>
             ) : (
               <>{selectedChild.fullName || "Your student"} has no learning activity in the last 30 days yet.</>

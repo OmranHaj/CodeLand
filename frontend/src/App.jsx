@@ -2,6 +2,7 @@ import { lazy, Suspense, useSyncExternalStore } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { RouteEffects, RouteErrorBoundary } from "./components/Hub/RouteSupport";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
+import useStudyTimeTracker from "./hooks/useStudyTimeTracker";
 
 const Home = lazy(() => import("./pages/Home/Home"));
 const Login = lazy(() => import("./pages/Login/Login"));
@@ -69,6 +70,7 @@ function getSessionSnapshot() {
 function App() {
   const location = useLocation();
   const session = useSyncExternalStore(subscribeSession, getSessionSnapshot);
+  useStudyTimeTracker(location.pathname);
 
   return (
     <>

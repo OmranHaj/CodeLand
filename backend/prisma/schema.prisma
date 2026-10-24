@@ -77,7 +77,10 @@ model DailyActivity {
   id                  String   @id @default(uuid())
   userId              String
   date                DateTime
+  // Legacy estimate (10 min per completed unit); no longer incremented.
   durationMinutes     Int      @default(0)
+  // Real time on lesson/challenge pages while visible and in use (see LearningService.recordStudyTime).
+  activeSeconds       Int      @default(0)
   lessonsCompleted    Int      @default(0)
   challengesCompleted Int      @default(0)
   xpEarned            Float    @default(0)

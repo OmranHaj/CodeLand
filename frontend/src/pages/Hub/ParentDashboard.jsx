@@ -421,7 +421,7 @@ export default function ParentDashboard() {
               </div>
               <div className={styles.statMain}>
                 <div className={styles.statValue}>{selectedChild.monthlyHours} hrs</div>
-                <div className={styles.statLabel}>30-Day Learning Time (estimated)</div>
+                <div className={styles.statLabel}>30-Day Learning Time</div>
                 <div className={styles.statSubtext}>
                   {selectedChild.activeDays > 0
                     ? `Average ~${selectedChild.avgMinutesPerActiveDay} mins per active day`
@@ -499,7 +499,7 @@ export default function ParentDashboard() {
                 <CalendarIcon /> 30-Day Learning Activity Heatmap
               </h2>
               <div className={styles.panelSubtitle}>
-                Hover over any day to inspect coding session duration and completed lessons
+                Time counts only while a lesson or challenge page is open and in use. Hover a day for details.
               </div>
             </div>
 
@@ -526,7 +526,7 @@ export default function ParentDashboard() {
                 <div
                   key={idx}
                   className={`${styles.heatmapCell} ${cellClass}`}
-                  title={`${day.date} (${day.dayName}): ~${day.minutes} mins · ${day.lessonsCompleted} lessons · ${day.challengesCompleted || 0} challenges`}
+                  title={`${day.date} (${day.dayName}): ${day.minutes} mins · ${day.lessonsCompleted} lessons · ${day.challengesCompleted || 0} challenges`}
                 >
                   <span>{day.dayNumber}</span>
                 </div>
@@ -541,7 +541,7 @@ export default function ParentDashboard() {
             <div>
               <strong>Busiest Day:</strong>{" "}
               {selectedChild.bestDay
-                ? `${selectedChild.bestDay.units} lessons & challenges (~${selectedChild.bestDay.minutes} mins) on ${shortDate(selectedChild.bestDay.date)}`
+                ? `${selectedChild.bestDay.minutes} mins, ${selectedChild.bestDay.units} lessons & challenges on ${shortDate(selectedChild.bestDay.date)}`
                 : "No activity yet"}
             </div>
           </div>

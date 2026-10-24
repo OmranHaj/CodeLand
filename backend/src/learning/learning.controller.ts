@@ -18,6 +18,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { CompleteLessonDto } from './dto/complete-lesson.dto.js';
 import { SubmitChallengeDto } from './dto/submit-challenge.dto.js';
 import { SubmitProjectDto } from './dto/submit-project.dto.js';
+import { StudyTimeDto } from './dto/study-time.dto.js';
 
 interface RequestWithUser {
   user: {
@@ -68,6 +69,20 @@ export class LearningController {
       dto.lessonId,
       dto.unitType,
     );
+  }
+
+  /**
+   * Endpoint: POST /learning/study-time
+   * Adds real active time on lesson/challenge pages to the student's daily activity.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('study-time')
+  @HttpCode(HttpStatus.OK)
+  async recordStudyTime(@Request() req: RequestWithUser, @Body() dto: StudyTimeDto) {
+    if ((req.user.role || '').toUpperCase() !== 'CHILD') {
+      throw new ForbiddenException('Only student accounts record study time.');
+    }
+    return this.learningService.recordStudyTime(req.user.id, dto.seconds);
   }
 
   /**

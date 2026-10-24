@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { PRACTICE_CHALLENGE_ANSWERS, PRACTICE_CHALLENGE_XP } from './practice-challenges.js';
 import { withStudentXpLock } from './xp-lock.util.js';
+import { creditStudySeconds } from './study-time.util.js';
 import {
   computeEffectiveStreak,
   computeStreakOnActivity,
@@ -271,6 +272,36 @@ export class LearningService {
     };
   }
 
+  /** When each student last reported study time (per server process; only bounds the next credit). */
+  private readonly lastStudyReportAt = new Map<string, number>();
+
+  /**
+   * Adds real time spent on lesson/challenge pages to today's DailyActivity.
+   * The browser only counts seconds while the page is visible and in use; the server further
+   * caps each report by the time elapsed since the previous one. Does not touch the streak.
+   */
+  async recordStudyTime(userId: string, reportedSeconds: number) {
+    const now = Date.now();
+    const credited = creditStudySeconds(reportedSeconds, this.lastStudyReportAt.get(userId), now);
+    this.lastStudyReportAt.set(userId, now);
+
+    if (credited === 0) {
+      return { creditedSeconds: 0 };
+    }
+
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+
+    const activity = await this.prisma.dailyActivity.upsert({
+      where: { userId_date: { userId, date: today } },
+      update: { activeSeconds: { increment: credited } },
+      create: { userId, date: today, activeSeconds: credited },
+      select: { activeSeconds: true },
+    });
+
+    return { creditedSeconds: credited, todaySeconds: activity.activeSeconds };
+  }
+
   /**
    * Helper method to record student activity and compute/persist streak updates.
    * Increments if yesterday was active, preserves if already solved today, resets to 1 if broken.
@@ -333,7 +364,6 @@ export class LearningService {
         ...(options.isChallenge ? { challengesCompleted: { increment: 1 } } : {}),
         ...(options.isLesson ? { lessonsCompleted: { increment: 1 } } : {}),
         ...(xpToAdd > 0 ? { xpEarned: { increment: xpToAdd } } : {}),
-        durationMinutes: { increment: 10 },
       },
       create: {
         userId,
@@ -341,7 +371,6 @@ export class LearningService {
         lessonsCompleted: options.isLesson ? 1 : 0,
         challengesCompleted: options.isChallenge ? 1 : 0,
         xpEarned: xpToAdd,
-        durationMinutes: 10,
       },
     });
 
