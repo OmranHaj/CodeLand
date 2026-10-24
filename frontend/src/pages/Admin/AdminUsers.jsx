@@ -38,7 +38,16 @@ import styles from "./AdminUsers.module.css";
 function UserAvatar({ src, alt, initials, className }) {
   const [failed, setFailed] = useState(false);
   if (!src || failed) return <span>{initials}</span>;
-  return <img src={src} alt={alt} className={className} onError={() => setFailed(true)} />;
+  // no-referrer: Google/GitHub avatar hosts can refuse hot-linked requests that carry a referrer.
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 export default function AdminUsers() {

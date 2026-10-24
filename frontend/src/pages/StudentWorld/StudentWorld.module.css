@@ -901,7 +901,81 @@
 /* RESPONSIVE */
 /* ====================================================== */
 
+/* Level list for narrow screens (the 3D islands do not fit the camera there) */
+.levelMap {
+  display: none;
+}
+
+.levelMapItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 12, 26, 0.78);
+  backdrop-filter: blur(10px);
+  color: #cbd5e1;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.levelMapItem strong {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.levelMapItem em {
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--map-accent, #38bdf8);
+}
+
+.levelMapOrder {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--map-accent, #38bdf8);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.levelMapCurrent {
+  border-color: var(--map-accent, #38bdf8);
+  color: #ffffff;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--map-accent, #38bdf8) 30%, transparent);
+}
+
+.levelMapLocked {
+  opacity: 0.6;
+}
+
 @media (max-width: 900px) {
+  .levelMap {
+    display: grid;
+    gap: 6px;
+    margin-top: 16px;
+    pointer-events: auto;
+  }
+
+  /* The list above replaces the floating 3D island labels, which otherwise cover the title. */
+  .levelLabel {
+    display: none;
+  }
+
   .hud {
     padding: 15px 18px;
 

@@ -473,6 +473,36 @@ function StudentWorld() {
                   />
                 </div>
               </div>
+
+              {/* On narrow screens the 3D islands fall outside the camera, so list them (CSS shows it ≤ 900px). */}
+              <nav className={styles.levelMap} aria-label="Web World levels">
+                {worldLevels.map((level) => {
+                  const locked = level.status === "locked";
+                  return (
+                    <button
+                      key={level.id}
+                      type="button"
+                      className={`${styles.levelMapItem} ${
+                        level.status === "current" ? styles.levelMapCurrent : ""
+                      } ${locked ? styles.levelMapLocked : ""}`}
+                      style={{ "--map-accent": level.accent }}
+                      onClick={() => (locked ? handleLockedLevel(level) : handleSelectLevel(level))}
+                    >
+                      <span className={styles.levelMapOrder}>
+                        {level.status === "completed" ? (
+                          <CheckCircle2 size={13} />
+                        ) : locked ? (
+                          <LockKeyhole size={12} />
+                        ) : (
+                          level.order
+                        )}
+                      </span>
+                      <strong>{level.title}</strong>
+                      {level.status === "current" && <em>CURRENT</em>}
+                    </button>
+                  );
+                })}
+              </nav>
             </section>
           )}
 

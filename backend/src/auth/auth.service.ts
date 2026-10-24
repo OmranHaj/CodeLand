@@ -11,7 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import crypto from 'node:crypto';
-import { OAuth2Client } from 'google-auth-library';
+import { OAuth2Client, type TokenPayload } from 'google-auth-library';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RegisterParentDto } from './dto/register-parent.dto.js';
 import { RegisterChildDto } from './dto/register-child.dto.js';
@@ -197,40 +197,33 @@ export class AuthService {
    * Verifies Google idToken/credential and logs in or creates user in PostgreSQL.
    */
   async googleLogin(credential: string, requestedRole?: string) {
-    let payload: any = null;
     const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      throw new BadRequestException(
+        'Google sign-in is not configured on the server. Please set GOOGLE_CLIENT_ID.',
+      );
+    }
 
+    // Only a token whose signature Google verifies is trusted: decoding an unverified token
+    // would let anyone sign in as any email.
+    let payload: TokenPayload | undefined;
     try {
-      if (clientId) {
-        const client = new OAuth2Client(clientId);
-        const ticket = await client.verifyIdToken({
-          idToken: credential,
-          audience: clientId,
-        });
-        payload = ticket.getPayload();
-      } else {
-        // Safe decoding fallback if clientId is not yet set in .env
-        const parts = credential.split('.');
-        if (parts.length === 3) {
-          const buff = Buffer.from(parts[1], 'base64');
-          payload = JSON.parse(buff.toString('utf-8'));
-        }
-      }
+      const client = new OAuth2Client(clientId);
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: clientId,
+      });
+      payload = ticket.getPayload();
     } catch {
-      // Fallback decoding for development
-      try {
-        const parts = credential.split('.');
-        if (parts.length === 3) {
-          const buff = Buffer.from(parts[1], 'base64');
-          payload = JSON.parse(buff.toString('utf-8'));
-        }
-      } catch {
-        throw new UnauthorizedException('Invalid or expired Google credential token.');
-      }
+      throw new UnauthorizedException('Invalid or expired Google credential token.');
     }
 
     if (!payload?.email) {
       throw new UnauthorizedException('Could not retrieve email from Google account.');
+    }
+
+    if (payload.email_verified !== true) {
+      throw new UnauthorizedException('Your Google email address is not verified.');
     }
 
     const email = String(payload.email).toLowerCase();
@@ -316,89 +309,74 @@ export class AuthService {
     let githubUser: any = null;
     let userEmail: string | null = null;
 
-    // Support simulated dev token for immediate testing before real credentials are added
-    if (code.startsWith('simulated:')) {
-      const parts = code.split(':');
-      const testEmail = parts[1] || 'github.tester@codeland.com';
-      const testName = parts[2] || 'GitHub Explorer';
-      githubUser = {
-        id: 'github-simulated-999',
-        login: testEmail.split('@')[0],
-        name: testName,
-        avatar_url: 'https://avatars.githubusercontent.com/u/999999',
-      };
-      userEmail = testEmail;
-    } else {
-      if (!clientId || !clientSecret) {
-        throw new BadRequestException(
-          'GitHub OAuth is not configured on the server. Please set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET.',
-        );
-      }
+    if (!clientId || !clientSecret) {
+      throw new BadRequestException(
+        'GitHub OAuth is not configured on the server. Please set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET.',
+      );
+    }
 
-      // 1. Exchange code for access_token
-      const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          client_id: clientId,
-          client_secret: clientSecret,
-          code,
-        }),
-      });
+    // 1. Exchange code for access_token
+    const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        code,
+      }),
+    });
 
-      if (!tokenRes.ok) {
-        throw new UnauthorizedException('Failed to exchange GitHub authorization code.');
-      }
+    if (!tokenRes.ok) {
+      throw new UnauthorizedException('Failed to exchange GitHub authorization code.');
+    }
 
-      const tokenData = await tokenRes.json();
-      const accessToken = tokenData?.access_token;
+    const tokenData = await tokenRes.json();
+    const accessToken = tokenData?.access_token;
 
-      if (!accessToken) {
-        throw new UnauthorizedException(
-          tokenData?.error_description || 'Invalid or expired GitHub authorization code.',
-        );
-      }
+    if (!accessToken) {
+      throw new UnauthorizedException(
+        tokenData?.error_description || 'Invalid or expired GitHub authorization code.',
+      );
+    }
 
-      // 2. Fetch user profile from GitHub
-      const userRes = await fetch('https://api.github.com/user', {
+    // 2. Fetch user profile from GitHub
+    const userRes = await fetch('https://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/vnd.github.v3+json',
+        'User-Agent': 'CodeLand-App',
+      },
+    });
+
+    if (!userRes.ok) {
+      throw new UnauthorizedException('Could not fetch user profile from GitHub.');
+    }
+
+    githubUser = await userRes.json();
+
+    // 3. Use only an email GitHub has verified (primary first): accounts are matched by email,
+    // so an unverified address would let someone sign in to another person's account.
+    try {
+      const emailsRes = await fetch('https://api.github.com/user/emails', {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           Accept: 'application/vnd.github.v3+json',
           'User-Agent': 'CodeLand-App',
         },
       });
-
-      if (!userRes.ok) {
-        throw new UnauthorizedException('Could not fetch user profile from GitHub.');
-      }
-
-      githubUser = await userRes.json();
-      userEmail = githubUser.email;
-
-      // 3. If primary email is hidden, fetch from /user/emails
-      if (!userEmail) {
-        try {
-          const emailsRes = await fetch('https://api.github.com/user/emails', {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              Accept: 'application/vnd.github.v3+json',
-              'User-Agent': 'CodeLand-App',
-            },
-          });
-          if (emailsRes.ok) {
-            const emails = await emailsRes.json();
-            if (Array.isArray(emails) && emails.length > 0) {
-              const primary = emails.find((e: any) => e.primary && e.verified) || emails[0];
-              userEmail = primary?.email || null;
-            }
-          }
-        } catch {
-          // ignore email fetch failure
+      if (emailsRes.ok) {
+        const emails = await emailsRes.json();
+        if (Array.isArray(emails) && emails.length > 0) {
+          const verified =
+            emails.find((e: any) => e.primary && e.verified) || emails.find((e: any) => e.verified);
+          userEmail = verified?.email || null;
         }
       }
+    } catch {
+      // ignore email fetch failure
     }
 
     if (!userEmail) {
@@ -490,73 +468,60 @@ export class AuthService {
     let discordUser: any = null;
     let userEmail: string | null = null;
 
-    // Support simulated dev token for immediate testing before real credentials are added
-    if (code.startsWith('simulated:')) {
-      const parts = code.split(':');
-      const testEmail = parts[1] || 'discord.tester@codeland.com';
-      const testName = parts[2] || 'Discord Pioneer';
-      discordUser = {
-        id: 'discord-simulated-999',
-        username: testEmail.split('@')[0],
-        global_name: testName,
-        avatar: null,
-      };
-      userEmail = testEmail;
-    } else {
-      if (!clientId || !clientSecret) {
-        throw new BadRequestException(
-          'Discord OAuth is not configured on the server. Please set DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET.',
-        );
-      }
-
-      // 1. Exchange authorization code for access token
-      const body = new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: redirectUri,
-      });
-
-      const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: body.toString(),
-      });
-
-      if (!tokenRes.ok) {
-        const errorText = await tokenRes.text();
-        throw new UnauthorizedException(
-          `Failed to exchange Discord authorization code: ${errorText || tokenRes.statusText}`,
-        );
-      }
-
-      const tokenData = await tokenRes.json();
-      const accessToken = tokenData?.access_token;
-
-      if (!accessToken) {
-        throw new UnauthorizedException(
-          tokenData?.error_description || 'Invalid or expired Discord authorization code.',
-        );
-      }
-
-      // 2. Fetch user profile from Discord
-      const userRes = await fetch('https://discord.com/api/users/@me', {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: 'application/json',
-        },
-      });
-
-      if (!userRes.ok) {
-        throw new UnauthorizedException('Could not fetch user profile from Discord.');
-      }
-
-      discordUser = await userRes.json();
-      userEmail = discordUser.email || null;
+    if (!clientId || !clientSecret) {
+      throw new BadRequestException(
+        'Discord OAuth is not configured on the server. Please set DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET.',
+      );
     }
+
+    // 1. Exchange authorization code for access token
+    const body = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: redirectUri,
+    });
+
+    const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: body.toString(),
+    });
+
+    if (!tokenRes.ok) {
+      const errorText = await tokenRes.text();
+      throw new UnauthorizedException(
+        `Failed to exchange Discord authorization code: ${errorText || tokenRes.statusText}`,
+      );
+    }
+
+    const tokenData = await tokenRes.json();
+    const accessToken = tokenData?.access_token;
+
+    if (!accessToken) {
+      throw new UnauthorizedException(
+        tokenData?.error_description || 'Invalid or expired Discord authorization code.',
+      );
+    }
+
+    // 2. Fetch user profile from Discord
+    const userRes = await fetch('https://discord.com/api/users/@me', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json',
+      },
+    });
+
+    if (!userRes.ok) {
+      throw new UnauthorizedException('Could not fetch user profile from Discord.');
+    }
+
+    discordUser = await userRes.json();
+    // Accounts are matched by email, so only an address Discord has verified is trusted.
+    userEmail = discordUser.verified === true ? discordUser.email || null : null;
 
     if (!userEmail) {
       userEmail = `${discordUser.username || discordUser.id}@users.noreply.discord.com`;
