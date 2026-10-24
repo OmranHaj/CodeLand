@@ -53,6 +53,8 @@ model User {
   // Organization (role PARENT) membership requests sent by students / received by organizations.
   orgJoinRequestsSent                    OrganizationJoinRequest[] @relation("JoinRequestStudent")
   orgJoinRequestsReceived                OrganizationJoinRequest[] @relation("JoinRequestOrganization")
+  gameCompletions                        GameCompletion[]
+  gameRecords                            GameRecord[]
 
   @@index([parentId])
   @@index([role, status])
@@ -536,4 +538,29 @@ model OrganizationJoinRequest {
 
   @@index([organizationId, status])
   @@index([studentId, createdAt])
+}
+
+/// A student finished one of the code games (robot-maze, sky-traps, bomb-defuser); XP and the
+/// game's badge are awarded once, when this row is created after the server verified the solutions.
+model GameCompletion {
+  id          String   @id @default(uuid())
+  userId      String
+  gameId      String
+  xpAwarded   Int
+  completedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameId])
+}
+
+/// Best endless-mode result per student and game (Robot Maze: levels cleared in one run), verified by the server.
+model GameRecord {
+  id         String   @id @default(uuid())
+  userId     String
+  gameId     String
+  bestLevel  Int
+  achievedAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameId])
 }

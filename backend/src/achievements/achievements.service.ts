@@ -91,6 +91,31 @@ export const DEFAULT_ACHIEVEMENTS = [
     criteria: 'Complete all 5 Python & Algorithm Lab sectors',
     xpReward: 300,
   },
+  // Code games (see games/games.config.ts); granted when a game is completed and verified.
+  {
+    id: 'maze-runner',
+    title: 'Maze Runner',
+    description: 'Guided the robot through every maze with code.',
+    badgeUrl: null,
+    criteria: 'Finish the Robot Maze game',
+    xpReward: 300,
+  },
+  {
+    id: 'sky-defender',
+    title: 'Sky Defender',
+    description: 'Destroyed every falling trap before it hit the ground.',
+    badgeUrl: null,
+    criteria: 'Finish the Sky Traps game',
+    xpReward: 400,
+  },
+  {
+    id: 'bomb-defuser',
+    title: 'Bomb Defuser',
+    description: 'Cracked all three bomb ciphers before the timer ran out.',
+    badgeUrl: null,
+    criteria: 'Finish the Defuse the Bomb game',
+    xpReward: 500,
+  },
 ];
 
 @Injectable()

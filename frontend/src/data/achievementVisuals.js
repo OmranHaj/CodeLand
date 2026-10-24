@@ -1,4 +1,4 @@
-import { Award, BookOpen, Code2, Compass, Cpu, Flame, Rocket, ShieldCheck, Sparkles, Trophy, Zap } from "lucide-react";
+import { Award, Bomb, BookOpen, Bot, Code2, Compass, Cpu, Flame, Radar, Rocket, ShieldCheck, Sparkles, Trophy, Zap } from "lucide-react";
 
 // Icon and accent color for each achievement id (the badge image files in the database do not exist).
 export const ACHIEVEMENT_ICONS = {
@@ -13,6 +13,9 @@ export const ACHIEVEMENT_ICONS = {
   "web-creator-apprentice": Compass,
   "cpp-system-pioneer": ShieldCheck,
   "algorithm-mastermind": Cpu,
+  "maze-runner": Bot,
+  "sky-defender": Radar,
+  "bomb-defuser": Bomb,
 };
 
 export const ACHIEVEMENT_ACCENTS = {
@@ -27,4 +30,7 @@ export const ACHIEVEMENT_ACCENTS = {
   "web-creator-apprentice": "#6366f1",
   "cpp-system-pioneer": "#06b6d4",
   "algorithm-mastermind": "#8b5cf6",
+  "maze-runner": "#3b82f6",
+  "sky-defender": "#10b981",
+  "bomb-defuser": "#ef4444",
 };

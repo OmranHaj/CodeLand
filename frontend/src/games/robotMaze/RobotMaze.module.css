@@ -1,0 +1,459 @@
+.game {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 18px;
+  min-height: calc(100vh - 230px);
+}
+
+.arena {
+  position: relative;
+  height: clamp(420px, 70vh, 680px);
+  border-radius: 22px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(16, 185, 129, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 45%),
+    linear-gradient(180deg, #090d16 0%, #0f172a 100%);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.sceneLoading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #94a3b8;
+}
+
+.arenaHud {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.arenaHud > span {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e2e8f0;
+  background: rgba(9, 13, 22, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.arenaHud em {
+  font-style: normal;
+  color: #fbbf24;
+}
+
+.speed {
+  display: flex;
+  gap: 4px;
+  pointer-events: auto;
+}
+
+.speed button {
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  color: #cbd5e1;
+  background: rgba(9, 13, 22, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  cursor: pointer;
+}
+
+.speed button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.speed .speedActive {
+  color: #0f172a;
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(15, 23, 42, 0.86);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.stages {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.stageTab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 9px 8px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: #cbd5e1;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stageTab span {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  font-size: 11px;
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.stageTab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.stageActive {
+  color: #ffffff;
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.18);
+}
+
+.goal {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+.goal strong {
+  color: #f8fafc;
+  font-size: 14px;
+}
+
+.goal span {
+  color: #93c5fd;
+  font-size: 12px;
+}
+
+.commands {
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.commands summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #93c5fd;
+}
+
+.commands ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.commands code {
+  display: inline-block;
+  padding: 3px 7px;
+  border-radius: 6px;
+  color: #a7f3d0;
+  background: #0b1120;
+  overflow-wrap: anywhere;
+}
+
+.editor {
+  flex: 1;
+  min-height: 260px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: #1e1e1e;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.runButton,
+.ghostButton,
+.nextButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.runButton {
+  flex: 1;
+  min-width: 140px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: none;
+  box-shadow: 0 8px 22px rgba(16, 185, 129, 0.3);
+}
+
+.ghostButton {
+  color: #cbd5e1;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.runButton:disabled,
+.ghostButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hint {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.result {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 13px;
+}
+
+.result p {
+  margin: 0;
+  color: #e2e8f0;
+}
+
+.resultTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.resultSuccess {
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+}
+
+.resultWarn {
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.resultFail {
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.hiddenList {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hiddenList li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.hiddenList button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 4px 9px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e2e8f0;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  cursor: pointer;
+}
+
+.hiddenPass {
+  color: #a7f3d0;
+}
+
+.hiddenFail {
+  color: #fecaca;
+}
+
+.nextButton {
+  justify-self: start;
+  color: #ffffff;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: none;
+}
+
+.finishNote {
+  color: #a7f3d0 !important;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Endless mode */
+.endlessTab {
+  grid-column: 1 / -1;
+  color: #e9d5ff;
+  background: linear-gradient(135deg, rgba(126, 34, 206, 0.35), rgba(30, 41, 59, 0.85));
+  border-color: rgba(168, 85, 247, 0.35);
+}
+
+.endlessTab:disabled {
+  color: #94a3b8;
+  background: rgba(30, 41, 59, 0.6);
+  border-color: transparent;
+}
+
+.endlessHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bestBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.lives {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 8px;
+}
+
+.lifeOn {
+  color: #f43f5e;
+  fill: #f43f5e;
+}
+
+.lifeOff {
+  color: #475569;
+}
+
+.record {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cbd5e1;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.record button {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 700;
+  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  cursor: pointer;
+}
+
+.recordSaved {
+  font-weight: 800;
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.recordBad {
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+@media (max-width: 1100px) {
+  .game {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .arena {
+    height: 420px;
+  }
+}
+
+@media (max-width: 600px) {
+  .arena {
+    height: 340px;
+  }
+
+  .panel {
+    padding: 14px;
+  }
+
+  .stageTab {
+    font-size: 11px;
+  }
+}

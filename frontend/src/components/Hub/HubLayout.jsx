@@ -20,6 +20,7 @@ import {
   Heart,
   Swords,
   UserPlus,
+  Gamepad2,
 } from "lucide-react";
 import {
   getHomeRoute,
@@ -78,6 +79,7 @@ export default function HubLayout({ children, title = "Learning space" }) {
     ["/courses", "Explore courses", Compass],
     ["/challenges", "Practice arena", Code2],
     ["/student/contest", "Sunday Arena", Swords],
+    ["/student/games", "Code Games", Gamepad2],
     ["/student/achievements", "Achievements", Trophy],
   ];
 
@@ -96,6 +98,7 @@ export default function HubLayout({ children, title = "Learning space" }) {
     ["/courses", "Explore Courses", Compass],
     ["/challenges", "Practice Arena", Code2],
     ["/student/contest", "Sunday Arena", Swords],
+    ["/student/games", "Code Games", Gamepad2],
     ["/student/dashboard", "Student View", LayoutDashboard],
     ["/parent/dashboard", "Organization View", Users],
   ];

@@ -44,6 +44,8 @@ const ParentCurriculum = lazy(() => import("./pages/Hub/ParentCurriculum"));
 const ParentReports = lazy(() => import("./pages/Hub/ParentReports"));
 const ParentGuide = lazy(() => import("./pages/Hub/ParentGuide"));
 const OrganizationRequests = lazy(() => import("./pages/Hub/OrganizationRequests"));
+const GamesHub = lazy(() => import("./pages/Games/GamesHub"));
+const GamePage = lazy(() => import("./pages/Games/GamePage"));
 const Help = lazy(() => import("./pages/Hub/Help"));
 const NotFound = lazy(() => import("./pages/Hub/NotFound"));
 const AdminStudio = lazy(() => import("./pages/Admin/AdminStudio"));
@@ -203,6 +205,22 @@ function App() {
               }
             />
             <Route path="/student/settings" element={<Navigate to="/settings" replace />} />
+            <Route
+              path="/student/games"
+              element={
+                <ProtectedRoute allowedRoles={["student", "admin", "superadmin"]}>
+                  <GamesHub />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/games/:gameId"
+              element={
+                <ProtectedRoute allowedRoles={["student", "admin", "superadmin"]}>
+                  <GamePage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/student/profile"
               element={

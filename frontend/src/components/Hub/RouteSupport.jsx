@@ -53,6 +53,7 @@ export function RouteEffects() {
       "/student/achievements": "Achievements",
       "/student/contest": "Weekly Sunday Arena",
       "/settings": "Your Preferences",
+      "/student/games": "Code Games",
       "/student/python-world": "Algorithm & Data Structures",
       "/student/algorithm-lab": "Algorithm Lab",
       "/help": "Help & Support",

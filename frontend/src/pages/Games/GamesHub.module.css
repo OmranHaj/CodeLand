@@ -1,0 +1,299 @@
+.page {
+  --bg-card: rgba(15, 23, 42, 0.86);
+  --border-subtle: rgba(148, 163, 184, 0.18);
+  position: relative;
+}
+
+.xpPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 22px rgba(16, 185, 129, 0.2);
+  white-space: nowrap;
+}
+
+.xpPill strong {
+  color: #ffffff;
+}
+
+.xpPill em {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #fbbf24;
+}
+
+.previewBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 12px;
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px dashed rgba(245, 158, 11, 0.4);
+}
+
+.previewBar button {
+  padding: 6px 12px;
+  border-radius: 9px;
+  font: inherit;
+  font-weight: 700;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  cursor: pointer;
+}
+
+.previewBar button.previewActive {
+  color: #0f172a;
+  background: #fbbf24;
+  border-color: #fbbf24;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.card {
+  --accent: #3b82f6;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 24px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 55%),
+    var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.cardUnlocked {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 34px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.cardUnlocked:hover {
+  transform: translateY(-4px);
+}
+
+.cardLocked h2,
+.cardLocked .tagline,
+.cardLocked .skills,
+.cardLocked .gameIcon {
+  opacity: 0.6;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gameIcon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.threshold {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #cbd5e1;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid var(--border-subtle);
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #f8fafc;
+}
+
+.tagline {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #94a3b8;
+}
+
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.skills span {
+  padding: 4px 9px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #cbd5e1;
+  background: rgba(30, 41, 59, 0.85);
+}
+
+.reward {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: #fde68a;
+}
+
+.reward svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.reward strong {
+  color: #ffffff;
+}
+
+.playButton {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-weight: 800;
+  color: #ffffff;
+  text-decoration: none;
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #0f172a));
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.playButton:hover {
+  filter: brightness(1.1);
+}
+
+.lockArea {
+  margin-top: auto;
+}
+
+.progressHead {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.progressTrack {
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(30, 41, 59, 0.95);
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3b82f6, #10b981);
+}
+
+/* Sits on the corner of the game icon (the top-right corner holds the threshold pill). */
+.lockBadge {
+  position: absolute;
+  top: 14px;
+  left: 58px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  color: #fbbf24;
+  background: rgba(9, 13, 22, 0.92);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  box-shadow: 0 0 18px rgba(251, 191, 36, 0.25);
+}
+
+.shatterCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #93c5fd;
+  text-decoration: none;
+}
+
+.notice {
+  max-width: 560px;
+}
+
+.loading,
+.error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 14px;
+  color: #cbd5e1;
+  background: var(--bg-card);
+}
+
+.error {
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card {
+    padding: 20px;
+  }
+}

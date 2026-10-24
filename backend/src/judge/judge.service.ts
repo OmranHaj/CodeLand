@@ -55,6 +55,8 @@ export class JudgeService {
     javascript: 63,
     js: 63,
     node: 63,
+    // Modern Node for the code games' verifier (optional chaining, node:vm contexts).
+    node22: 102,
   };
 
   // Wandbox compiler names
@@ -68,6 +70,7 @@ export class JudgeService {
     javascript: 'nodejs-head',
     js: 'nodejs-head',
     node: 'nodejs-head',
+    node22: 'nodejs-head',
   };
 
   // Per-request timeout for the remote executors (Judge0 / Wandbox).
@@ -83,6 +86,7 @@ export class JudgeService {
    */
   private normalizeLanguage(lang: string = 'cpp'): string {
     const key = lang.trim().toLowerCase();
+    if (key === 'node22') return key;
     if (key.includes('cpp') || key.includes('c++')) return 'cpp';
     if (key.includes('py')) return 'python';
     if (key.includes('js') || key.includes('script') || key.includes('node')) return 'javascript';

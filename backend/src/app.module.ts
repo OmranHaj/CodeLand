@@ -12,6 +12,7 @@ import { AdminModule } from './admin/admin.module.js';
 import { JudgeModule } from './judge/judge.module.js';
 import { ContestModule } from './contest/contest.module.js';
 import { OrganizationModule } from './organization/organization.module.js';
+import { GamesModule } from './games/games.module.js';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { OrganizationModule } from './organization/organization.module.js';
     JudgeModule,
     ContestModule,
     OrganizationModule,
+    GamesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

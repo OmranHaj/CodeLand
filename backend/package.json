@@ -20,7 +20,8 @@
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
-    "seed:arena": "node prisma/seed-arena.js"
+    "seed:arena": "node prisma/seed-arena.js",
+    "build:game-verifier": "node scripts/build-game-verifier.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^12.1.2",
