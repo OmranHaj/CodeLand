@@ -176,10 +176,12 @@ ${this.frontendUrl}/login
         process.env.ALLOW_DEV_RESET_LINK_LOGGING === 'true';
 
       if (allowResetLinkLogging) {
+        // Keep the link out of the truncated preview so nobody copies a cut-off token from it.
+        const preview = devLink ? text.split(devLink).join('[see Reset Link above]') : text;
         this.logger.log(
           `[DEV EMAIL SIMULATION]\nTo: ${to}\nSubject: ${subject}\n${
             devLink ? `Reset Link: ${devLink}\n` : ''
-          }Content preview: ${text.slice(0, 160)}...`,
+          }Content preview: ${preview.slice(0, 160)}...`,
         );
       } else {
         this.logger.log(

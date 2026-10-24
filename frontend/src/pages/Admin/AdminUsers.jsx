@@ -294,7 +294,7 @@ export default function AdminUsers() {
             </div>
             <h1>User Management & Security Controls</h1>
             <p>
-              Inspect CodeLand learner profiles, audit Parent-Child family linkages, manage account
+              Inspect CodeLand learner profiles, audit organization memberships, manage account
               suspensions, and safely delegate administrator roles.
             </p>
           </div>
@@ -361,7 +361,7 @@ export default function AdminUsers() {
           {/* Parents */}
           <div className={styles.statCard}>
             <div className={styles.statCardHeader}>
-              <span>Parents</span>
+              <span>Organizations</span>
               <div className={styles.statCardIcon} style={{ background: "rgba(6, 182, 212, 0.15)", color: "#38bdf8" }}>
                 <HeartHandshake size={16} />
               </div>
@@ -369,7 +369,7 @@ export default function AdminUsers() {
             <div className={styles.statValue}>
               {statsLoading ? "..." : stats.parents}
             </div>
-            <div className={styles.statSubtext}>Family observatories</div>
+            <div className={styles.statSubtext}>Schools, universities & teachers</div>
           </div>
 
           {/* Super Admins */}
@@ -470,7 +470,7 @@ export default function AdminUsers() {
               >
                 <option value="ALL">All Roles</option>
                 <option value="STUDENT">Students</option>
-                <option value="PARENT">Parents</option>
+                <option value="PARENT">Organizations</option>
                 <option value="ADMIN">Super Admins</option>
               </select>
             </div>
@@ -647,7 +647,7 @@ export default function AdminUsers() {
                               {isAdminRole
                                 ? "SUPER ADMIN"
                                 : isParent
-                                ? "PARENT"
+                                ? "ORGANIZATION"
                                 : "STUDENT"}
                             </span>
                           </span>
@@ -1013,20 +1013,20 @@ export default function AdminUsers() {
                       )}
                     </div>
 
-                    {/* Section 3: Family Relations */}
+                    {/* Section 3: Organization Membership */}
                     <div className={styles.drawerSection}>
                       <div className={styles.sectionHeader}>
                         <HeartHandshake size={15} />
-                        <span>Family & Relations</span>
+                        <span>Organization Membership</span>
                       </div>
 
                       {drawerUser.parent ? (
                         <div>
-                          <span className={styles.infoLabel}>Linked Parent:</span>
+                          <span className={styles.infoLabel}>Organization:</span>
                           <div className={styles.relationCard}>
                             <div>
                               <strong style={{ fontSize: "13px", color: "#fff" }}>
-                                {drawerUser.parent.name || "Parent Account"}
+                                {drawerUser.parent.name || "Organization Account"}
                               </strong>
                               <div style={{ fontSize: "11px", color: "#94a3b8" }}>
                                 {drawerUser.parent.email} &bull; Code: {drawerUser.parent.parentCode}
@@ -1037,7 +1037,7 @@ export default function AdminUsers() {
                       ) : drawerUser.children && drawerUser.children.length > 0 ? (
                         <div>
                           <span className={styles.infoLabel}>
-                            Linked Children ({drawerUser.children.length}):
+                            Students ({drawerUser.children.length}):
                           </span>
                           {drawerUser.children.map((child) => (
                             <div key={child.id} className={styles.relationCard}>
@@ -1061,7 +1061,7 @@ export default function AdminUsers() {
                         </div>
                       ) : (
                         <p style={{ margin: 0, fontSize: "12px", color: "#64748b" }}>
-                          No linked parent or student family accounts found.
+                          Not linked to any organization or students.
                         </p>
                       )}
                     </div>
@@ -1418,8 +1418,8 @@ export default function AdminUsers() {
                   }
                   disabled={roleModal.isSubmitting}
                 >
-                  <option value="STUDENT">Student (Child Learner)</option>
-                  <option value="PARENT">Parent (Family Observatory)</option>
+                  <option value="STUDENT">Student</option>
+                  <option value="PARENT">Organization</option>
                   <option value="SUPER_ADMIN">Super Admin (Full Platform Access)</option>
                 </select>
               </div>

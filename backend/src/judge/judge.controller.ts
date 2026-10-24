@@ -6,7 +6,8 @@ import {
   HttpStatus,
   Param,
   Post,
-  Req,
+  Request,
+  UseGuards,
 } from '@nestjs/common';
 import { JudgeService } from './judge.service.js';
 import { RunCustomDto } from './dto/run-custom.dto.js';
@@ -14,34 +15,25 @@ import { RunTestsDto } from './dto/run-tests.dto.js';
 import { SubmitCodeDto } from './dto/submit-code.dto.js';
 import { CreateTestCaseDto } from './dto/create-testcase.dto.js';
 import { AiJudgeDto } from './dto/ai-judge.dto.js';
-import { JwtService } from '@nestjs/jwt';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { AdminGuard } from '../admin/guards/admin.guard.js';
 
+interface RequestWithUser {
+  user: {
+    id: string;
+    email: string;
+    role: string;
+  };
+}
+
+/**
+ * Every judge route needs a verified login: running code costs judge/AI quota,
+ * and submissions award XP to the signed-in student only.
+ */
 @Controller('judge')
+@UseGuards(JwtAuthGuard)
 export class JudgeController {
-  constructor(
-    private readonly judgeService: JudgeService,
-    private readonly jwtService: JwtService,
-  ) {}
-
-  /**
-   * Helper to extract userId from Authorization Bearer token if present
-   */
-  private extractUserId(req: any): string | null {
-    if (req.user?.id) {
-      return req.user.id;
-    }
-    const authHeader = req.headers?.authorization;
-    if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.slice(7).trim();
-      try {
-        const payload: any = this.jwtService.decode(token);
-        return payload?.sub || payload?.id || payload?.userId || null;
-      } catch {
-        return null;
-      }
-    }
-    return null;
-  }
+  constructor(private readonly judgeService: JudgeService) {}
 
   /**
    * 1. POST /judge/run-custom
@@ -91,10 +83,9 @@ export class JudgeController {
   async submitChallenge(
     @Param('challengeId') challengeId: string,
     @Body() dto: SubmitCodeDto,
-    @Req() req: any,
+    @Request() req: RequestWithUser,
   ) {
-    const userId = this.extractUserId(req);
-    return this.judgeService.submitChallenge(userId, challengeId, dto);
+    return this.judgeService.submitChallenge(req.user.id, challengeId, dto);
   }
 
   /**
@@ -104,7 +95,7 @@ export class JudgeController {
   @HttpCode(HttpStatus.OK)
   async submitChallengeBody(
     @Body() dto: SubmitCodeDto,
-    @Req() req: any,
+    @Request() req: RequestWithUser,
   ) {
     const id = dto.challengeId;
     if (!id) {
@@ -113,8 +104,7 @@ export class JudgeController {
         language: dto.language || 'cpp',
       });
     }
-    const userId = this.extractUserId(req);
-    return this.judgeService.submitChallenge(userId, id, dto);
+    return this.judgeService.submitChallenge(req.user.id, id, dto);
   }
 
   /**
@@ -139,26 +129,23 @@ export class JudgeController {
 
   /**
    * GET /judge/submissions/:challengeId
-   * Retrieve submissions history for this challenge.
+   * Retrieve the signed-in student's submissions history for this challenge.
    */
   @Get('submissions/:challengeId')
   @HttpCode(HttpStatus.OK)
   async getSubmissions(
     @Param('challengeId') challengeId: string,
-    @Req() req: any,
+    @Request() req: RequestWithUser,
   ) {
-    const userId = this.extractUserId(req);
-    if (!userId) {
-      return [];
-    }
-    return this.judgeService.getSubmissions(userId, challengeId);
+    return this.judgeService.getSubmissions(req.user.id, challengeId);
   }
 
   /**
    * POST /judge/testcases/:challengeId
-   * Add a testcase to a challenge.
+   * Add a testcase to a challenge (admins only).
    */
   @Post('testcases/:challengeId')
+  @UseGuards(AdminGuard)
   @HttpCode(HttpStatus.CREATED)
   async createTestCase(
     @Param('challengeId') challengeId: string,

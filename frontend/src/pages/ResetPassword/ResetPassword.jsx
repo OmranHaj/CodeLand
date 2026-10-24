@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LockKeyhole,
@@ -31,20 +31,14 @@ export default function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // StrictMode safeguard to prevent duplicate token validation calls
-  const validatedTokenRef = useRef("");
-
+  // Validation is a read-only GET, so StrictMode's double effect run is harmless; skipping the
+  // second run would drop the response (the first run's cleanup already marked it stale).
   useEffect(() => {
     if (!token || token.trim() === "") {
       setState("invalid");
       setErrorMessage("No password reset token was provided in the link.");
       return undefined;
     }
-
-    if (validatedTokenRef.current === token) {
-      return undefined;
-    }
-    validatedTokenRef.current = token;
 
     setState("validating");
     setErrorMessage("");

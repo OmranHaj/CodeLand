@@ -3,19 +3,11 @@ import { Link } from "react-router-dom";
 import {
   ArrowRight,
   Award,
-  BookOpen,
-  Code2,
-  Compass,
-  Cpu,
-  Flame,
   Loader2,
   Lock,
   RefreshCw,
   Rocket,
-  ShieldCheck,
-  Sparkles,
   Trophy,
-  Zap,
 } from "lucide-react";
 import gsap from "gsap";
 import HubLayout from "../../components/Hub/HubLayout";
@@ -27,34 +19,7 @@ import {
   fetchAllAchievements,
   fetchMyAchievements,
 } from "../../services/achievementsService";
-
-const ICON_MAP = {
-  "first-step": Sparkles,
-  "curious-mind": BookOpen,
-  "challenge-gladiator": Code2,
-  "first-project": Rocket,
-  "xp-explorer": Zap,
-  "xp-1000": Trophy,
-  "streak-3": Flame,
-  "streak-7": Award,
-  "web-creator-apprentice": Compass,
-  "cpp-system-pioneer": ShieldCheck,
-  "algorithm-mastermind": Cpu,
-};
-
-const ACCENT_MAP = {
-  "first-step": "#a855f7",
-  "curious-mind": "#38bdf8",
-  "challenge-gladiator": "#34d399",
-  "first-project": "#f43f5e",
-  "xp-explorer": "#fbbf24",
-  "xp-1000": "#eab308",
-  "streak-3": "#f97316",
-  "streak-7": "#ec4899",
-  "web-creator-apprentice": "#6366f1",
-  "cpp-system-pioneer": "#06b6d4",
-  "algorithm-mastermind": "#8b5cf6",
-};
+import { ACHIEVEMENT_ACCENTS as ACCENT_MAP, ACHIEVEMENT_ICONS as ICON_MAP } from "../../data/achievementVisuals";
 
 const FALLBACK_PALETTE = [
   "#a855f7",

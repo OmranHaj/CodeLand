@@ -2585,6 +2585,263 @@
   box-shadow: 0 0 15px rgba(139, 92, 246, 0.35);
 }
 
+.hub-copy-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Student: join an organization */
+.hub-org-title {
+  font-size: 15px;
+  color: #f8fafc;
+}
+
+.hub-org-subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 2px 0 0;
+}
+
+.hub-org-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cbd5e1;
+  background: rgba(6, 9, 20, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hub-org-status svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.hub-org-status strong {
+  color: #f8fafc;
+}
+
+.hub-org-status.accepted {
+  border-color: rgba(52, 211, 153, 0.4);
+  color: #a7f3d0;
+}
+
+.hub-org-status.pending {
+  border-color: rgba(251, 191, 36, 0.4);
+  color: #fde68a;
+}
+
+.hub-org-status.rejected {
+  border-color: rgba(248, 113, 113, 0.4);
+  color: #fecaca;
+}
+
+.hub-org-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.hub-org-input {
+  flex: 1;
+  min-width: 0;
+  padding-left: 16px;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+}
+
+.hub-org-send {
+  flex-shrink: 0;
+  height: 48px;
+  padding: 0 18px;
+}
+
+.hub-org-error {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #fca5a5;
+}
+
+@media (max-width: 480px) {
+  .hub-org-form {
+    flex-direction: column;
+  }
+
+  /* In a column, flex: 1 would override the input's 48px height. */
+  .hub-org-input {
+    flex: none;
+  }
+
+  .hub-org-send {
+    justify-content: center;
+  }
+}
+
+.hub-nav-badge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffffff;
+  background: #f43f5e;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.5);
+}
+
+/* Organization: join requests page */
+.hub-requests-list {
+  display: grid;
+  gap: 14px;
+}
+
+.hub-request-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: rgba(12, 17, 34, 0.85);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+.hub-request-avatar {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+}
+
+.hub-request-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hub-request-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.hub-request-info strong {
+  display: block;
+  color: #f8fafc;
+  font-size: 15px;
+}
+
+.hub-request-info span {
+  display: block;
+  color: #94a3b8;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.hub-request-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.hub-request-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #ffffff;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.hub-request-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hub-request-btn.accept {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: rgba(52, 211, 153, 0.5);
+}
+
+.hub-request-btn.accept:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.4);
+}
+
+.hub-request-btn.reject {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+.hub-request-btn.reject:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.hub-requests-empty {
+  padding: 36px 20px;
+  text-align: center;
+  border-radius: 18px;
+  color: #94a3b8;
+  background: rgba(12, 17, 34, 0.7);
+  border: 1px dashed rgba(139, 92, 246, 0.35);
+}
+
+.hub-requests-empty strong {
+  display: block;
+  margin: 10px 0 4px;
+  color: #f8fafc;
+  font-size: 16px;
+}
+
+.hub-requests-notice {
+  margin-bottom: 14px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.hub-requests-notice.success {
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+}
+
+.hub-requests-notice.error {
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+@media (max-width: 560px) {
+  .hub-request-row {
+    flex-wrap: wrap;
+  }
+
+  .hub-request-actions {
+    width: 100%;
+  }
+
+  .hub-request-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
 /* Save Bar */
 .hub-save-bar {
   display: flex;

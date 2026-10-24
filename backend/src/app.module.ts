@@ -11,6 +11,7 @@ import { AchievementsModule } from './achievements/achievements.module.js';
 import { AdminModule } from './admin/admin.module.js';
 import { JudgeModule } from './judge/judge.module.js';
 import { ContestModule } from './contest/contest.module.js';
+import { OrganizationModule } from './organization/organization.module.js';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ContestModule } from './contest/contest.module.js';
     AdminModule,
     JudgeModule,
     ContestModule,
+    OrganizationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

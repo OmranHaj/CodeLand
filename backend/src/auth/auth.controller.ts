@@ -12,7 +12,6 @@ import {
 import { AuthService } from './auth.service.js';
 import { RegisterParentDto } from './dto/register-parent.dto.js';
 import { RegisterChildDto } from './dto/register-child.dto.js';
-import { VerifyParentCodeDto } from './dto/verify-parent-code.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { GoogleLoginDto } from './dto/google-login.dto.js';
 import { GithubLoginDto } from './dto/github-login.dto.js';
@@ -36,18 +35,9 @@ export class AuthController {
   }
 
   /**
-   * Endpoint: POST /auth/verify-parent-code
-   * Verifies that a parent code exists and is valid.
-   */
-  @Post('verify-parent-code')
-  @HttpCode(HttpStatus.OK)
-  async verifyParentCode(@Body() dto: VerifyParentCodeDto) {
-    return this.authService.verifyParentCode(dto.code);
-  }
-
-  /**
    * Endpoint: POST /auth/register/child
-   * Registers a new Child linked via parentCode and returns user info with JWT.
+   * Registers a new student account (no code needed) and returns user info with JWT.
+   * Students join an organization later from their settings (see OrganizationController).
    */
   @Post('register/child')
   @HttpCode(HttpStatus.CREATED)
@@ -71,8 +61,9 @@ export class AuthController {
    */
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  async login(@Body() dto: LoginDto, @Request() req: any) {
+    // req.ip is the connection address (not the client-controlled X-Forwarded-For header).
+    return this.authService.login(dto, req.ip || req.socket?.remoteAddress || 'unknown');
   }
 
   /**

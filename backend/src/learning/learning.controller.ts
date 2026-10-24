@@ -66,7 +66,6 @@ export class LearningController {
       req.user.id,
       dto.levelId,
       dto.lessonId,
-      dto.xpEarned ?? 25,
       dto.unitType,
     );
   }
@@ -93,13 +92,7 @@ export class LearningController {
     @Request() req: RequestWithUser,
     @Body() dto: SubmitChallengeDto,
   ) {
-    return this.learningService.submitChallenge(
-      req.user.id,
-      dto.challengeId,
-      dto.submittedCode,
-      dto.passed,
-      dto.xpEarned ?? 50,
-    );
+    return this.learningService.submitChallenge(req.user.id, dto.challengeId, dto.submittedCode);
   }
 
   /**

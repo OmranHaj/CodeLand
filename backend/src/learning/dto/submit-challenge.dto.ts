@@ -1,5 +1,6 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
+// The server grades the answer itself, so the client sends neither a pass flag nor an XP amount.
 export class SubmitChallengeDto {
   @IsString()
   @IsNotEmpty()
@@ -7,12 +8,6 @@ export class SubmitChallengeDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(5000)
   submittedCode?: string;
-
-  @IsBoolean()
-  passed: boolean;
-
-  @IsNumber()
-  @IsOptional()
-  xpEarned?: number;
 }

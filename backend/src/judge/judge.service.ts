@@ -5,6 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { LearningService } from '../learning/learning.service.js';
+import { withStudentXpLock } from '../learning/xp-lock.util.js';
 import { RunCustomDto } from './dto/run-custom.dto.js';
 import { RunTestsDto } from './dto/run-tests.dto.js';
 import { SubmitCodeDto } from './dto/submit-code.dto.js';
@@ -71,7 +73,10 @@ export class JudgeService {
   // Per-request timeout for the remote executors (Judge0 / Wandbox).
   private readonly httpTimeoutMs = Number(process.env.JUDGE_HTTP_TIMEOUT_MS) || 12000;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly learning: LearningService,
+  ) {}
 
   /**
    * Normalize language key
@@ -565,7 +570,7 @@ export class JudgeService {
    * 3. POST /judge/submit/:challengeId (Submit & Record in DB)
    */
   async submitChallenge(
-    userId: string | null,
+    userId: string,
     challengeId: string,
     dto: SubmitCodeDto,
   ) {
@@ -671,21 +676,19 @@ export class JudgeService {
       }
     }
 
-    // Resolve userId if not provided (fallback to first student user if available)
-    let effectiveUserId = userId;
-    if (!effectiveUserId) {
-      const defaultUser = await this.prisma.user.findFirst({
-        where: { role: 'CHILD' },
-        select: { id: true },
-      });
-      effectiveUserId = defaultUser?.id || null;
-    }
+    let xpAwarded = 0;
+    const submission = await withStudentXpLock(this.prisma, userId, async (tx) => {
+      const priorAccepted =
+        status === SubmissionStatus.ACCEPTED
+          ? await tx.codeSubmission.findFirst({
+              where: { userId, challengeId, status: SubmissionStatus.ACCEPTED },
+              select: { id: true },
+            })
+          : null;
 
-    let submission: any = null;
-    if (effectiveUserId) {
-      submission = await this.prisma.codeSubmission.create({
+      const created = await tx.codeSubmission.create({
         data: {
-          userId: effectiveUserId,
+          userId,
           challengeId,
           code: dto.code,
           language,
@@ -697,71 +700,71 @@ export class JudgeService {
         },
       });
 
-      // Award XP and record challenge progress if Accepted
-      if (status === SubmissionStatus.ACCEPTED) {
-        const xpEarned = challenge.xp || 100;
-        await this.prisma.user.update({
-          where: { id: effectiveUserId },
-          data: {
-            totalXp: { increment: xpEarned },
-            lastActiveAt: new Date(),
-          },
-        });
+      // XP is awarded only for the first accepted submission of a challenge, and only when real
+      // test cases checked it: without them any program that compiles counts as "accepted".
+      if (status !== SubmissionStatus.ACCEPTED || priorAccepted || testCases.length === 0) {
+        return created;
+      }
 
-        // Also record in LearningProgress if challenge belongs to a Level
-        if (challenge.levelId) {
-          const progress = await this.prisma.learningProgress.findUnique({
-            where: {
-              userId_levelId: {
-                userId: effectiveUserId,
-                levelId: challenge.levelId,
-              },
+      xpAwarded = challenge.xp || 100;
+      await tx.user.update({
+        where: { id: userId },
+        data: { totalXp: { increment: xpAwarded } },
+      });
+
+      // Also record in LearningProgress if challenge belongs to a Level
+      if (challenge.levelId) {
+        const progress = await tx.learningProgress.findUnique({
+          where: { userId_levelId: { userId, levelId: challenge.levelId } },
+        });
+        const completedChallenges: string[] = Array.isArray(progress?.completedChallengeIds)
+          ? (progress.completedChallengeIds as string[])
+          : [];
+
+        if (!completedChallenges.includes(challenge.id)) {
+          const nextChallenges = [...completedChallenges, challenge.id];
+          await tx.learningProgress.upsert({
+            where: { userId_levelId: { userId, levelId: challenge.levelId } },
+            create: {
+              userId,
+              levelId: challenge.levelId,
+              trackId: 'cpp',
+              completedChallengeIds: nextChallenges,
+              xp: xpAwarded,
+              status: 'IN_PROGRESS',
+              updatedAt: new Date(),
+            },
+            update: {
+              completedChallengeIds: nextChallenges,
+              xp: { increment: xpAwarded },
+              lastAccessedAt: new Date(),
+              updatedAt: new Date(),
             },
           });
-
-          const completedChallenges: string[] = Array.isArray(progress?.completedChallengeIds)
-            ? (progress.completedChallengeIds as string[])
-            : [];
-
-          if (!completedChallenges.includes(challenge.id)) {
-            const nextChallenges = [...completedChallenges, challenge.id];
-            await this.prisma.learningProgress.upsert({
-              where: {
-                userId_levelId: {
-                  userId: effectiveUserId,
-                  levelId: challenge.levelId,
-                },
-              },
-              create: {
-                userId: effectiveUserId,
-                levelId: challenge.levelId,
-                trackId: 'cpp',
-                completedChallengeIds: nextChallenges,
-                xp: xpEarned,
-                status: 'IN_PROGRESS',
-                updatedAt: new Date(),
-              },
-              update: {
-                completedChallengeIds: nextChallenges,
-                xp: { increment: xpEarned },
-                lastAccessedAt: new Date(),
-                updatedAt: new Date(),
-              },
-            });
-          }
         }
       }
+
+      return created;
+    });
+
+    if (xpAwarded > 0) {
+      // totalXp was already credited above; this logs daily activity, streak and achievements.
+      await this.learning.recordActivityAndStreak(userId, {
+        isChallenge: true,
+        xpEarned: xpAwarded,
+        creditTotalXp: false,
+      });
     }
 
     return {
-      submissionId: submission?.id || `sim_${Date.now()}`,
+      submissionId: submission.id,
       status,
       passedTests,
       totalTests,
       executionTime: maxExecutionTime,
       errorMessage,
-      xpEarned: status === SubmissionStatus.ACCEPTED ? challenge.xp || 100 : 0,
-      createdAt: submission?.createdAt || new Date().toISOString(),
+      xpEarned: xpAwarded,
+      createdAt: submission.createdAt,
     };
   }
 

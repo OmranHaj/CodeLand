@@ -1,5 +1,6 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, Length, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 
+// Students sign up on their own; joining an organization happens later with its code.
 export class RegisterChildDto {
   @IsEmail({}, { message: 'Please provide a valid email address' })
   @IsNotEmpty({ message: 'Email is required' })
@@ -16,9 +17,4 @@ export class RegisterChildDto {
   @IsString({ message: 'Full name must be a string' })
   @IsOptional()
   fullName?: string;
-
-  @IsString({ message: 'Parent code must be a string' })
-  @IsNotEmpty({ message: 'Parent code is required' })
-  @Length(6, 12, { message: 'Parent code must be between 6 and 12 characters' })
-  parentCode: string;
 }

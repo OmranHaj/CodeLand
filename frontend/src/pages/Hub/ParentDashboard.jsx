@@ -26,9 +26,12 @@ import ParentMasteryOrb from "../../components/Parent/ParentMasteryOrb";
 import { getParentInviteCode, getUser, readStored, writeStored, startPreview } from "../../services/learningHub";
 import { apiRequest } from "../../services/api";
 import {
-  buildParentChildrenList,
-  generate30DayActivity
-} from "../../data/parentMockData";
+  toDashboardStudents,
+  monthTrendLabel,
+  lastActiveLabel,
+  shortDate,
+} from "../../services/organizationStudents";
+import { ACHIEVEMENT_ACCENTS, ACHIEVEMENT_ICONS } from "../../data/achievementVisuals";
 import {
   getParentChildren,
   sendParentCheer,
@@ -94,15 +97,8 @@ export default function ParentDashboard() {
   // const mockMode = import.meta.env.VITE_USE_MOCK_API === "true";
   // const storedUsers = mockMode ? readStored("codeland_mock_users", []) : [];
 
-  // Build the list of children (real from backend)
-  const children = useMemo(() => {
-    if (realChildren.length > 0) {
-      return buildParentChildrenList(realChildren, user?.id);
-    }
-    // Mock data fallback commented out:
-    // return buildParentChildrenList(storedUsers, user?.id);
-    return buildParentChildrenList([]);
-  }, [realChildren, user?.id]);
+  // Students linked to this organization, with figures computed by the backend from real activity
+  const children = useMemo(() => toDashboardStudents(realChildren), [realChildren]);
 
   const [selectedChildId, setSelectedChildId] = useState(children[0]?.id);
 
@@ -116,31 +112,8 @@ export default function ParentDashboard() {
     return children.find((c) => c.id === selectedChildId) || children[0];
   }, [children, selectedChildId]);
 
-  // 30-day activity telemetry from real database records (or real clean days if none yet)
-  const activityDays = useMemo(() => {
-    if (Array.isArray(selectedChild?.dailyActivities) && selectedChild.dailyActivities.length > 0) {
-      return selectedChild.dailyActivities;
-    }
-    /*
-    // ORIGINAL MOCK FALLBACK (Preserved for reference):
-    return generate30DayActivity(selectedChild?.activityLevel || "high");
-    */
-
-    // Generate real 30-day timeline with 0 minutes for new students without past sessions
-    const days = [];
-    const today = new Date();
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      days.push({
-        date: d.toISOString().split("T")[0],
-        minutes: 0,
-        lessonsCount: 0,
-        quizzesCount: 0,
-      });
-    }
-    return days;
-  }, [selectedChild]);
+  // 30-day timeline from the backend (one entry per day, quiet days included)
+  const activityDays = selectedChild?.dailyActivities || [];
 
   // Weekly study goal state
   const [weeklyGoal, setWeeklyGoal] = useState(
@@ -227,17 +200,17 @@ export default function ParentDashboard() {
   // If not logged in as parent, show preview / login screen
   if (user?.role !== "parent") {
     return (
-      <HubLayout title="Family Observatory">
+      <HubLayout title="Organization Dashboard">
         <div className="hub-empty">
           <Users size={40} color="#a855f7" />
           <h1>A Front-Row Seat to Their Future.</h1>
           <p>
-            Sign in with a parent account to observe your family's 30-day learning journey,
+            Sign in with an organization account to follow your students' 30-day learning journey,
             review skill progress, and guide their coding habits.
           </p>
           <div className="hub-flex" style={{ justifyContent: "center", marginTop: "20px" }}>
             <Link to="/login" className="hub-btn primary">
-              Parent Log In
+              Organization Log In
             </Link>
             <button
               className="hub-btn"
@@ -246,7 +219,7 @@ export default function ParentDashboard() {
                 setUser(getUser());
               }}
             >
-              Preview Parent Observatory
+              Preview Organization Dashboard
             </button>
           </div>
         </div>
@@ -255,13 +228,13 @@ export default function ParentDashboard() {
   }
 
   return (
-    <HubLayout title="Parent Observatory">
+    <HubLayout title="Organization Dashboard">
       <div className={styles.dashboard}>
         {/* Top Header */}
         <div className={styles.topHeader}>
           <div className={styles.headerTitleArea}>
             <div className="hub-eyebrow">
-              <Heart size={13} color="#f43f5e" /> PARENT OBSERVATORY & INSIGHTS
+              <Heart size={13} color="#f43f5e" /> ORGANIZATION DASHBOARD & INSIGHTS
             </div>
             <h1>Empowering Their Coding Journey</h1>
             <p className={styles.headerSubtitle}>
@@ -282,15 +255,15 @@ export default function ParentDashboard() {
             <button
               className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
               onClick={handleCopyCode}
-              title="Copy family invite code"
+              title="Copy organization code"
             >
               {copyStatus ? <Check size={15} /> : <Copy size={15} />}
-              {copyStatus ? "Code Copied!" : `Family Code: ${inviteCode}`}
+              {copyStatus ? "Code Copied!" : `Organization Code: ${inviteCode}`}
             </button>
           </div>
         </div>
 
-        {/* Dedicated Family Invitation Code Banner */}
+        {/* Dedicated Organization Code Banner */}
         <div style={{
           display: "flex",
           alignItems: "center",
@@ -317,11 +290,11 @@ export default function ParentDashboard() {
             </div>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <strong style={{ fontSize: "14px", color: "#f8fafc" }}>Your Family Invitation Code</strong>
-                <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "6px", background: "rgba(99, 102, 241, 0.25)", color: "#c4b5fd", fontWeight: "700" }}>STUDENT REGISTRATION</span>
+                <strong style={{ fontSize: "14px", color: "#f8fafc" }}>Your Organization Code</strong>
+                <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "6px", background: "rgba(99, 102, 241, 0.25)", color: "#c4b5fd", fontWeight: "700" }}>JOIN REQUESTS</span>
               </div>
               <p style={{ fontSize: "12px", color: "#94a3b8", margin: "3px 0 0 0" }}>
-                Share this code with your child. Entering it when creating their student account will automatically link them to you.
+                Share this code with your students. They enter it in their Settings to send you a join request, which you accept from Join Requests.
               </p>
             </div>
           </div>
@@ -355,7 +328,7 @@ export default function ParentDashboard() {
         <div className={styles.childSelectorBar}>
           <div className={styles.childTabs}>
             <span style={{ fontSize: "11px", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px" }}>
-              Enrolled Children:
+              Enrolled Students:
             </span>
             {children.length > 0 ? (
               children.map((child) => {
@@ -375,7 +348,7 @@ export default function ParentDashboard() {
                     <div className={styles.childTabInfo}>
                       <span className={styles.childTabName}>{child.fullName}</span>
                       <span className={styles.childTabMeta}>
-                        {child.grade} · {child.streakDays}d Streak 🔥
+                        Level {child.level} · {child.streakDays}d Streak 🔥
                       </span>
                     </div>
                   </button>
@@ -383,7 +356,7 @@ export default function ParentDashboard() {
               })
             ) : (
               <span style={{ fontSize: "12px", color: "#94a3b8", padding: "4px 8px" }}>
-                No children linked yet. Share your invitation code above to link your child's account.
+                No students yet. Share your organization code above so students can send you a join request.
               </span>
             )}
           </div>
@@ -402,7 +375,7 @@ export default function ParentDashboard() {
               No Student Account Connected Yet
             </h3>
             <p style={{ color: "#94a3b8", fontSize: "13px", maxWidth: "480px", margin: "0 auto 20px auto" }}>
-              Have your child enter your Invitation Code <code style={{ color: "#c4b5fd", fontWeight: 700 }}>{inviteCode}</code> when creating their account to link directly to your dashboard.
+              Ask your students to enter your organization code <code style={{ color: "#c4b5fd", fontWeight: 700 }}>{inviteCode}</code> in their Settings, then accept their requests from Join Requests.
             </p>
           </div>
         ) : (
@@ -417,7 +390,7 @@ export default function ParentDashboard() {
               </span>
               <div className={styles.beaconStatus}>
                 <span className={styles.beaconStatusDot} style={{ background: selectedChild.themeColor, boxShadow: `0 0 10px ${selectedChild.themeColor}` }} />
-                <span>Active Today</span>
+                <span>{lastActiveLabel(selectedChild.lastActiveDate)}</span>
               </div>
             </div>
 
@@ -433,7 +406,7 @@ export default function ParentDashboard() {
                 {selectedChild.fullName}
               </h3>
               <p style={{ fontSize: "11px", color: "#94a3b8", margin: 0 }}>
-                {selectedChild.rankTitle} · {selectedChild.grade}
+                {selectedChild.rankTitle} · Level {selectedChild.level}
               </p>
             </div>
           </div>
@@ -447,13 +420,17 @@ export default function ParentDashboard() {
                   <Clock size={22} />
                 </div>
                 <span className={styles.statTrend}>
-                  <TrendingUp size={12} /> +18% vs last month
+                  <TrendingUp size={12} /> {monthTrendLabel(selectedChild.monthTrendPercent)}
                 </span>
               </div>
               <div className={styles.statMain}>
                 <div className={styles.statValue}>{selectedChild.monthlyHours} hrs</div>
-                <div className={styles.statLabel}>30-Day Learning Time</div>
-                <div className={styles.statSubtext}>Average ~50 mins per active day</div>
+                <div className={styles.statLabel}>30-Day Learning Time (estimated)</div>
+                <div className={styles.statSubtext}>
+                  {selectedChild.activeDays > 0
+                    ? `Average ~${selectedChild.avgMinutesPerActiveDay} mins per active day`
+                    : "No learning activity in the last 30 days"}
+                </div>
               </div>
             </div>
 
@@ -464,13 +441,19 @@ export default function ParentDashboard() {
                   <Flame size={22} />
                 </div>
                 <span className={styles.statTrend} style={{ color: "#f59e0b", background: "rgba(245, 158, 11, 0.1)", borderColor: "rgba(245, 158, 11, 0.25)" }}>
-                  Unbroken
+                  {selectedChild.activeToday
+                    ? "Studied today"
+                    : selectedChild.streakDays > 0
+                    ? "Study today to keep it"
+                    : "No active streak"}
                 </span>
               </div>
               <div className={styles.statMain}>
-                <div className={styles.statValue}>{selectedChild.streakDays} Days 🔥</div>
+                <div className={styles.statValue}>{selectedChild.streakDays} {selectedChild.streakDays === 1 ? "Day" : "Days"} 🔥</div>
                 <div className={styles.statLabel}>Daily Habit Streak</div>
-                <div className={styles.statSubtext}>Consistent coding every single day</div>
+                <div className={styles.statSubtext}>
+                  Active on {selectedChild.activeDays} of the last 30 days
+                </div>
               </div>
             </div>
 
@@ -506,7 +489,7 @@ export default function ParentDashboard() {
               <div className={styles.statMain}>
                 <div className={styles.statValue}>{selectedChild.totalXp.toLocaleString()} XP</div>
                 <div className={styles.statLabel}>Total Experience Points</div>
-                <div className={styles.statSubtext}>{selectedChild.quizMetrics.playgroundRuns} code executions in lab</div>
+                <div className={styles.statSubtext}>{selectedChild.quizMetrics.codeSubmissions} code submissions judged</div>
               </div>
             </div>
           </div>
@@ -547,7 +530,7 @@ export default function ParentDashboard() {
                 <div
                   key={idx}
                   className={`${styles.heatmapCell} ${cellClass}`}
-                  title={`${day.date} (${day.dayName}): ${day.minutes} mins · ${day.lessonsCompleted} lessons`}
+                  title={`${day.date} (${day.dayName}): ~${day.minutes} mins · ${day.lessonsCompleted} lessons · ${day.challengesCompleted || 0} challenges`}
                 >
                   <span>{day.dayNumber}</span>
                 </div>
@@ -557,10 +540,13 @@ export default function ParentDashboard() {
 
           <div className={styles.heatmapFooter}>
             <div>
-              <strong>Active Learning Time:</strong> Typically active between <strong>3:30 PM – 5:30 PM</strong>
+              <strong>Active Days:</strong> {selectedChild.activeDays} of the last 30
             </div>
             <div>
-              <strong>Longest Session:</strong> 90 minutes on recent weekend
+              <strong>Busiest Day:</strong>{" "}
+              {selectedChild.bestDay
+                ? `${selectedChild.bestDay.units} lessons & challenges (~${selectedChild.bestDay.minutes} mins) on ${shortDate(selectedChild.bestDay.date)}`
+                : "No activity yet"}
             </div>
           </div>
         </div>
@@ -660,10 +646,10 @@ export default function ParentDashboard() {
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: "14px", color: "#f8fafc", fontWeight: 700 }}>
-                    Parent AI Guidance & Insight
+                    Learning Insight
                   </h3>
                   <span style={{ fontSize: "10px", color: "#c4b5fd" }}>
-                    Personalized based on {selectedChild?.fullName}'s recent work
+                    Based on {selectedChild?.fullName}'s real activity and progress
                   </span>
                 </div>
               </div>
@@ -700,12 +686,17 @@ export default function ParentDashboard() {
                 {(selectedChild?.recentBadges || []).length > 0 ? (
                   selectedChild.recentBadges.map((b) => (
                     <div key={b.id} className={styles.badgeRow}>
-                      <div className={styles.badgeIcon}>{b.icon}</div>
+                      <div className={styles.badgeIcon} style={{ color: ACHIEVEMENT_ACCENTS[b.id] || "#fbbf24" }}>
+                        {(() => {
+                          const BadgeIcon = ACHIEVEMENT_ICONS[b.id] || Award;
+                          return <BadgeIcon size={20} />;
+                        })()}
+                      </div>
                       <div className={styles.badgeContent}>
                         <div className={styles.badgeTitle}>{b.title}</div>
                         <div className={styles.badgeDesc}>{b.desc}</div>
                       </div>
-                      <span className={styles.badgeDate}>{b.date}</span>
+                      <span className={styles.badgeDate}>{shortDate(b.date)}</span>
                     </div>
                   ))
                 ) : (
@@ -721,7 +712,7 @@ export default function ParentDashboard() {
               <div className={styles.panelHeader}>
                 <div>
                   <h2 className={styles.panelTitle}>
-                    <MessageSquareHeart size={18} color="#f43f5e" /> Send Parent Cheer
+                    <MessageSquareHeart size={18} color="#f43f5e" /> Send a Cheer
                   </h2>
                   <div className={styles.panelSubtitle}>
                     Send an encouraging note to appear on {selectedChild.fullName}'s learning hub

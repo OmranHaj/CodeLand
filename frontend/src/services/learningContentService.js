@@ -394,14 +394,15 @@ export function getLearningContentConfig() {
 /* BACKEND SYNC */
 /* ====================================================== */
 
-export async function recordLessonCompletion(levelId, lessonId, xp = 25, unitType = "lesson") {
+// The server awards the lesson's XP from the database; _xp is ignored and kept so existing callers still work.
+export async function recordLessonCompletion(levelId, lessonId, _xp, unitType = "lesson") {
   try {
     const token = localStorage.getItem("codeland_token");
     if (!token) return null;
 
     return await apiRequest("/learning/complete-lesson", {
       method: "POST",
-      body: JSON.stringify({ levelId, lessonId, xpEarned: xp, unitType }),
+      body: JSON.stringify({ levelId, lessonId, unitType }),
     });
   } catch (err) {
     console.warn("[CodeLand] Progress sync warning:", err);
@@ -422,12 +423,8 @@ export async function fetchStudentProgress() {
 
 export const getStudentProgress = fetchStudentProgress;
 
-export async function submitChallengeProgress(
-  challengeId,
-  submittedCode = "",
-  passed = false,
-  xpEarned = 25,
-) {
+// The server grades the answer and awards XP itself.
+export async function submitChallengeProgress(challengeId, submittedCode = "") {
   try {
     const token = localStorage.getItem("codeland_token");
     if (!token) return null;
@@ -437,8 +434,6 @@ export async function submitChallengeProgress(
       body: JSON.stringify({
         challengeId: String(challengeId),
         submittedCode: String(submittedCode),
-        passed: Boolean(passed),
-        xpEarned: Number(xpEarned) || 25,
       }),
     });
   } catch (err) {

@@ -33,7 +33,8 @@ model User {
   ParentCheer_ParentCheer_parentIdToUser ParentCheer[]         @relation("ParentCheer_parentIdToUser")
   submissions                            ProjectSubmission[]
   codeSubmissions                        CodeSubmission[]
-  parent                                 User?                 @relation("ParentChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  // SetNull: deleting an organization only unlinks its students; their accounts and progress stay.
+  parent                                 User?                 @relation("ParentChildren", fields: [parentId], references: [id], onDelete: SetNull)
   children                               User[]                @relation("ParentChildren")
   UserAchievement                        UserAchievement[]
   UserProfile                            UserProfile?
@@ -49,6 +50,9 @@ model User {
   arenaContestsCreated                   ArenaContest[]        @relation("ArenaContestAuthor")
   arenaRegistrations                     ArenaRegistration[]
   arenaMedals                            ArenaMedal[]
+  // Organization (role PARENT) membership requests sent by students / received by organizations.
+  orgJoinRequestsSent                    OrganizationJoinRequest[] @relation("JoinRequestStudent")
+  orgJoinRequestsReceived                OrganizationJoinRequest[] @relation("JoinRequestOrganization")
 
   @@index([parentId])
   @@index([role, status])
@@ -187,6 +191,12 @@ enum Role {
   PARENT
   CHILD
   ADMIN
+}
+
+enum OrganizationJoinStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }
 
 enum UserStatus {
@@ -507,4 +517,20 @@ model ArenaTestCase {
   problem ArenaProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
   @@index([problemId, order])
+}
+
+/// A student asks to join an organization (a User with role PARENT) by entering its code.
+/// Accepting sets the student's parentId to the organization.
+model OrganizationJoinRequest {
+  id             String                 @id @default(uuid())
+  studentId      String
+  organizationId String
+  status         OrganizationJoinStatus @default(PENDING)
+  createdAt      DateTime               @default(now())
+  decidedAt      DateTime?
+  student        User                   @relation("JoinRequestStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  organization   User                   @relation("JoinRequestOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@index([studentId, createdAt])
 }

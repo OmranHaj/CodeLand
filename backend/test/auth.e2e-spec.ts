@@ -87,70 +87,44 @@ describe('AuthController (e2e)', () => {
     });
   });
 
-  describe('Parent Code Verification', () => {
-    it('should reject invalid parent code with 400', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/auth/verify-parent-code')
-        .send({ code: 'INVALID8' })
-        .expect(400);
-
-      expect(response.body.message).toContain('Invalid parent code');
-    });
-
-    it('should successfully verify valid parent code', async () => {
-      const response = await request(app.getHttpServer())
+  describe('Organization code lookup', () => {
+    it('no longer exposes a public endpoint that reveals the organization behind a code', async () => {
+      await request(app.getHttpServer())
         .post('/auth/verify-parent-code')
         .send({ code: parentCode })
-        .expect(200);
-
-      expect(response.body.valid).toBe(true);
-      expect(response.body.code).toBe(parentCode);
-      expect(response.body.parent).toHaveProperty('email', testParentEmail);
-    });
-
-    it('should successfully verify valid parent code with CL- prefix', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/auth/verify-parent-code')
-        .send({ code: `CL-${parentCode}` })
-        .expect(200);
-
-      expect(response.body.valid).toBe(true);
-      expect(response.body.code).toBe(parentCode);
+        .expect(404);
     });
   });
 
-  describe('Child Registration', () => {
-    it('should fail if parentCode does not exist', async () => {
+  describe('Student Registration', () => {
+    it('should register a student on their own, without any code', async () => {
       const response = await request(app.getHttpServer())
         .post('/auth/register/child')
         .send({
           email: testChildEmail,
           password: testPassword,
           name: 'Child User',
-          parentCode: 'INVALID8',
-        })
-        .expect(400);
-
-      expect(response.body.message).toContain('Invalid parent code');
-    });
-
-    it('should successfully register child when parentCode is valid', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/auth/register/child')
-        .send({
-          email: testChildEmail,
-          password: testPassword,
-          name: 'Child User',
-          parentCode,
         })
         .expect(201);
 
       expect(response.body).toHaveProperty('accessToken');
       expect(response.body.user.email).toBe(testChildEmail);
       expect(response.body.user.role).toBe('CHILD');
-      expect(response.body.user.parentId).toBeDefined();
+      expect(response.body.user.parentId).toBeNull();
 
       childToken = response.body.accessToken;
+    });
+
+    it('should not link a student to an organization through the signup form', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/register/student')
+        .send({
+          email: `other_${testChildEmail}`,
+          password: testPassword,
+          name: 'Other Child',
+          parentCode,
+        })
+        .expect(400);
     });
   });
 
@@ -212,7 +186,7 @@ describe('AuthController (e2e)', () => {
 
       expect(response.body.email).toBe(testChildEmail);
       expect(response.body.role).toBe('CHILD');
-      expect(response.body.parentId).toBeDefined();
+      expect(response.body.parentId).toBeNull();
     });
 
     it('should reject unauthenticated request with 401', async () => {

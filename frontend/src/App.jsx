@@ -42,6 +42,7 @@ const ParentDashboard = lazy(() => import("./pages/Hub/ParentDashboard"));
 const ParentCurriculum = lazy(() => import("./pages/Hub/ParentCurriculum"));
 const ParentReports = lazy(() => import("./pages/Hub/ParentReports"));
 const ParentGuide = lazy(() => import("./pages/Hub/ParentGuide"));
+const OrganizationRequests = lazy(() => import("./pages/Hub/OrganizationRequests"));
 const Help = lazy(() => import("./pages/Hub/Help"));
 const NotFound = lazy(() => import("./pages/Hub/NotFound"));
 const AdminStudio = lazy(() => import("./pages/Admin/AdminStudio"));
@@ -378,6 +379,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["parent"]}>
                   <ParentDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/parent/requests"
+              element={
+                <ProtectedRoute allowedRoles={["parent"]}>
+                  <OrganizationRequests />
                 </ProtectedRoute>
               }
             />

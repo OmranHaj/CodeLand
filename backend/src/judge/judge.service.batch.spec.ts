@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { JudgeService } from './judge.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { LearningService } from '../learning/learning.service.js';
 
 const b64 = (s: string) => Buffer.from(s, 'utf-8').toString('base64');
 const json = (body: unknown, status = 200) =>
@@ -14,7 +15,7 @@ describe('JudgeService.executeBatch', () => {
     vi.useFakeTimers();
     fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
-    service = new JudgeService({} as PrismaService);
+    service = new JudgeService({} as PrismaService, {} as LearningService);
   });
 
   afterEach(() => {

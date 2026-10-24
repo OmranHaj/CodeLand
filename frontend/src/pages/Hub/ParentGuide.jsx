@@ -26,7 +26,7 @@ export default function ParentGuide() {
     },
     {
       prompt: "“Can you teach me what an algorithm is in your own words?”",
-      why: "Teaching a parent is the ultimate test of true understanding."
+      why: "Teaching someone else is the ultimate test of true understanding."
     }
   ];
 
@@ -34,7 +34,7 @@ export default function ParentGuide() {
     {
       icon: Lock,
       title: "Zero Third-Party Ads or Tracking",
-      desc: "CodeLand is strictly educational. We do not sell user data, run advertising networks, or track children across the web."
+      desc: "CodeLand is strictly educational. We do not sell user data, run advertising networks, or track students across the web."
     },
     {
       icon: Eye,
@@ -43,42 +43,42 @@ export default function ParentGuide() {
     },
     {
       icon: ShieldCheck,
-      title: "Parent-Gated Invitations",
-      desc: "Student accounts can only be created and linked with a verified parent invitation code, keeping you in full control."
+      title: "Approval-Based Membership",
+      desc: "Students join your organization only after you accept their request, keeping you in full control of who appears on your dashboard."
     }
   ];
 
   const faqs = [
     {
-      q: "My child is completely new to coding. Which path should they start with?",
+      q: "My student is completely new to coding. Which path should they start with?",
       a: "We recommend Web Creator for beginners aged 8–12. It provides immediate, colorful visual feedback (seeing buttons, colors, and layout changes). If they are 11+ and enjoy math or puzzle games, Algorithm & Data Structures is also a wonderful starting point."
     },
     {
-      q: "What should my child do if they get stuck on a difficult challenge?",
+      q: "What should a student do if they get stuck on a difficult challenge?",
       a: "Encourage them to view the 3D visual sketch analogies in the Algorithm Lab, re-run test cases, or take a 10-minute break. In coding, stepping away often lets the brain find the solution effortlessly."
     },
     {
-      q: "How many hours per week should my child spend on CodeLand?",
+      q: "How many hours per week should a student spend on CodeLand?",
       a: "We recommend 3 to 6 hours per week, ideally divided into 30 to 45-minute daily sessions. Consistency is far more effective than long, exhausting weekend marathon sessions."
     }
   ];
 
   return (
-    <HubLayout title="Parent Guide">
+    <HubLayout title="Organization Guide">
       <div className="hub-heading">
         <div>
           <div className="hub-eyebrow">
-            <ShieldCheck size={14} color="#34d399" /> PARENT GUIDANCE & SAFETY
+            <ShieldCheck size={14} color="#34d399" /> ORGANIZATION GUIDANCE & SAFETY
           </div>
           <h1>Empowering Your Young Creator</h1>
           <p>
-            You don't need a computer science degree to support your child's coding journey.
+            You don't need a computer science degree to support your students' coding journey.
             Here is everything you need to guide, protect, and inspire them.
           </p>
         </div>
 
         <Link to="/parent/dashboard" className="hub-btn ghost">
-          Back to Observatory <ArrowRight size={14} />
+          Back to Dashboard <ArrowRight size={14} />
         </Link>
       </div>
 
@@ -181,7 +181,7 @@ export default function ParentGuide() {
         </aside>
       </div>
 
-      {/* Parent FAQs Accordion / List */}
+      {/* Organization FAQs Accordion / List */}
       <div className="hub-panel" style={{ borderRadius: "18px", padding: "26px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
           <HelpCircle size={18} color="#fbbf24" />

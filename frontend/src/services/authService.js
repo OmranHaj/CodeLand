@@ -183,23 +183,6 @@ export async function registerParent(parentData) {
 }
 
 /* ====================================================== */
-/* VERIFY PARENT CODE */
-/* ====================================================== */
-
-export async function verifyParentCode(code) {
-  // if (USE_MOCK_API) {
-  //   return mockVerifyParentCode(code);
-  // }
-
-  return apiRequest("/auth/verify-parent-code", {
-    method: "POST",
-    body: JSON.stringify({
-      code,
-    }),
-  });
-}
-
-/* ====================================================== */
 /* REGISTER STUDENT */
 /* ====================================================== */
 
@@ -209,7 +192,6 @@ export async function registerStudent(studentData) {
   // }
 
   const payload = {
-    parentCode: studentData.parentCode,
     email: studentData.email,
     password: studentData.password,
     name: studentData.name || studentData.fullName,

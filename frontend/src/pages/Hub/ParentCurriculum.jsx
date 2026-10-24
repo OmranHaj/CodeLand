@@ -102,16 +102,16 @@ export default function ParentCurriculum() {
       <div className="hub-heading">
         <div>
           <div className="hub-eyebrow">
-            <GraduationCap size={14} color="#a78bfa" /> PARENT CURRICULUM ROADMAP
+            <GraduationCap size={14} color="#a78bfa" /> CURRICULUM ROADMAP
           </div>
-          <h1>What Your Child Learns at CodeLand</h1>
+          <h1>What Your Students Learn at CodeLand</h1>
           <p>
-            An educational guide designed for parents to understand the learning objectives,
+            An educational guide designed for schools and teachers to understand the learning objectives,
             cognitive skills, and real-world outcomes of each curriculum track.
           </p>
         </div>
         <Link to="/parent/dashboard" className="hub-btn ghost">
-          Back to Observatory <ArrowRight size={14} />
+          Back to Dashboard <ArrowRight size={14} />
         </Link>
       </div>
 
@@ -274,7 +274,7 @@ export default function ParentCurriculum() {
                   </div>
                 </div>
 
-                {/* Why It Matters for Parents */}
+                {/* Why It Matters for Students */}
                 <div
                   style={{
                     background: "rgba(15, 23, 42, 0.6)",
@@ -284,7 +284,7 @@ export default function ParentCurriculum() {
                   }}
                 >
                   <strong style={{ display: "block", fontSize: "12px", color: "#e2e8f0", marginBottom: "6px" }}>
-                    💡 Why It Matters for Your Child
+                    💡 Why It Matters for Your Students
                   </strong>
                   <p style={{ margin: 0, fontSize: "12px", color: "#94a3b8", lineHeight: "1.6" }}>
                     {track.parentBenefit}

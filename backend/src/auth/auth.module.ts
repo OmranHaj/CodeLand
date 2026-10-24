@@ -6,13 +6,14 @@ import { AuthService } from './auth.service.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
 
 import { EmailService } from './email.service.js';
+import { getJwtSecret } from './jwt-secret.js';
 
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       useFactory: (): JwtModuleOptions => ({
-        secret: process.env.JWT_SECRET || 'super-secret-jwt-key-for-codeland-platform',
+        secret: getJwtSecret(),
         signOptions: {
           expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any,
         },

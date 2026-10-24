@@ -6,65 +6,115 @@ import {
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { computeEffectiveStreak } from '../learning/streak.util.js';
+import { buildStudentInsights, type CatalogLevel, WINDOW_DAYS } from './student-insights.util.js';
 
 @Injectable()
 export class ParentService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Retrieves all children linked to a parent account,
-   * along with their profiles, progress, and recent activity.
-   */
-  async getChildren(parentId: string) {
-    const children = await this.prisma.user.findMany({
-      where: {
-        parentId,
-      },
+  /** Published levels with their units, used to turn completed ids into per-track progress. */
+  private async loadCatalog(): Promise<CatalogLevel[]> {
+    const levels = await this.prisma.level.findMany({
+      where: { status: 'published' },
       select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        parentCode: true,
-        parentId: true,
-        totalXp: true,
-        streakDays: true,
-        lastStreakAt: true,
-        lastActiveAt: true,
-        createdAt: true,
-        UserProfile: {
-          select: {
-            avatarTheme: true,
-            dailyGoal: true,
-            weeklyGoalHours: true,
-            soundEffects: true,
-            reducedMotion: true,
-            fontSize: true,
-          },
-        },
-        dailyActivities: {
-          orderBy: { date: 'desc' },
-          take: 30,
-        },
-        LearningProgress: {
-          select: {
-            trackId: true,
-            levelId: true,
-            status: true,
-            progressPercent: true,
-            xp: true,
-            completedLessonIds: true,
-            completedChallengeIds: true,
-            lastAccessedAt: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'asc',
+        slug: true,
+        title: true,
+        order: true,
+        track: { select: { slug: true, title: true, themeColor: true, order: true } },
+        lessons: { where: { status: 'published' }, select: { slug: true } },
+        challenges: { where: { status: 'published' }, select: { id: true, slug: true } },
       },
     });
 
-    // Map each child to a clean, frontend-compatible structure using pure database values
+    return levels.map((level) => ({
+      slug: level.slug,
+      title: level.title,
+      order: level.order,
+      track: level.track,
+      // The judge stores challenge ids, lessons store slugs: accept both.
+      unitIds: new Set([
+        ...level.lessons.map((l) => l.slug),
+        ...level.challenges.flatMap((c) => [c.id, ...(c.slug ? [c.slug] : [])]),
+      ]),
+      totalUnits: level.lessons.length + level.challenges.length,
+    }));
+  }
+
+  /**
+   * Retrieves all students linked to an organization, with dashboard figures computed from
+   * their real activity, progress, challenge results and achievements.
+   */
+  async getChildren(parentId: string) {
+    const now = new Date();
+    // Two windows: the last 30 days, plus the 30 before them for the month-over-month trend.
+    const since = new Date(now);
+    since.setDate(since.getDate() - WINDOW_DAYS * 2);
+    since.setHours(0, 0, 0, 0);
+    const badgesSince = new Date(now);
+    badgesSince.setDate(badgesSince.getDate() - WINDOW_DAYS);
+
+    const [children, catalog] = await Promise.all([
+      this.prisma.user.findMany({
+        where: {
+          parentId,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          parentCode: true,
+          parentId: true,
+          totalXp: true,
+          streakDays: true,
+          lastStreakAt: true,
+          lastActiveAt: true,
+          createdAt: true,
+          UserProfile: {
+            select: {
+              avatarTheme: true,
+              dailyGoal: true,
+              weeklyGoalHours: true,
+              soundEffects: true,
+              reducedMotion: true,
+              fontSize: true,
+            },
+          },
+          dailyActivities: {
+            where: { date: { gte: since } },
+            orderBy: { date: 'asc' },
+          },
+          LearningProgress: {
+            select: {
+              trackId: true,
+              levelId: true,
+              status: true,
+              progressPercent: true,
+              xp: true,
+              completedLessonIds: true,
+              completedChallengeIds: true,
+              lastAccessedAt: true,
+            },
+          },
+          ChallengeSubmission: { select: { challengeId: true, passed: true } },
+          UserAchievement: {
+            where: { unlockedAt: { gte: badgesSince } },
+            orderBy: { unlockedAt: 'desc' },
+            select: {
+              unlockedAt: true,
+              Achievement: { select: { id: true, title: true, description: true, badgeUrl: true } },
+            },
+          },
+          arenaAttempts: { select: { submissionCount: true } },
+          _count: { select: { codeSubmissions: true } },
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      }),
+      this.loadCatalog(),
+    ]);
+
     return children.map((child) => {
       const { effectiveStreak, isBroken } = computeEffectiveStreak(
         child.streakDays,
@@ -78,22 +128,18 @@ export class ParentService {
       }
       const actualStreak = isBroken ? 0 : effectiveStreak;
 
-      const totalMinutes = child.dailyActivities.reduce(
-        (sum, a) => sum + (a.durationMinutes || 0),
-        0,
-      );
-      const monthlyHours = Math.round((totalMinutes / 60) * 10) / 10;
-
-      const formattedDailyActivities = child.dailyActivities.map((act) => {
-        const d = new Date(act.date);
-        return {
-          date: d.toISOString().split('T')[0],
-          dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
-          dayNumber: d.getDate(),
-          minutes: act.durationMinutes,
-          lessonsCompleted: act.lessonsCompleted,
-          active: act.durationMinutes > 0,
-        };
+      const insights = buildStudentInsights({
+        now,
+        firstName: (child.name || 'This student').trim().split(/\s+/)[0],
+        streakDays: actualStreak,
+        lastActiveAt: child.lastActiveAt,
+        activities: child.dailyActivities,
+        progress: child.LearningProgress,
+        catalog,
+        challengeSubmissions: child.ChallengeSubmission,
+        codeSubmissionCount:
+          child._count.codeSubmissions + child.arenaAttempts.reduce((sum, a) => sum + a.submissionCount, 0),
+        recentAchievements: child.UserAchievement.map((ua) => ({ ...ua.Achievement, unlockedAt: ua.unlockedAt })),
       });
 
       return {
@@ -102,11 +148,8 @@ export class ParentService {
         fullName: child.name || 'Student Explorer',
         email: child.email,
         role: 'student',
-        parentCode: child.parentCode,
-        inviteCode: child.parentCode,
         totalXp: child.totalXp,
         streakDays: actualStreak,
-        monthlyHours,
         level: Math.max(1, Math.floor(child.totalXp / 100) + 1),
         rankTitle: this.calculateRankTitle(child.totalXp),
         lastActiveAt: child.lastActiveAt,
@@ -114,8 +157,7 @@ export class ParentService {
         avatar: (child.name || 'S').charAt(0).toUpperCase(),
         themeColor: this.mapAvatarColor(child.UserProfile?.avatarTheme),
         weeklyGoalHours: child.UserProfile?.weeklyGoalHours ?? 6,
-        dailyActivities: formattedDailyActivities,
-        learningProgress: child.LearningProgress,
+        ...insights,
       };
     });
   }

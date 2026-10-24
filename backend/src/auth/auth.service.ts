@@ -19,12 +19,16 @@ import { LoginDto } from './dto/login.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { EmailService } from './email.service.js';
+import { FailedAttemptLimiter } from './failed-attempt-limiter.js';
 
 @Injectable()
 export class AuthService {
   // Salt rounds for bcrypt password hashing
   private readonly saltRounds = 10;
   private readonly forgotPasswordRateLimits = new Map<string, { count: number; expiresAt: number }>();
+  // Failed password logins: 5 per account and 20 per IP in 15 minutes.
+  private readonly failedLoginsByEmail = new FailedAttemptLimiter(5, 15 * 60 * 1000);
+  private readonly failedLoginsByIp = new FailedAttemptLimiter(20, 15 * 60 * 1000);
 
   constructor(
     private readonly prisma: PrismaService,
@@ -83,49 +87,8 @@ export class AuthService {
   }
 
   /**
-   * Verifies if a parentCode belongs to a valid registered parent.
-   */
-  async verifyParentCode(code: string) {
-    const rawCode = code.trim().toUpperCase();
-    const cleanCode = rawCode.replace(/^CL-/, '');
-
-    const parent = await this.prisma.user.findFirst({
-      where: {
-        OR: [
-          { parentCode: rawCode },
-          { parentCode: cleanCode },
-        ],
-        role: Role.PARENT,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        parentCode: true,
-      },
-    });
-
-    if (!parent) {
-      throw new BadRequestException(
-        'Invalid parent code. Please check the code and try again.',
-      );
-    }
-
-    return {
-      valid: true,
-      code: parent.parentCode,
-      parent: {
-        id: parent.id,
-        fullName: parent.name,
-        email: parent.email,
-      },
-    };
-  }
-
-  /**
-   * Register a new Child account.
-   * Validates the provided parentCode, ensures the parent exists,
-   * hashes child's password, and links child to parentId.
+   * Register a new student (Child) account on its own, without any code.
+   * The student can later ask to join an organization from their settings.
    */
   async registerChild(dto: RegisterChildDto) {
     // Check if email is already in use
@@ -137,37 +100,15 @@ export class AuthService {
       throw new ConflictException('An account with this email already exists.');
     }
 
-    // Validate parent code
-    const rawCode = dto.parentCode.trim().toUpperCase();
-    const cleanCode = rawCode.replace(/^CL-/, '');
-
-    const parent = await this.prisma.user.findFirst({
-      where: {
-        OR: [
-          { parentCode: rawCode },
-          { parentCode: cleanCode },
-        ],
-        role: Role.PARENT,
-      },
-    });
-
-    if (!parent) {
-      throw new BadRequestException(
-        'Invalid parent code. A valid parent code from an active parent account is required.',
-      );
-    }
-
-    // Hash child's password
+    // Hash student's password
     const hashedPassword = await bcrypt.hash(dto.password, this.saltRounds);
 
-    // Save child linked to parent
     const user = await this.prisma.user.create({
       data: {
         email: dto.email.toLowerCase(),
         password: hashedPassword,
         name: dto.name || dto.fullName,
         role: Role.CHILD,
-        parentId: parent.id,
       },
       select: {
         id: true,
@@ -184,7 +125,7 @@ export class AuthService {
     const token = await this.signToken(user.id, user.email, user.role, user.tokenVersion);
 
     return {
-      message: 'Child registered successfully and linked to parent',
+      message: 'Student registered successfully',
       user,
       accessToken: token,
     };
@@ -194,13 +135,29 @@ export class AuthService {
    * Standard Login for both Parents and Children.
    * Validates credentials and returns JWT token.
    */
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, clientIp = 'unknown') {
+    const email = dto.email.toLowerCase();
+
+    // Checked before the password, so guessing is useless once an account or IP is blocked.
+    if (this.failedLoginsByEmail.isBlocked(email) || this.failedLoginsByIp.isBlocked(clientIp)) {
+      throw new HttpException(
+        'Too many failed login attempts. Please wait 15 minutes and try again, or reset your password.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
+    const recordFailure = () => {
+      this.failedLoginsByEmail.recordFailure(email);
+      this.failedLoginsByIp.recordFailure(clientIp);
+      return new UnauthorizedException('Invalid email or password.');
+    };
+
     const user = await this.prisma.user.findUnique({
-      where: { email: dto.email.toLowerCase() },
+      where: { email },
     });
 
     if (!user || !user.password) {
-      throw new UnauthorizedException('Invalid email or password.');
+      throw recordFailure();
     }
 
     if (user.status === 'SUSPENDED') {
@@ -210,8 +167,10 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid email or password.');
+      throw recordFailure();
     }
+
+    this.failedLoginsByEmail.reset(email);
 
     const token = await this.signToken(user.id, user.email, user.role, user.tokenVersion);
 

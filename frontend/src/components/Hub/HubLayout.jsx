@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Heart,
   Swords,
+  UserPlus,
 } from "lucide-react";
 import {
   getHomeRoute,
@@ -27,6 +28,7 @@ import {
   startPreview,
   writeStored,
 } from "../../services/learningHub";
+import { fetchJoinRequests } from "../../services/organizationService";
 import "./hub.css";
 
 export default function HubLayout({ children, title = "Learning space" }) {
@@ -54,6 +56,22 @@ export default function HubLayout({ children, title = "Learning space" }) {
   const isAdmin =
     rawRole === "admin" || rawRole === "superadmin" || rawRole === "super_admin";
   const parent = rawRole === "parent";
+  const [pendingRequests, setPendingRequests] = useState(0);
+
+  // Organizations see how many students are waiting for a decision.
+  useEffect(() => {
+    if (!parent || user?.isDemo) return undefined;
+    let active = true;
+    fetchJoinRequests()
+      .then((data) => active && setPendingRequests(Number(data?.count) || 0))
+      .catch(() => {});
+    const onChange = (event) => setPendingRequests(Number(event.detail?.count) || 0);
+    window.addEventListener("codeland:join-requests", onChange);
+    return () => {
+      active = false;
+      window.removeEventListener("codeland:join-requests", onChange);
+    };
+  }, [parent, user?.isDemo]);
 
   const studentLinks = [
     ["/student/dashboard", "Overview", LayoutDashboard],
@@ -64,10 +82,11 @@ export default function HubLayout({ children, title = "Learning space" }) {
   ];
 
   const parentLinks = [
-    ["/parent/dashboard", "Family Observatory", Users],
+    ["/parent/dashboard", "Organization Dashboard", Users],
+    ["/parent/requests", "Join Requests", UserPlus],
     ["/parent/curriculum", "Curriculum Guide", BookOpen],
     ["/parent/reports", "Monthly Reports", FileText],
-    ["/parent/guide", "Parent Guide & Safety", ShieldCheck],
+    ["/parent/guide", "Organization Guide & Safety", ShieldCheck],
   ];
 
   const adminLinks = [
@@ -78,7 +97,7 @@ export default function HubLayout({ children, title = "Learning space" }) {
     ["/challenges", "Practice Arena", Code2],
     ["/student/contest", "Sunday Arena", Swords],
     ["/student/dashboard", "Student View", LayoutDashboard],
-    ["/parent/dashboard", "Parent View", Users],
+    ["/parent/dashboard", "Organization View", Users],
   ];
 
   const links = isAdmin ? adminLinks : parent ? parentLinks : studentLinks;
@@ -116,7 +135,7 @@ export default function HubLayout({ children, title = "Learning space" }) {
           {isAdmin
             ? "SUPER ADMIN COMMAND"
             : parent
-            ? "PARENT OBSERVATORY"
+            ? "ORGANIZATION SPACE"
             : "YOUR LEARNING SPACE"}
         </span>
 
@@ -146,6 +165,11 @@ export default function HubLayout({ children, title = "Learning space" }) {
                   PREVIEW
                 </span>
               )}
+              {to === "/parent/requests" && pendingRequests > 0 && (
+                <span className="hub-nav-badge" aria-label={`${pendingRequests} pending`}>
+                  {pendingRequests}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -166,7 +190,7 @@ export default function HubLayout({ children, title = "Learning space" }) {
               <strong>Every Step Needs Encouragement</strong>
               <p>A little support from you creates a world of confidence.</p>
               <Link to="/parent/guide">
-                Read parent guide <ArrowUpRight size={16} />
+                Read organization guide <ArrowUpRight size={16} />
               </Link>
             </div>
           ) : (

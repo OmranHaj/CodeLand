@@ -16,11 +16,7 @@ import {
   EyeOff,
 } from "lucide-react";
 
-import {
-  registerParent,
-  verifyParentCode,
-  registerStudent,
-} from "../../services/authService";
+import { registerParent, registerStudent } from "../../services/authService";
 import { getHomeRoute } from "../../services/learningHub";
 
 import styles from "./Register.module.css";
@@ -48,14 +44,6 @@ function Register() {
   const [showParentPassword, setShowParentPassword] = useState(false);
   const [showParentConfirmPassword, setShowParentConfirmPassword] =
     useState(false);
-
-  /* ====================================================== */
-  /* STUDENT CODE */
-  /* ====================================================== */
-
-  const [studentCode, setStudentCode] = useState("");
-  const [codeError, setCodeError] = useState("");
-  const [checkingCode, setCheckingCode] = useState(false);
 
   /* ====================================================== */
   /* STUDENT */
@@ -87,7 +75,7 @@ function Register() {
     }
 
     if (accountType === "student") {
-      setStep("studentCode");
+      setStep("student");
     }
   };
 
@@ -152,47 +140,13 @@ function Register() {
           registered: true,
           accountType: "parent",
           email: normalizedEmail,
-          message: "Parent account created successfully. Please log in.",
+          message: "Organization account created successfully. Please log in.",
         },
       });
     } catch (error) {
       setParentError(error.message || "Unable to create your account.");
     } finally {
       setParentLoading(false);
-    }
-  };
-
-  /* ====================================================== */
-  /* VERIFY PARENT CODE */
-  /* ====================================================== */
-
-  const handleParentCodeSubmit = async (e) => {
-    e.preventDefault();
-
-    setCodeError("");
-
-    const normalizedCode = studentCode.trim().toUpperCase();
-
-    if (!normalizedCode) {
-      setCodeError("Please enter your parent code.");
-      return;
-    }
-
-    setCheckingCode(true);
-
-    try {
-      const data = await verifyParentCode(normalizedCode);
-
-      if (data?.valid === false) {
-        throw new Error("Invalid parent code.");
-      }
-
-      setStudentCode(data?.code || normalizedCode);
-      setStep("student");
-    } catch (error) {
-      setCodeError(error.message || "Unable to verify parent code.");
-    } finally {
-      setCheckingCode(false);
     }
   };
 
@@ -246,7 +200,6 @@ function Register() {
 
     try {
       await registerStudent({
-        parentCode: studentCode.trim().toUpperCase(),
         fullName: studentForm.fullName.trim(),
         email: normalizedEmail,
         password: studentForm.password,
@@ -277,7 +230,7 @@ function Register() {
       return parentRegisterVisual;
     }
 
-    if (step === "studentCode" || step === "student") {
+    if (step === "student") {
       return studentRegisterVisual;
     }
 
@@ -286,10 +239,10 @@ function Register() {
 
   const getVisualAlt = () => {
     if (step === "parent") {
-      return "Parent supporting a child learning coding";
+      return "Organization supporting students learning coding";
     }
 
-    if (step === "studentCode" || step === "student") {
+    if (step === "student") {
       return "Student studying and learning with CodeLand";
     }
 
@@ -334,7 +287,7 @@ function Register() {
 
             {/* STUDENT */}
 
-            {(step === "studentCode" || step === "student") && (
+            {step === "student" && (
               <>
                 <h2 className={styles.visualTitle}>
                   Learn Today
@@ -435,14 +388,14 @@ function Register() {
                     <UserPlus size={24} />
                   </div>
 
-                  <h2>Parent Account</h2>
+                  <h2>Organization Account</h2>
 
                   <p>
-                    Create a parent account and manage your child's learning
-                    journey.
+                    For schools, universities, and teachers who want to follow
+                    their students' learning.
                   </p>
 
-                  <span className={styles.accountLabel}>I'm a Parent</span>
+                  <span className={styles.accountLabel}>I'm an Organization</span>
                 </button>
 
                 {/* STUDENT */}
@@ -466,7 +419,7 @@ function Register() {
 
                   <h2>Student Account</h2>
 
-                  <p>Join CodeLand using your parent's invitation code.</p>
+                  <p>Create your own account and start learning right away.</p>
 
                   <span className={styles.accountLabel}>I'm a Student</span>
                 </button>
@@ -509,13 +462,13 @@ function Register() {
               </button>
 
               <div className={styles.parentHeading}>
-                <span className={styles.badge}>Parent Account</span>
+                <span className={styles.badge}>Organization Account</span>
 
-                <h1>Create Parent Account</h1>
+                <h1>Create Organization Account</h1>
 
                 <p>
-                  Create your account first. Your child will connect later using
-                  your invitation code.
+                  Create your account first. Your students will send a join
+                  request using your organization code.
                 </p>
               </div>
 
@@ -526,14 +479,14 @@ function Register() {
                 {/* FULL NAME */}
 
                 <div className={styles.field}>
-                  <label htmlFor="fullName">Full Name</label>
+                  <label htmlFor="fullName">Organization Name</label>
 
                   <input
                     id="fullName"
                     name="fullName"
                     type="text"
-                    placeholder="Your full name"
-                    autoComplete="name"
+                    placeholder="School, university, or teacher name"
+                    autoComplete="organization"
                     value={parentForm.fullName}
                     onChange={handleParentChange}
                     disabled={parentLoading}
@@ -660,93 +613,7 @@ function Register() {
                     "Creating account..."
                   ) : (
                     <>
-                      Create Parent Account
-                      <ArrowRight size={17} />
-                    </>
-                  )}
-                </button>
-              </form>
-
-              <p className={styles.loginText}>
-                Already have an account?
-                <Link to="/login">Log In</Link>
-              </p>
-            </div>
-          )}
-
-          {/* ================================================= */}
-          {/* STUDENT PARENT CODE */}
-          {/* ================================================= */}
-
-          {step === "studentCode" && (
-            <div className={styles.stepContent}>
-              <button
-                type="button"
-                className={styles.changeTypeButton}
-                disabled={checkingCode}
-                onClick={() => {
-                  setStep("choose");
-                  setStudentCode("");
-                  setCodeError("");
-                }}
-              >
-                <ArrowLeft size={15} />
-                Change account type
-              </button>
-
-              <div className={styles.parentHeading}>
-                <span className={styles.badge}>Student Account</span>
-
-                <h1>Enter Parent Code</h1>
-
-                <p>
-                  Ask your parent for their CodeLand invitation code to connect
-                  your account.
-                </p>
-              </div>
-
-              <form
-                className={styles.registerForm}
-                onSubmit={handleParentCodeSubmit}
-              >
-                <div className={styles.field}>
-                  <label htmlFor="parentCode">Parent Code</label>
-
-                  <input
-                    id="parentCode"
-                    type="text"
-                    placeholder="Example: CL-1234"
-                    autoComplete="off"
-                    value={studentCode}
-                    disabled={checkingCode}
-                    onChange={(e) => {
-                      setStudentCode(e.target.value.toUpperCase());
-                      setCodeError("");
-                    }}
-                    required
-                  />
-                </div>
-
-                <p className={styles.codeHint}>
-                  This code is provided by your parent.
-                </p>
-
-                {codeError && (
-                  <div className={styles.errorMessage} role="alert">
-                    {codeError}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  className={styles.createButton}
-                  disabled={checkingCode}
-                >
-                  {checkingCode ? (
-                    "Checking code..."
-                  ) : (
-                    <>
-                      Continue
+                      Create Organization Account
                       <ArrowRight size={17} />
                     </>
                   )}
@@ -771,12 +638,12 @@ function Register() {
                 className={styles.changeTypeButton}
                 disabled={studentLoading}
                 onClick={() => {
-                  setStep("studentCode");
+                  setStep("choose");
                   setStudentError("");
                 }}
               >
                 <ArrowLeft size={15} />
-                Back to Parent Code
+                Change account type
               </button>
 
               <div className={styles.parentHeading}>
@@ -785,22 +652,9 @@ function Register() {
                 <h1>Create Student Account</h1>
 
                 <p>
-                  Your parent code is verified. Now create your personal
-                  CodeLand account.
+                  Create your personal CodeLand account. You can join your
+                  school or teacher later from Settings using their code.
                 </p>
-              </div>
-
-              {/* VERIFIED CODE */}
-
-              <div className={styles.verifiedCode}>
-                <div className={styles.verifiedIcon}>
-                  <Check size={16} />
-                </div>
-
-                <div className={styles.verifiedInfo}>
-                  <span>Parent connected</span>
-                  <strong>{studentCode}</strong>
-                </div>
               </div>
 
               {/* STUDENT FORM */}

@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import HubLayout from "../../components/Hub/HubLayout";
 import { getUser, readStored, writeStored } from "../../services/learningHub";
-import { buildParentChildrenList } from "../../data/parentMockData";
+import { toDashboardStudents, STANDING_COLORS } from "../../services/organizationStudents";
 import { getParentChildren } from "../../services/parentService";
 import { apiRequest } from "../../services/api";
 
@@ -76,12 +76,8 @@ export default function ParentReports() {
     }
   };
 
-  const children = useMemo(() => {
-    if (realChildren.length > 0) {
-      return buildParentChildrenList(realChildren, user?.id);
-    }
-    return buildParentChildrenList([]);
-  }, [realChildren, user?.id]);
+  // Students linked to this organization, with figures computed by the backend from real activity
+  const children = useMemo(() => toDashboardStudents(realChildren), [realChildren]);
 
   const [selectedChildId, setSelectedChildId] = useState(children[0]?.id);
 
@@ -151,7 +147,7 @@ export default function ParentReports() {
             No Student Account Connected Yet
           </h3>
           <p style={{ color: "#94a3b8", fontSize: "14px", maxWidth: "520px", margin: "0 auto 24px auto", lineHeight: "1.6" }}>
-            Monthly evaluation audits, attendance records, and certificates are generated once a student account is linked to your family profile.
+            Monthly evaluation audits, attendance records, and certificates are generated once a student joins your organization.
           </p>
 
           {inviteCode && (
@@ -169,7 +165,7 @@ export default function ParentReports() {
                 justifyContent: "center"
               }}
             >
-              <span style={{ fontSize: "12px", color: "#94a3b8" }}>Your Family Invitation Code:</span>
+              <span style={{ fontSize: "12px", color: "#94a3b8" }}>Your Organization Code:</span>
               <code style={{ fontSize: "16px", fontWeight: "700", color: "#c4b5fd", letterSpacing: "2px" }}>
                 {inviteCode}
               </code>
@@ -201,7 +197,7 @@ export default function ParentReports() {
               className="hub-btn primary"
               style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}
             >
-              Go to Parent Dashboard <ArrowRight size={15} />
+              Go to Organization Dashboard <ArrowRight size={15} />
             </Link>
           </div>
         </div>
@@ -301,8 +297,10 @@ export default function ParentReports() {
               Monthly Evaluation for {selectedChild.fullName || "Student"}
             </h2>
             <p style={{ margin: 0, fontSize: "12px", color: "#94a3b8" }}>
-              Period: Past 30 Days · Grade: {selectedChild.grade || "Primary"} · Standing:{" "}
-              <strong style={{ color: "#34d399" }}>Excellent (Top 5% Habit Consistency)</strong>
+              Period: Past 30 Days · Active on {selectedChild.activeDays} of 30 days · Standing:{" "}
+              <strong style={{ color: STANDING_COLORS[selectedChild.standing.tone] || "#94a3b8" }}>
+                {selectedChild.standing.label}
+              </strong>
             </p>
           </div>
 
@@ -335,7 +333,7 @@ export default function ParentReports() {
         >
           <div style={{ padding: "16px", background: "#12192e", borderRadius: "14px", border: "1px solid #1f2a48" }}>
             <span style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>
-              Total Study Time
+              Study Time (estimated)
             </span>
             <strong style={{ fontSize: "22px", color: "#38bdf8" }}>
               {selectedChild.monthlyHours ?? 0} Hours
@@ -350,7 +348,7 @@ export default function ParentReports() {
               Active Streak
             </span>
             <strong style={{ fontSize: "22px", color: "#f59e0b" }}>
-              {selectedChild.streakDays ?? 0} Days 🔥
+              {selectedChild.streakDays ?? 0} {selectedChild.streakDays === 1 ? "Day" : "Days"} 🔥
             </strong>
             <span style={{ fontSize: "10px", color: "#64748b", display: "block", marginTop: "4px" }}>
               Continuous daily sessions
@@ -365,7 +363,7 @@ export default function ParentReports() {
               {selectedChild.quizMetrics?.challengesSolved ?? 0} Passed
             </strong>
             <span style={{ fontSize: "10px", color: "#64748b", display: "block", marginTop: "4px" }}>
-              {selectedChild.quizMetrics?.totalQuizzesTaken ?? 0} quizzes evaluated
+              out of {selectedChild.quizMetrics?.totalQuizzesTaken ?? 0} challenges attempted
             </span>
           </div>
 
@@ -400,19 +398,31 @@ export default function ParentReports() {
               </strong>
             </div>
             <span style={{ fontSize: "11px", padding: "4px 10px", borderRadius: "6px", background: "rgba(16, 185, 129, 0.15)", color: "#34d399", fontWeight: "700" }}>
-              HEALTHY LEARNING ZONE
+              {selectedChild.loadZone || "NO ACTIVITY YET"}
             </span>
           </div>
 
           <p style={{ margin: "0 0 14px 0", fontSize: "12px", color: "#94a3b8", lineHeight: "1.6" }}>
-            {selectedChild.fullName || "Your student"} spends an average of <strong>~50 minutes per active session</strong>,
-            which fits perfectly within pediatrician recommendations for productive, screen-positive cognitive exercise.
+            {selectedChild.activeDays > 0 ? (
+              <>
+                {selectedChild.fullName || "Your student"} averaged{" "}
+                <strong>~{selectedChild.avgMinutesPerActiveDay} minutes per active day</strong> and about{" "}
+                <strong>{selectedChild.avgWeeklyHours} hours per week</strong> over the last 30 days. Time is
+                estimated from completed lessons and challenges.
+              </>
+            ) : (
+              <>{selectedChild.fullName || "Your student"} has no learning activity in the last 30 days yet.</>
+            )}
           </p>
 
           <div style={{ height: "10px", background: "#0d1324", borderRadius: "5px", overflow: "hidden", display: "flex" }}>
-            <div style={{ width: "35%", background: "#38bdf8" }} title="Weekdays (35%)" />
-            <div style={{ width: "40%", background: "#818cf8" }} title="Weekend Afternoons (40%)" />
-            <div style={{ width: "25%", background: "#34d399" }} title="Coding Labs (25%)" />
+            <div
+              style={{
+                width: `${Math.min(100, Math.round(((selectedChild.avgWeeklyHours || 0) / 15) * 100))}%`,
+                background: "linear-gradient(90deg, #38bdf8, #818cf8)",
+              }}
+              title={`About ${selectedChild.avgWeeklyHours || 0} hrs/week`}
+            />
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: "8px", fontSize: "10px", color: "#64748b" }}>

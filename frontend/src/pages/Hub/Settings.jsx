@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import gsap from "gsap";
 import HubLayout from "../../components/Hub/HubLayout";
+import OrganizationJoinCard from "../../components/Hub/OrganizationJoinCard";
 import {
   getParentInviteCode,
   getSummary,
@@ -345,9 +346,11 @@ export default function Settings() {
     }
   };
 
+  const isStudent = ["student", "child"].includes(String(user?.role || "").toLowerCase());
+
   const rankTitle =
     user?.role === "parent"
-      ? "Family Guardian & Observatory Lead"
+      ? "Organization Lead"
       : summary.xp >= 300
       ? "Grand Architect · Level 4"
       : summary.xp >= 150
@@ -602,14 +605,17 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* FAMILY CODE BEACON (PARENT ONLY) */}
+          {/* JOIN AN ORGANIZATION (STUDENT ONLY) */}
+          {isStudent && <OrganizationJoinCard />}
+
+          {/* ORGANIZATION CODE (ORGANIZATION ONLY) */}
           {user?.role === "parent" && inviteCode && (
             <div className="hub-family-card">
               <div className="hub-family-header">
                 <Users size={22} color="#a78bfa" />
                 <div>
                   <strong style={{ fontSize: "15px", color: "#f8fafc" }}>
-                    Family Observatory Passcode
+                    Organization Code
                   </strong>
                   <p
                     style={{
@@ -618,8 +624,8 @@ export default function Settings() {
                       margin: "2px 0 0",
                     }}
                   >
-                    Provide this token to your children during registration to link
-                    them to your Family Dashboard.
+                    Share this code with your students. They enter it in their
+                    Settings to send you a join request.
                   </p>
                 </div>
               </div>

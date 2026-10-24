@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { PRACTICE_CHALLENGE_ANSWERS, PRACTICE_CHALLENGE_XP } from './practice-challenges.js';
+import { withStudentXpLock } from './xp-lock.util.js';
 import {
   computeEffectiveStreak,
   computeStreakOnActivity,
@@ -115,12 +118,12 @@ export class LearningService {
   /**
    * Records a completed lesson for the authenticated student.
    * Updates LearningProgress, increments User.totalXp, and logs DailyActivity.
+   * The unit must be a published lesson/challenge of the level; its XP comes from the database.
    */
   async completeLesson(
     userId: string,
     levelSlug: string,
     unitSlug: string,
-    xpEarned: number = 25,
     unitType?: 'lesson' | 'challenge',
   ) {
     const normalizedLevelSlug = levelSlug.trim().toLowerCase();
@@ -140,88 +143,79 @@ export class LearningService {
       throw new NotFoundException(`Level "${normalizedLevelSlug}" not found.`);
     }
 
-    const isChallenge =
-      unitType === 'challenge' ||
-      level.challenges.some((c) => c.slug === normalizedUnitSlug) ||
-      normalizedUnitSlug.includes('challenge');
+    const lesson = level.lessons.find((l) => l.slug === normalizedUnitSlug);
+    const challenge = level.challenges.find((c) => c.slug === normalizedUnitSlug);
+    // A slug can exist in both lists; the client's unitType only picks between real units.
+    const unit = unitType === 'challenge' ? (challenge ?? lesson) : (lesson ?? challenge);
+
+    if (!unit) {
+      throw new NotFoundException(
+        `Unit "${normalizedUnitSlug}" is not a published lesson or challenge of level "${normalizedLevelSlug}".`,
+      );
+    }
+
+    const isChallenge = unit === challenge;
+    const unitXp = Math.max(0, unit.xp ?? 0);
 
     const totalLessons = level.lessons.length;
     const totalChallenges = level.challenges.length;
     const totalUnits = Math.max(1, totalLessons + totalChallenges);
     const trackSlug = level.track?.slug || 'web-creator';
 
-    // 2. Find or create user's progress for this level
-    const existingProgress = await this.prisma.learningProgress.findUnique({
-      where: {
-        userId_levelId: {
-          userId,
-          levelId: normalizedLevelSlug,
-        },
+    const { updatedProgress, isNewCompletion, actualXpToAdd } = await withStudentXpLock(
+      this.prisma,
+      userId,
+      async (tx) => {
+        // 2. Load the student's progress for this level
+        const existingProgress = await tx.learningProgress.findUnique({
+          where: { userId_levelId: { userId, levelId: normalizedLevelSlug } },
+        });
+
+        const completedLessonIds: string[] = Array.isArray(existingProgress?.completedLessonIds)
+          ? [...(existingProgress.completedLessonIds as string[])]
+          : [];
+        const completedChallengeIds: string[] = Array.isArray(existingProgress?.completedChallengeIds)
+          ? [...(existingProgress.completedChallengeIds as string[])]
+          : [];
+
+        const completedIds = isChallenge ? completedChallengeIds : completedLessonIds;
+        const isNew = !completedIds.includes(normalizedUnitSlug);
+        if (isNew) completedIds.push(normalizedUnitSlug);
+
+        const totalCompleted = completedLessonIds.length + completedChallengeIds.length;
+        const progressPercent = Math.min(100, Math.round((totalCompleted / totalUnits) * 100));
+        const status = progressPercent >= 100 ? 'COMPLETED' : 'IN_PROGRESS';
+        const xpToAdd = isNew ? unitXp : 0;
+
+        // 3. Update LearningProgress record
+        const progress = await tx.learningProgress.upsert({
+          where: { userId_levelId: { userId, levelId: normalizedLevelSlug } },
+          update: {
+            completedLessonIds,
+            completedChallengeIds,
+            progressPercent,
+            status,
+            xp: { increment: xpToAdd },
+            lastAccessedAt: new Date(),
+          },
+          create: {
+            id: randomUUID(),
+            userId,
+            trackId: trackSlug,
+            levelId: normalizedLevelSlug,
+            completedLessonIds,
+            completedChallengeIds,
+            progressPercent,
+            status,
+            xp: xpToAdd,
+            lastAccessedAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+
+        return { updatedProgress: progress, isNewCompletion: isNew, actualXpToAdd: xpToAdd };
       },
-    });
-
-    let completedLessonIds: string[] = [];
-    let completedChallengeIds: string[] = [];
-
-    if (existingProgress) {
-      if (Array.isArray(existingProgress.completedLessonIds)) {
-        completedLessonIds = [...(existingProgress.completedLessonIds as string[])];
-      }
-      if (Array.isArray(existingProgress.completedChallengeIds)) {
-        completedChallengeIds = [...(existingProgress.completedChallengeIds as string[])];
-      }
-    }
-
-    let isNewCompletion = false;
-
-    if (isChallenge) {
-      if (!completedChallengeIds.includes(normalizedUnitSlug)) {
-        completedChallengeIds.push(normalizedUnitSlug);
-        isNewCompletion = true;
-      }
-    } else {
-      if (!completedLessonIds.includes(normalizedUnitSlug)) {
-        completedLessonIds.push(normalizedUnitSlug);
-        isNewCompletion = true;
-      }
-    }
-
-    const totalCompleted = completedLessonIds.length + completedChallengeIds.length;
-    const progressPercent = Math.min(100, Math.round((totalCompleted / totalUnits) * 100));
-    const status = progressPercent >= 100 ? 'COMPLETED' : 'IN_PROGRESS';
-
-    const actualXpToAdd = isNewCompletion ? xpEarned : 0;
-
-    // 3. Update LearningProgress record
-    const updatedProgress = await this.prisma.learningProgress.upsert({
-      where: {
-        userId_levelId: {
-          userId,
-          levelId: normalizedLevelSlug,
-        },
-      },
-      update: {
-        completedLessonIds,
-        completedChallengeIds,
-        progressPercent,
-        status,
-        xp: { increment: actualXpToAdd },
-        lastAccessedAt: new Date(),
-      },
-      create: {
-        id: randomUUID(),
-        userId,
-        trackId: trackSlug,
-        levelId: normalizedLevelSlug,
-        completedLessonIds,
-        completedChallengeIds,
-        progressPercent,
-        status,
-        xp: actualXpToAdd,
-        lastAccessedAt: new Date(),
-        updatedAt: new Date(),
-      },
-    });
+    );
 
     // 4. Record student activity and update daily streak
     const streakInfo = await this.recordActivityAndStreak(userId, {
@@ -414,39 +408,43 @@ export class LearningService {
   }
 
   /**
-   * Records a challenge submission, saves code and test result,
+   * Grades a practice challenge answer against the server-side answer key, saves the submission,
    * updates daily streak if passed, and awards XP on first successful completion.
    */
-  async submitChallenge(
-    userId: string,
-    challengeId: string,
-    submittedCode: string = '',
-    passed: boolean = false,
-    xpEarned: number = 50,
-  ) {
+  async submitChallenge(userId: string, challengeId: string, submittedCode: string = '') {
     const normalizedChallengeId = String(challengeId).trim();
+    const correctAnswer = PRACTICE_CHALLENGE_ANSWERS[normalizedChallengeId];
 
-    // Check if user has already passed this challenge
-    const priorPass = await this.prisma.challengeSubmission.findFirst({
-      where: {
-        userId,
-        challengeId: normalizedChallengeId,
-        passed: true,
-      },
-    });
+    if (correctAnswer === undefined) {
+      throw new NotFoundException(`Practice challenge "${normalizedChallengeId}" not found.`);
+    }
 
-    const isNewPass = passed && !priorPass;
-    const actualXpToAdd = isNewPass ? xpEarned || 50 : 0;
+    const passed = (submittedCode || '').trim() === correctAnswer;
 
-    // Create submission record
-    const submission = await this.prisma.challengeSubmission.create({
-      data: {
-        userId,
-        challengeId: normalizedChallengeId,
-        submittedCode: submittedCode || '',
-        passed,
-        xpEarned: actualXpToAdd,
-      },
+    const { submission, isNewPass, actualXpToAdd } = await withStudentXpLock(this.prisma, userId, async (tx) => {
+      // Check if user has already passed this challenge
+      const priorPass = await tx.challengeSubmission.findFirst({
+        where: {
+          userId,
+          challengeId: normalizedChallengeId,
+          passed: true,
+        },
+      });
+
+      const isNew = passed && !priorPass;
+      const xpToAdd = isNew ? PRACTICE_CHALLENGE_XP : 0;
+
+      const created = await tx.challengeSubmission.create({
+        data: {
+          userId,
+          challengeId: normalizedChallengeId,
+          submittedCode: submittedCode || '',
+          passed,
+          xpEarned: xpToAdd,
+        },
+      });
+
+      return { submission: created, isNewPass: isNew, actualXpToAdd: xpToAdd };
     });
 
     let streakInfo = null;
@@ -461,6 +459,7 @@ export class LearningService {
     return {
       success: true,
       submission,
+      passed,
       isNewPass,
       xpEarned: actualXpToAdd,
       streakDays: streakInfo?.streakDays,
@@ -556,13 +555,21 @@ export class LearningService {
       return false;
     }
 
-    await this.prisma.userAchievement.create({
-      data: {
-        userId,
-        achievementId,
-        unlockedAt: new Date(),
-      },
-    });
+    try {
+      await this.prisma.userAchievement.create({
+        data: {
+          userId,
+          achievementId,
+          unlockedAt: new Date(),
+        },
+      });
+    } catch (err) {
+      // A parallel request granted it between the check above and this insert.
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        return false;
+      }
+      throw err;
+    }
 
     return true;
   }

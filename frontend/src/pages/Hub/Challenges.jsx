@@ -210,7 +210,7 @@ export default function Challenges() {
     const submittedText = challenge.options[selected] || String(selected);
 
     // Sync challenge submission to PostgreSQL backend!
-    submitChallengeProgress(challenge.id, submittedText, correct, 25).catch((err) => {
+    submitChallengeProgress(challenge.id, submittedText).catch((err) => {
       console.warn("[CodeLand] Submit challenge sync error:", err);
     });
 
