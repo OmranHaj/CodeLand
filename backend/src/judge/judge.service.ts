@@ -878,6 +878,13 @@ export class JudgeService {
         stderrData += chunk.toString('utf-8');
       });
 
+      pythonProcess.stdin.on('error', () => {
+        // Suppress EPIPE if Python terminates early
+      });
+
+      pythonProcess.stdin.write(JSON.stringify(dto), 'utf-8');
+      pythonProcess.stdin.end();
+
       const timer = setTimeout(() => {
         try {
           pythonProcess.kill();
