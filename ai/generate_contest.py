@@ -28,7 +28,7 @@ if hasattr(sys.stdin, 'reconfigure'):
     sys.stdin.reconfigure(encoding='utf-8')
 
 # The key lives in backend/.env (GEMINI_API_KEY) and is passed in by the backend; never hardcode it.
-API_KEY = os.environ.get("GEMINI_API_KEY")
+API_KEY = os.environ.get("GEMINI_API_KEY1")
 if not API_KEY:
     raise RuntimeError("GEMINI_API_KEY is not set. Add it to backend/.env and restart the backend.")
 
@@ -229,7 +229,7 @@ def worker_node(state_slice):
     try:
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(image_model.invoke, final_image_prompt)
-            img_response = future.result(timeout=25)
+            img_response = future.result(timeout=60)
             saved_path, data_url = save_image_from_response(img_response, image_filename)
             if not data_url:
                 image_error = "The image model returned no image."

@@ -26,8 +26,8 @@ def main():
             return
 
         input_data = json.loads(raw_input)
-        problem_text = input_data.get("problem_text", "")
-        student_code = input_data.get("student_code", "")
+        problem_text = input_data.get("problem_text") or input_data.get("problemText", "")
+        student_code = input_data.get("student_code") or input_data.get("studentCode", "")
 
         result = simple_ai_judge(problem_text, student_code)
         print("__AI_JUDGE_RESULT__" + json.dumps(result, ensure_ascii=False))
