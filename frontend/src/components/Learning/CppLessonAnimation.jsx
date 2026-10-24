@@ -11,7 +11,6 @@ import {
   Eye,
   Layers,
   Cpu,
-  Zap,
 } from "lucide-react";
 import gsap from "gsap";
 import Cpp3DStage from "../CppWorld/Cpp3DStage";

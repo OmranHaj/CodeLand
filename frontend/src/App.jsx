@@ -1,5 +1,5 @@
 import { lazy, Suspense, useSyncExternalStore } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { RouteEffects, RouteErrorBoundary } from "./components/Hub/RouteSupport";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 
@@ -193,13 +193,14 @@ function App() {
               }
             />
             <Route
-              path="/student/settings"
+              path="/settings"
               element={
-                <ProtectedRoute allowedRoles={["student"]}>
+                <ProtectedRoute allowedRoles={["student", "parent", "admin", "superadmin"]}>
                   <Settings />
                 </ProtectedRoute>
               }
             />
+            <Route path="/student/settings" element={<Navigate to="/settings" replace />} />
             <Route
               path="/student/profile"
               element={

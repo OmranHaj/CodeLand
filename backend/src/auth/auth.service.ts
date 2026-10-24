@@ -18,6 +18,7 @@ import { RegisterChildDto } from './dto/register-child.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { EmailService } from './email.service.js';
 import { FailedAttemptLimiter } from './failed-attempt-limiter.js';
 
@@ -29,6 +30,8 @@ export class AuthService {
   // Failed password logins: 5 per account and 20 per IP in 15 minutes.
   private readonly failedLoginsByEmail = new FailedAttemptLimiter(5, 15 * 60 * 1000);
   private readonly failedLoginsByIp = new FailedAttemptLimiter(20, 15 * 60 * 1000);
+  // Wrong "current password" on change-password: 5 per account in 15 minutes (stops guessing from a stolen session).
+  private readonly failedPasswordChecks = new FailedAttemptLimiter(5, 15 * 60 * 1000);
 
   constructor(
     private readonly prisma: PrismaService,
@@ -882,6 +885,74 @@ export class AuthService {
     return {
       success: true,
       message: 'Password updated successfully.',
+    };
+  }
+
+  /** Whether the account can sign in with a password (social-login-only accounts cannot). */
+  async hasPassword(userId: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { password: true } });
+    return Boolean(user?.password);
+  }
+
+  /**
+   * Changes the password of a signed-in user who knows their current one.
+   * Other devices are signed out (tokenVersion bump); this session gets a fresh token.
+   */
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    if (this.failedPasswordChecks.isBlocked(userId)) {
+      throw new HttpException(
+        'Too many wrong current-password attempts. Please wait 15 minutes and try again.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
+    if (dto.newPassword !== dto.confirmPassword) {
+      throw new BadRequestException('New passwords do not match.');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('User no longer exists or session is invalid');
+    }
+
+    if (!user.password) {
+      throw new BadRequestException(
+        'This account signs in with Google, GitHub or Discord and has no password to change.',
+      );
+    }
+
+    const currentMatches = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!currentMatches) {
+      this.failedPasswordChecks.recordFailure(userId);
+      throw new BadRequestException('Your current password is incorrect.');
+    }
+    this.failedPasswordChecks.reset(userId);
+
+    if (await bcrypt.compare(dto.newPassword, user.password)) {
+      throw new BadRequestException('The new password must be different from your current password.');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.newPassword, this.saltRounds);
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const saved = await tx.user.update({
+        where: { id: userId },
+        data: { password: hashedPassword, tokenVersion: { increment: 1 } },
+        select: { id: true, email: true, role: true, tokenVersion: true },
+      });
+      // A reset link sent before the change must not be able to undo it.
+      await tx.passwordResetToken.updateMany({
+        where: { userId, usedAt: null },
+        data: { usedAt: new Date() },
+      });
+      return saved;
+    });
+
+    this.emailService.sendPasswordChangedEmail(updated.email).catch(() => {});
+
+    return {
+      success: true,
+      message: 'Your password was changed. Other devices have been signed out.',
+      accessToken: await this.signToken(updated.id, updated.email, updated.role, updated.tokenVersion),
     };
   }
 

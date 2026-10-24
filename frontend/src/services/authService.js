@@ -143,6 +143,23 @@ export async function resetPassword({ token, password, confirmPassword }) {
   });
 }
 
+/**
+ * Signed-in password change. The server signs out other devices and returns a fresh token
+ * for this session, which replaces the old one so the user stays logged in.
+ */
+export async function changePassword({ currentPassword, newPassword, confirmPassword }) {
+  const data = await apiRequest("/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+  });
+
+  if (data?.accessToken) {
+    localStorage.setItem("codeland_token", data.accessToken);
+  }
+
+  return data;
+}
+
 /* ====================================================== */
 /* REGISTER PARENT */
 /* ====================================================== */

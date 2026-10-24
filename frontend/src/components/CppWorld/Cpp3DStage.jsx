@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Float, Html, Sparkles } from "@react-three/drei";
-import * as THREE from "three";
 
 /* ====================================================== */
 /* 1. SYNTAX CORE STAGES                                  */

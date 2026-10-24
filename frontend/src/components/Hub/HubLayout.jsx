@@ -205,7 +205,7 @@ export default function HubLayout({ children, title = "Learning space" }) {
           )}
 
           <nav aria-label="Account navigation">
-            <NavLink to="/student/settings" onClick={() => setOpen(false)}>
+            <NavLink to="/settings" onClick={() => setOpen(false)}>
               <Settings size={18} />
               <span>Settings</span>
             </NavLink>
@@ -278,7 +278,7 @@ export default function HubLayout({ children, title = "Learning space" }) {
             </span>
 
             <Link
-              to="/student/settings"
+              to="/settings"
               className="hub-avatar"
               aria-label="Open profile"
             >

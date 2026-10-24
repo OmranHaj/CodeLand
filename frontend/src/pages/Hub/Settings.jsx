@@ -12,17 +12,16 @@ import {
   ShieldCheck,
   Sparkles as SparklesIcon,
   Target,
-  Trophy,
   Type,
   UserRound,
   Users,
   Volume2,
-  Zap,
   Loader2,
 } from "lucide-react";
 import gsap from "gsap";
 import HubLayout from "../../components/Hub/HubLayout";
 import OrganizationJoinCard from "../../components/Hub/OrganizationJoinCard";
+import ChangePasswordCard from "../../components/Hub/ChangePasswordCard";
 import {
   getParentInviteCode,
   getSummary,
@@ -244,8 +243,13 @@ export default function Settings() {
     return () => ctx.revert();
   }, []);
 
-  const inviteCode =
-    user?.role === "parent" || user?.role === "PARENT"
+  // Login stores the role as the server sends it ("PARENT", "CHILD", "ADMIN"), so compare in lowercase.
+  const role = String(user?.role || "").toLowerCase();
+  const isOrganization = role === "parent";
+  const isStudent = role === "student" || role === "child";
+  const isAdmin = role === "admin" || role === "superadmin" || role === "super_admin";
+
+  const inviteCode = isOrganization
       ? user?.parentCode || user?.inviteCode || getParentInviteCode(user) || null
       : null;
 
@@ -346,11 +350,10 @@ export default function Settings() {
     }
   };
 
-  const isStudent = ["student", "child"].includes(String(user?.role || "").toLowerCase());
-
-  const rankTitle =
-    user?.role === "parent"
+  const rankTitle = isOrganization
       ? "Organization Lead"
+      : isAdmin
+      ? "Platform Administrator"
       : summary.xp >= 300
       ? "Grand Architect · Level 4"
       : summary.xp >= 150
@@ -392,7 +395,7 @@ export default function Settings() {
                 <UserRound size={20} />
               </div>
               <div className="hub-card-title-group">
-                <h2>Learner Identity</h2>
+                <h2>{isOrganization ? "Organization Profile" : isAdmin ? "Admin Profile" : "Learner Identity"}</h2>
                 <p>Personalize your name and holographic color aura.</p>
               </div>
             </div>
@@ -470,7 +473,8 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* CARD 2: MISSION CALIBRATION (GOALS) */}
+          {/* CARD 2: MISSION CALIBRATION (GOALS) — students only */}
+          {isStudent && (
           <div className="hub-settings-card">
             <div className="hub-card-header">
               <div
@@ -514,6 +518,7 @@ export default function Settings() {
               })}
             </div>
           </div>
+          )}
 
           {/* CARD 3: SENSORY & DYNAMICS CONTROLS */}
           <div className="hub-settings-card">
@@ -609,7 +614,7 @@ export default function Settings() {
           {isStudent && <OrganizationJoinCard />}
 
           {/* ORGANIZATION CODE (ORGANIZATION ONLY) */}
-          {user?.role === "parent" && inviteCode && (
+          {isOrganization && inviteCode && (
             <div className="hub-family-card">
               <div className="hub-family-header">
                 <Users size={22} color="#a78bfa" />
@@ -643,6 +648,9 @@ export default function Settings() {
               </div>
             </div>
           )}
+
+          {/* CHANGE PASSWORD (ANY SIGNED-IN ACCOUNT) */}
+          {user && !user.isDemo && <ChangePasswordCard />}
 
           {/* SAVE BUTTON BAR */}
           <div className="hub-save-bar">
@@ -726,12 +734,13 @@ export default function Settings() {
             <div className="hub-passport-rank">{rankTitle}</div>
 
             <p className="hub-passport-quote">
-              {user?.role === "parent"
+              {!isStudent
                 ? "“Guiding the next generation of digital creators and cyber architects.”"
                 : "“Curiosity fuels syntax. Code builds galaxies.”"}
             </p>
 
-            {/* Quick Stats Grid */}
+            {/* Quick Stats Grid (learning stats are a student thing) */}
+            {isStudent && (
             <div className="hub-passport-stats">
               <div className="hub-passport-stat">
                 <strong>{summary.xp || 0}</strong>
@@ -746,6 +755,7 @@ export default function Settings() {
                 <span>CHALLENGES</span>
               </div>
             </div>
+            )}
 
             <div className="hub-passport-footer">
               <span>

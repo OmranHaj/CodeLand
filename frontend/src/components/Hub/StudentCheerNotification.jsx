@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Heart, Sparkles, X, Check, MessageSquareHeart } from "lucide-react";
+import { Heart, Sparkles, X, Check } from "lucide-react";
 import { getStudentCheers, markCheerAsRead } from "../../services/cheerService";
 import soundEngine from "../../services/soundEngine";
 

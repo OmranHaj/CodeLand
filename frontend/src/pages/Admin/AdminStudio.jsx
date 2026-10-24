@@ -11,16 +11,12 @@ import {
   Database,
   Sparkles,
   BookOpen,
-  ArrowRight,
   ExternalLink,
   Layers,
-  HelpCircle,
   FileCode,
-  CheckCircle2,
   AlertCircle,
   Clock,
   Award,
-  Filter,
 } from "lucide-react";
 import gsap from "gsap";
 
@@ -44,7 +40,6 @@ import {
   updateLessonInDB,
   createLessonInDB,
   deleteLessonInDB,
-  isDatabaseSynced,
 } from "../../services/adminLessonService";
 
 import "../../components/Admin/admin.css";

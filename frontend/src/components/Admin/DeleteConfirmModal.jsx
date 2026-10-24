@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { AlertCircle, Trash2, X, RotateCcw } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import gsap from "gsap";
 
 export default function DeleteConfirmModal({

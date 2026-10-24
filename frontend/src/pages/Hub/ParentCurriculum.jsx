@@ -1,8 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import {
-  BookOpen,
-  Compass,
   Code2,
   Cpu,
   Boxes,
@@ -11,7 +9,7 @@ import {
   ArrowRight,
   Sparkles,
   Layers,
-  GraduationCap
+  GraduationCap,
 } from "lucide-react";
 import HubLayout from "../../components/Hub/HubLayout";
 

@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import {
   ADMIN_STORAGE_KEY,
   readAdminStore,
-  writeAdminStore,
   getCourseLessons,
   getAllCourses,
   addLesson,
@@ -11,7 +10,6 @@ import {
   deleteLesson,
   undoDeleteLesson,
   resetCourseOverlay,
-  resetAllAdminOverlays,
   getAdminSummary,
 } from "../src/services/adminLessonService.js";
 

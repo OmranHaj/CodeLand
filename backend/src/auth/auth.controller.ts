@@ -18,6 +18,7 @@ import { GithubLoginDto } from './dto/github-login.dto.js';
 import { DiscordLoginDto } from './dto/discord-login.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 
 @Controller('auth')
@@ -134,7 +135,19 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   @HttpCode(HttpStatus.OK)
-  async getProfile(@Request() req: { user: unknown }) {
-    return req.user;
+  async getProfile(@Request() req: { user: { id: string } }) {
+    // hasPassword lets Settings offer "change password" only to accounts that have one.
+    return { ...req.user, hasPassword: await this.authService.hasPassword(req.user.id) };
+  }
+
+  /**
+   * Endpoint: POST /auth/change-password
+   * Signed-in user changes their password with their current one; returns a fresh token.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  async changePassword(@Request() req: { user: { id: string } }, @Body() dto: ChangePasswordDto) {
+    return this.authService.changePassword(req.user.id, dto);
   }
 }

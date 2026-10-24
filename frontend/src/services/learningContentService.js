@@ -1,5 +1,4 @@
 import { HTML_FOUNDATIONS_CONTENT } from "../data/htmlFoundationsContent";
-import { getUser } from "./learningHub";
 import { CSS_STYLING_CONTENT } from "../data/cssStylingContent";
 import { JAVASCRIPT_CORE_CONTENT } from "../data/javascriptCoreContent";
 import { REACT_NEXUS_CONTENT } from "../data/reactNexusContent";

@@ -2681,6 +2681,45 @@
   }
 }
 
+/* Change password card */
+.hub-password-fields {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.hub-password-input {
+  letter-spacing: normal;
+  font-weight: 500;
+}
+
+.hub-password-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.hub-password-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #cbd5e1;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+}
+
+.hub-password-toggle:hover {
+  border-color: rgba(139, 92, 246, 0.5);
+  color: #ffffff;
+}
+
 .hub-nav-badge {
   margin-left: auto;
   min-width: 20px;

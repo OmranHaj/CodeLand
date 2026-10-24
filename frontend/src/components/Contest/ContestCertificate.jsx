@@ -1,14 +1,10 @@
 import { useState, useRef } from "react";
 import {
   Printer,
-  Download,
   X,
-  Award,
   CheckCircle2,
-  Sparkles,
   ShieldCheck,
   Trophy,
-  Medal,
   Share2,
 } from "lucide-react";
 

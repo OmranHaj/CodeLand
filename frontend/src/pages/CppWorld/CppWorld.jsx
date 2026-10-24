@@ -9,13 +9,11 @@ import {
   CheckCircle2,
   ChevronRight,
   Cpu,
-  Gauge,
   Map,
   Orbit,
   Power,
   RotateCcw,
   ShieldCheck,
-  Sparkles,
   Trophy,
   Zap,
 } from "lucide-react";

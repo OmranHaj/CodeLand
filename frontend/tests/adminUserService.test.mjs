@@ -3,10 +3,8 @@ import assert from "node:assert/strict";
 import {
   getAdminUserStats,
   getAdminUsers,
-  getAdminUserById,
   updateAdminUserStatus,
   updateAdminUserRole,
-  getAdminAuditLogs,
 } from "../src/services/adminUserService.js";
 
 const storage = new Map();

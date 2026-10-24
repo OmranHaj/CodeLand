@@ -4,13 +4,10 @@ import {
   ShieldCheck,
   Heart,
   Eye,
-  Smile,
   Lock,
   MessageCircle,
   HelpCircle,
   ArrowRight,
-  Sparkles,
-  Lightbulb
 } from "lucide-react";
 import HubLayout from "../../components/Hub/HubLayout";
 

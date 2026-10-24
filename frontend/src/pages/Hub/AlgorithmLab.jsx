@@ -26,12 +26,16 @@ import {
   loadAlgoWorldProgress,
   saveAlgoWorldProgress,
 } from "../../data/algorithmWorldLevels";
-import { userKey, readStored, writeStored } from "../../services/learningHub";
+import { userKey } from "../../services/learningHub";
 import { recordLessonCompletion, fetchStudentProgress } from "../../services/learningContentService";
 import { runCustomCode, detectCodeNeedsInput, submitWithAiJudge } from "../../services/judgeService";
 import LessonExplanationPanel from "../../components/Learning/LessonExplanationPanel";
 import AiVerdictCard from "../../components/Learning/AiVerdictCard";
 import styles from "./AlgorithmLab.module.css";
+
+// Matches each algorithm lesson's XP in the database; the server awards it once per lesson,
+// whether the student passes the quiz or the code challenge first.
+const LESSON_XP = 75;
 
 export default function AlgorithmLab() {
   const { sectorId } = useParams();
@@ -157,11 +161,11 @@ export default function AlgorithmLab() {
           ...worldProgress,
           completedLessons: nextLessons,
           completedSectors: nextSectors,
-          xp: (worldProgress.xp || 0) + 75,
+          xp: (worldProgress.xp || 0) + LESSON_XP,
         };
         setWorldProgress(nextProgress);
         saveAlgoWorldProgress(userId, nextProgress);
-        recordLessonCompletion(currentSector.id, currentLesson.id, 75, "lesson");
+        recordLessonCompletion(currentSector.id, currentLesson.id, LESSON_XP, "lesson");
 
         /*
         // MOCK DATA: Commented out legacy python storage sync
@@ -310,11 +314,11 @@ export default function AlgorithmLab() {
             ...worldProgress,
             completedLessons: nextLessons,
             completedSectors: nextSectors,
-            xp: (worldProgress.xp || 0) + 100,
+            xp: (worldProgress.xp || 0) + LESSON_XP,
           };
           setWorldProgress(nextProgress);
           saveAlgoWorldProgress(userId, nextProgress);
-          recordLessonCompletion(currentSector.id, currentLesson.id, 100, "lesson");
+          recordLessonCompletion(currentSector.id, currentLesson.id, LESSON_XP, "lesson");
         }
       } else {
         setRobotReaction("sad");
@@ -472,7 +476,7 @@ export default function AlgorithmLab() {
             <section className={styles.quizCard}>
               <div className={styles.quizTag}>
                 <BookOpen size={13} />
-                <span>TEST YOUR UNDERSTANDING · +75 XP</span>
+                <span>TEST YOUR UNDERSTANDING · +{LESSON_XP} XP</span>
               </div>
 
               <h3 className={styles.quizQuestion}>
@@ -515,7 +519,7 @@ export default function AlgorithmLab() {
                 >
                   <strong>
                     {quizIsCorrect
-                      ? "✓ Outstanding! Correct answer and +75 XP awarded!"
+                      ? `✓ Outstanding! Correct answer and +${LESSON_XP} XP awarded!`
                       : "✕ Not quite! Review the explanation and try again."}
                   </strong>
                   <p style={{ margin: "6px 0 0", fontSize: "12px" }}>

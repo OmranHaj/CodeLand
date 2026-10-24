@@ -11,7 +11,6 @@ import {
   Eye,
   Layers,
   Cpu,
-  Zap,
 } from "lucide-react";
 import gsap from "gsap";
 import Algo3DStage from "./Algo3DStage";

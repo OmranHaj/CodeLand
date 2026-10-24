@@ -10,7 +10,6 @@ import {
   Cpu,
   Palette,
   Sparkles,
-  Terminal,
   Zap,
 } from "lucide-react";
 import gsap from "gsap";

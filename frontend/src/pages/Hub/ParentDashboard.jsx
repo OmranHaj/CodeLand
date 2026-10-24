@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import {
   Users,
   Heart,
-  ShieldCheck,
-  Sparkles,
   Flame,
   Clock,
   Award,
@@ -13,17 +11,15 @@ import {
   Printer,
   Copy,
   Check,
-  Plus,
   Compass,
   MessageSquareHeart,
   Send,
   Target,
   Brain,
-  X
 } from "lucide-react";
 import HubLayout from "../../components/Hub/HubLayout";
 import ParentMasteryOrb from "../../components/Parent/ParentMasteryOrb";
-import { getParentInviteCode, getUser, readStored, writeStored, startPreview } from "../../services/learningHub";
+import { getParentInviteCode, getUser, writeStored, startPreview } from "../../services/learningHub";
 import { apiRequest } from "../../services/api";
 import {
   toDashboardStudents,
@@ -198,7 +194,7 @@ export default function ParentDashboard() {
   };
 
   // If not logged in as parent, show preview / login screen
-  if (user?.role !== "parent") {
+  if (String(user?.role || "").toLowerCase() !== "parent") {
     return (
       <HubLayout title="Organization Dashboard">
         <div className="hub-empty">

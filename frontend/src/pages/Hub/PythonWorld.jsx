@@ -3,33 +3,18 @@ import { Canvas } from "@react-three/fiber";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
-  ArrowRight,
   CheckCircle2,
   ChevronRight,
-  Code2,
   Cpu,
-  Layers,
   Orbit,
-  Play,
-  RotateCcw,
   Sparkles,
-  Trophy,
-  X,
-  Zap,
 } from "lucide-react";
 import gsap from "gsap";
 
 import AlgorithmWorldScene from "../../components/AlgorithmWorld/AlgorithmWorldScene";
 import AlgoCameraRig from "../../components/AlgorithmWorld/AlgoCameraRig";
-import AlgoVisualizer from "../../components/AlgorithmWorld/AlgoVisualizer";
-import {
-  ALGO_SECTORS,
-  ALGO_WORLD_CAMERA,
-  loadAlgoWorldProgress,
-  saveAlgoWorldProgress,
-  resetAlgoWorldProgress,
-} from "../../data/algorithmWorldLevels";
-import { userKey, writeStored, readStored } from "../../services/learningHub";
+import { ALGO_SECTORS, ALGO_WORLD_CAMERA, loadAlgoWorldProgress } from "../../data/algorithmWorldLevels";
+import { userKey } from "../../services/learningHub";
 import { fetchStudentProgress } from "../../services/learningContentService";
 import styles from "./AlgorithmWorld.module.css";
 

@@ -8,12 +8,7 @@ import {
   ChevronDown,
   Sparkles,
   ExternalLink,
-  RotateCcw,
-  Sliders,
-  Check,
-  X,
 } from "lucide-react";
-import gsap from "gsap";
 
 import LessonFormModal from "./LessonFormModal";
 import DeleteConfirmModal from "./DeleteConfirmModal";

@@ -2,14 +2,12 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Users,
   ShieldCheck,
-  UserCheck,
   UserX,
   Search,
   X,
   RefreshCw,
   AlertTriangle,
   CheckCircle2,
-  Clock,
   Flame,
   Sparkles,
   ChevronLeft,
@@ -17,10 +15,7 @@ import {
   Eye,
   Lock,
   Unlock,
-  Calendar,
-  Mail,
   Award,
-  BookOpen,
   FileText,
   AlertCircle,
   TrendingUp,
@@ -38,6 +33,13 @@ import {
   getAdminAuditLogs,
 } from "../../services/adminUserService.js";
 import styles from "./AdminUsers.module.css";
+
+/** Profile picture that falls back to initials when the image URL is missing or broken. */
+function UserAvatar({ src, alt, initials, className }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) return <span>{initials}</span>;
+  return <img src={src} alt={alt} className={className} onError={() => setFailed(true)} />;
+}
 
 export default function AdminUsers() {
   // Statistics State
@@ -603,15 +605,13 @@ export default function AdminUsers() {
                         <td>
                           <div className={styles.userCell}>
                             <div className={styles.avatar}>
-                              {u.avatar ? (
-                                <img
-                                  src={u.avatar}
-                                  alt={u.name || "Avatar"}
-                                  className={styles.avatarImg}
-                                />
-                              ) : (
-                                <span>{initials}</span>
-                              )}
+                              <UserAvatar
+                                key={u.avatar || "none"}
+                                src={u.avatar}
+                                alt={u.name || "Avatar"}
+                                initials={initials}
+                                className={styles.avatarImg}
+                              />
                             </div>
                             <div className={styles.userInfo}>
                               <span className={styles.userName}>
@@ -854,13 +854,13 @@ export default function AdminUsers() {
               <div className={styles.drawerHeader}>
                 <div className={styles.drawerTitleGroup}>
                   <div className={styles.avatar}>
-                    {drawerUser.avatar ? (
-                      <img src={drawerUser.avatar} alt="Avatar" className={styles.avatarImg} />
-                    ) : (
-                      <span>
-                        {(drawerUser.name || drawerUser.email || "?").slice(0, 2).toUpperCase()}
-                      </span>
-                    )}
+                    <UserAvatar
+                      key={drawerUser.avatar || "none"}
+                      src={drawerUser.avatar}
+                      alt="Avatar"
+                      initials={(drawerUser.name || drawerUser.email || "?").slice(0, 2).toUpperCase()}
+                      className={styles.avatarImg}
+                    />
                   </div>
                   <div>
                     <h2 style={{ fontSize: "17px", fontWeight: 700, margin: 0, color: "#fff" }}>

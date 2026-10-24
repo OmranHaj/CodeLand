@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { RotateCcw, X, CheckCircle2 } from "lucide-react";
+import { RotateCcw, X } from "lucide-react";
 import gsap from "gsap";
 
 export default function AdminUndoToast({ toast, onUndo, onDismiss }) {
