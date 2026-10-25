@@ -2,6 +2,7 @@ import { Suspense, useEffect } from "react";
 
 import { Canvas, useThree } from "@react-three/fiber";
 import { useAnimations, useGLTF } from "@react-three/drei";
+import { useRobotModel } from "../Robot/useRobotModel";
 
 import * as THREE from "three";
 
@@ -39,7 +40,7 @@ function RobotCamera() {
 /* ====================================================== */
 
 function RobotModel({ reaction = "idle", reactionKey = 0 }) {
-  const { scene, animations } = useGLTF("/models/Robot.glb");
+  const { scene, animations } = useRobotModel();
 
   const { actions, names, mixer } = useAnimations(animations, scene);
 

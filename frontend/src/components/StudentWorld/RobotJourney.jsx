@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { Sparkles, useAnimations, useGLTF } from "@react-three/drei";
+import { useRobotModel } from "../Robot/useRobotModel";
 
 import { useFrame, useThree } from "@react-three/fiber";
 
@@ -313,7 +314,7 @@ function RobotJourney({ level, active, onPhaseChange, onComplete }) {
 
   const [portalPhase, setPortalPhase] = useState("idle");
 
-  const { scene, animations } = useGLTF("/models/Robot.glb");
+  const { scene, animations } = useRobotModel();
 
   const { actions, names } = useAnimations(animations, scene);
 

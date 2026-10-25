@@ -10,6 +10,7 @@ import {
   useAnimations,
   useGLTF,
 } from "@react-three/drei";
+import { useRobotModel } from "../Robot/useRobotModel";
 
 import * as THREE from "three";
 
@@ -536,7 +537,7 @@ function OrbitingRobot({ curve }) {
   const glowRef = useRef(null);
   const droneRingRef = useRef(null);
 
-  const { scene, animations } = useGLTF("/models/Robot.glb");
+  const { scene, animations } = useRobotModel();
   const { actions, names } = useAnimations(animations, scene);
 
   useEffect(() => {

@@ -1,13 +1,14 @@
 import { Suspense, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, useAnimations, useGLTF } from "@react-three/drei";
+import { useRobotModel } from "./useRobotModel";
 
 import * as THREE from "three";
 
 import styles from "./Robot.module.css";
 
 function RobotModel() {
-  const { scene, animations } = useGLTF("/models/Robot.glb");
+  const { scene, animations } = useRobotModel();
 
   const { actions, names } = useAnimations(animations, scene);
 
